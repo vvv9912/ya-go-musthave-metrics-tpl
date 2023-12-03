@@ -23,15 +23,15 @@ func (m *Mw) Middlware(next http.Handler) http.Handler {
 			http.Error(w, "Метод не соответствует Post; Метод: "+r.Method, http.StatusBadRequest)
 			return
 		}
-		if r.Header.Get("Content-Type") != "text/plain" {
-			http.Error(w, "Content-Type не соответствует text/plain; Метод: "+r.Header.Get("Content-Type"), http.StatusBadRequest)
-			return
-		}
-		data := strings.Split(r.URL.Path, "/")
-		if len(data) < 5 {
-			http.Error(w, "Err", http.StatusBadRequest)
-			return
-		}
+		//if r.Header.Get("Content-Type") != "text/plain" {
+		//	http.Error(w, "Content-Type не соответствует text/plain; Метод: "+r.Header.Get("Content-Type"), http.StatusBadRequest)
+		//	return
+		//}
+		//data := strings.Split(r.URL.Path, "/")
+		//if len(data) != 5 {
+		//	http.Error(w, "Err", http.StatusBadRequest)
+		//	return
+		//}
 
 		next.ServeHTTP(w, r)
 	})
@@ -40,7 +40,7 @@ func (m *Mw) Middlware(next http.Handler) http.Handler {
 func (m *Mw) MiddlwareGauge(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		data := strings.Split(req.URL.Path, "/")
-		if len(data) < 5 {
+		if len(data) != 5 {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
@@ -50,6 +50,7 @@ func (m *Mw) MiddlwareGauge(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
+
 		err = m.GaugeStorage.UpdateGauge(name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
@@ -61,21 +62,18 @@ func (m *Mw) MiddlwareGauge(next http.Handler) http.Handler {
 func (m *Mw) MiddlwareCounter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		data := strings.Split(req.URL.Path, "/")
-		if len(data) < 5 {
-			fmt.Println("err len(data) != 4 ")
+		if len(data) != 5 {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 		name := data[3]
 		value, err := strconv.ParseInt(data[4], 10, 64)
 		if err != nil {
-			fmt.Println(err)
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 		err = m.CounterStorage.UpdateCounter(name, value)
 		if err != nil {
-			fmt.Println(err)
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
