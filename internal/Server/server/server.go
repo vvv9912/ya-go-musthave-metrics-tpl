@@ -32,7 +32,7 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 	ch := make(chan error)
 	go func() {
 		defer s.s.Close()
-		fmt.Println("server start")
+		fmt.Println("server start, addr:", addr)
 		err := s.s.ListenAndServe()
 		if err != nil {
 			fmt.Println(err)

@@ -47,13 +47,13 @@ func (m *Mw) MiddlwareGauge(next http.Handler) http.Handler {
 		name := data[3]
 		value, err := strconv.ParseFloat(data[4], 64)
 		if err != nil {
-			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusNotFound)
+			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 
 		err = m.GaugeStorage.UpdateGauge(name, value)
 		if err != nil {
-			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusNotFound)
+			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 		next.ServeHTTP(res, req)
@@ -69,12 +69,12 @@ func (m *Mw) MiddlwareCounter(next http.Handler) http.Handler {
 		name := data[3]
 		value, err := strconv.ParseInt(data[4], 10, 64)
 		if err != nil {
-			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusNotFound)
+			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 		err = m.CounterStorage.UpdateCounter(name, value)
 		if err != nil {
-			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusNotFound)
+			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
 
