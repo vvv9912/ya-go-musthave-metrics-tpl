@@ -41,19 +41,19 @@ func (m *Mw) MiddlwareGauge(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		data := strings.Split(req.URL.Path, "/")
 		if len(data) != 5 {
-			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
+			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusNotFound)
 			return
 		}
 		name := data[3]
 		value, err := strconv.ParseFloat(data[4], 64)
 		if err != nil {
-			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
+			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusNotFound)
 			return
 		}
 
 		err = m.GaugeStorage.UpdateGauge(name, value)
 		if err != nil {
-			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
+			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusNotFound)
 			return
 		}
 		next.ServeHTTP(res, req)
@@ -63,18 +63,18 @@ func (m *Mw) MiddlwareCounter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		data := strings.Split(req.URL.Path, "/")
 		if len(data) != 5 {
-			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
+			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusNotFound)
 			return
 		}
 		name := data[3]
 		value, err := strconv.ParseInt(data[4], 10, 64)
 		if err != nil {
-			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
+			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusNotFound)
 			return
 		}
 		err = m.CounterStorage.UpdateCounter(name, value)
 		if err != nil {
-			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
+			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusNotFound)
 			return
 		}
 
