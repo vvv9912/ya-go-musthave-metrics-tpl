@@ -27,6 +27,7 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 	//http://localhost:8080/update/unknown/testCounter/100
 	mux.Handle("/update/gauge/", m.Middlware(m.MiddlwareGauge(http.HandlerFunc(handler.HandlerGauge))))
 	mux.Handle("/update/counter/", m.Middlware(m.MiddlwareCounter(http.HandlerFunc(handler.HandlerCounter))))
+	mux.Handle("/", http.HandlerFunc(handler.HandlerBase))
 	s.s.Addr = addr
 	s.s.Handler = mux
 	ch := make(chan error)
