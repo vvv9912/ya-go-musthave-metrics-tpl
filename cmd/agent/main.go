@@ -18,28 +18,16 @@ func main() {
 	if err != nil {
 		return
 	}
-	select {
-	case <-ctx.Done():
-		// Обработка завершения программы
-
-		return
-		//default:
-	}
-	//metric := metrics.UpdateMetrics()
-	//wx := &sync.WaitGroup{}
-	//for i := 1; i < 10; i++ {
-	//	wx.Add(1)
-	//	go func(i int) {
-	//
-	//		time.Sleep(time.Duration(i) * time.Second)
-	//
-	//		metric := metrics.UpdateMetricsGauge()
-	//		fmt.Println(i)
-	//		for key, values := range *metric {
-	//			fmt.Println("Key:", key, "Values:", values)
-	//		}
-	//		wx.Done()
-	//	}(i)
+	done := make(chan struct{})
+	go func() {
+		<-ctx.Done()
+		done <- struct{}{}
+	}()
+	<-done
+	//select { //почему лучше так?
+	//case <-ctx.Done():
+	//	// Обработка завершения программы
+	//	return
 	//}
-	//wx.Wait()
+
 }
