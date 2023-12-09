@@ -30,8 +30,6 @@ func (p *PostRequest) PostReq(ctx context.Context, url string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if err != nil {
-		return err
-	}
+
 	return nil
 }
