@@ -22,11 +22,11 @@ type Notifier struct {
 
 	TimerUpdate time.Duration
 	TimerSend   time.Duration
-	Url         string //localhost:8080/update/
+	URL         string //localhost:8080/update/
 }
 
 func NewNotifier(eventsMetric EventsMetric, postReq PostRequester, timeupdate time.Duration, timesend time.Duration, url string) *Notifier {
-	return &Notifier{EventsMetric: eventsMetric, PostRequester: postReq, TimerUpdate: timeupdate, TimerSend: timesend, Url: url}
+	return &Notifier{EventsMetric: eventsMetric, PostRequester: postReq, TimerUpdate: timeupdate, TimerSend: timesend, URL: url}
 }
 
 func (n *Notifier) NotifyPending(ctx context.Context) (*map[string]string, uint64, error) {
@@ -46,7 +46,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		wg.Add(1)
 		go func(key string, values string) {
 			defer wg.Done()
-			url := n.Url + "gauge" + "/" + key + "/" + values
+			url := n.URL + "gauge" + "/" + key + "/" + values
 			err := n.PostReq(ctx, url)
 			if err != nil {
 				fmt.Println(err)
@@ -61,7 +61,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 	go func() {
 		defer wg.Done()
 		coun := strconv.FormatUint(counter, 10)
-		url := n.Url + "counter" + "/" + "PollCount" + "/" + coun
+		url := n.URL + "counter" + "/" + "PollCount" + "/" + coun
 		err := n.PostReq(ctx, url)
 		if err != nil {
 			fmt.Println(err)
