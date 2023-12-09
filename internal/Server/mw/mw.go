@@ -56,6 +56,7 @@ func (m *Mw) MiddlwareGauge(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
+		fmt.Println("name:", name, "value:", value)
 		next.ServeHTTP(res, req)
 	})
 }
@@ -77,7 +78,7 @@ func (m *Mw) MiddlwareCounter(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-
+		fmt.Println("-------\nname:", name, "value:", value)
 		next.ServeHTTP(res, req)
 	})
 }
