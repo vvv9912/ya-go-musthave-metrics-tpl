@@ -32,6 +32,7 @@ func NewNotifier(eventsMetric EventsMetric, postReq PostRequester, timeupdate ti
 func (n *Notifier) NotifyPending(ctx context.Context) (*map[string]string, uint64, error) {
 	gauge := n.UpdateMetricsGauge()
 	counter, err := n.UpdateMetricsCounter()
+	counter++
 	if err != nil {
 		log.Fatal(err)
 		return nil, 0, err

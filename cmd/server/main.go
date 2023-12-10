@@ -13,4 +13,10 @@ func main() {
 	s := server.NewServer()
 	ctx := context.TODO()
 	s.StartServer(ctx, "localhost:8080", gauge, counter)
+	done := make(chan struct{})
+	go func() {
+		<-ctx.Done()
+		done <- struct{}{}
+	}()
+	<-done
 }
