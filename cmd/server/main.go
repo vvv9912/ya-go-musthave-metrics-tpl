@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"log"
 )
 
 func main() {
@@ -13,7 +14,11 @@ func main() {
 
 	s := server.NewServer()
 	ctx := context.TODO()
-	s.StartServer(ctx, "localhost:8080", gauge, counter)
+	err := s.StartServer(ctx, "localhost:8080", gauge, counter)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 	done := make(chan struct{})
 	go func() {
 		<-ctx.Done()

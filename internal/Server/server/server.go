@@ -61,10 +61,16 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 		handler.HandlerGetDef(res, req, gaugeStorage, counterStorage)
 	}))
 	ch := make(chan error)
+	server := http.Server{}
+	server.Handler = s.s
+	server.Addr = addr
 	go func() {
+
 		//defer s.s.Close()
 		fmt.Println("server start, addr:", addr)
-		err := http.ListenAndServe(addr, s.s)
+
+		//err := http.ListenAndServe(addr, s.s)
+		err := server.ListenAndServe()
 		if err != nil {
 			fmt.Println(err)
 			ch <- err
@@ -96,11 +102,11 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 	//}()
 	//
 
-	//select {
-	//case <-ctx.Done():
-	//	return s.s.Close() //s.s.Shutdown(context.Background())
-	//case err := <-ch:
-	//	return err
-	//}
+	select {
+	case <-ctx.Done():
+		return server.Shutdown(context.Background()) //s.s.Shutdown(context.Background())
+	case err := <-ch:
+		return err
+	}
 	return nil
 }
