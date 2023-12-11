@@ -117,7 +117,6 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 			}
 			if err != nil {
 				fmt.Println(err)
-				//log.Fatal(err)
 				return
 			}
 			time.Sleep(n.TimerSend)
