@@ -56,6 +56,7 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 	//})
 	s.s.With(m.MiddlewareType).Post("/update/{type}/{SomeMetric}/{Value}", handler.HandlerSucess)
 	s.s.With(m.MiddlwareGetCounter).Get("/value/counter/{SomeMetric}", handler.HandlerGetCounter)
+	s.s.With(m.MiddlwareGetGauge).Get("/value/gauge/{SomeMetric}", handler.HandlerGetGauge)
 	s.s.Post("/update/", handler.HandlerErrType)
 	s.s.Get("/", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		handler.HandlerGetDef(res, req, gaugeStorage, counterStorage)
