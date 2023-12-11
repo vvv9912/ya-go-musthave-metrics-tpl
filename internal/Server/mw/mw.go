@@ -23,8 +23,8 @@ func (m *Mw) MwLogger(next http.Handler) http.Handler {
 		m.Log.Println("Новый запрос:", r.Method, ";", r.URL.Path)
 		log.Println("Новый запрос:", r.Method, ";", r.URL.Path)
 		next.ServeHTTP(w, r)
-		m.Log.Println("Запрос обработан:", r.Method, ";", r.URL.Path, "\n")
-		log.Println("Запрос обработан:", r.Method, ";", r.URL.Path, "\n")
+		m.Log.Println("Запрос обработан:", r.Method, ";", r.URL.Path)
+		log.Println("Запрос обработан:", r.Method, ";", r.URL.Path)
 	})
 }
 func (m *Mw) Middlware(next http.Handler) http.Handler {
