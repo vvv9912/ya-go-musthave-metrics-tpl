@@ -67,13 +67,12 @@ func (S *MemStorage) UpdateCounter(key string, val uint64) error {
 	S.counterMutex.Lock()
 	defer S.counterMutex.Unlock()
 	//fmt.Println("value counter get to map:", val)
-	valOld, found := S.counterStorage[key]
+	_, found := S.counterStorage[key]
 	if found {
-		S.counterStorage[key] = val + valOld
+		S.counterStorage[key] += val
 	} else {
 		S.counterStorage[key] = val
 	}
-	//S.counterStorage[key] = val
 	return nil
 }
 func (S *MemStorage) GetCounter(key string) (uint64, error) {

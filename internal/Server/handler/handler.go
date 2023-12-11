@@ -7,6 +7,20 @@ import (
 	"net/http"
 )
 
+func HandlerSucess(res http.ResponseWriter, req *http.Request) {
+
+	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	res.WriteHeader(http.StatusOK)
+	body := fmt.Sprintf("%v", http.StatusOK)
+	res.Write([]byte(body))
+}
+func HandlerErrType(res http.ResponseWriter, req *http.Request) {
+
+	//res.Header().Set("text/plain", "charset=utf-8")
+	res.WriteHeader(http.StatusBadRequest)
+	body := fmt.Sprintf("%v", http.StatusBadRequest)
+	res.Write([]byte(body))
+}
 func HandlerGauge(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
@@ -15,7 +29,7 @@ func HandlerGauge(res http.ResponseWriter, req *http.Request) {
 	//fmt.Println("Сработал Handler Gauge")
 }
 func HandlerCounter(res http.ResponseWriter, req *http.Request) {
-
+	//fmt.Println("-------\n", "POST:", req.URL.Path)
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	body := fmt.Sprintf("%v", http.StatusOK)
@@ -24,26 +38,26 @@ func HandlerCounter(res http.ResponseWriter, req *http.Request) {
 }
 
 func HandlerGetCounter(res http.ResponseWriter, req *http.Request) {
-	value := req.Context().Value("val").(string)
+	value := req.Context().Value("value_metric").(string)
 	name := chi.URLParam(req, "SomeMetric")
 
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res.Header().Set(name, value)
 	res.WriteHeader(http.StatusOK)
-	body := fmt.Sprintf("%s", value)
+	body := value
 	//fmt.Println("GetRequest=", value)
 	//fmt.Println(res.Header())
 	res.Write([]byte(body))
 	//fmt.Println("Сработал Handler counter")
 }
 func HandlerGetGauge(res http.ResponseWriter, req *http.Request) {
-	value := req.Context().Value("val").(string)
+	value := req.Context().Value("value_metric").(string)
 	name := chi.URLParam(req, "SomeMetric")
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res.Header().Set(name, value)
 	res.WriteHeader(http.StatusOK)
-	body := fmt.Sprintf("%s", value)
-	//	fmt.Println("GetRequest=", value)
+	body := value
+	//fmt.Println("GetRequest=", value)
 	//fmt.Println(res.Header())
 	//body := fmt.Sprintf("%v\n%s:%s", http.StatusOK, name, value)
 	res.Write([]byte(body))
@@ -67,11 +81,3 @@ func HandlerGetDef(res http.ResponseWriter, req *http.Request, gauger storage.Ga
 	res.Write([]byte(body))
 	//fmt.Println("Сработал Handler counter")
 }
-
-//func HandlerBase(res http.ResponseWriter, req *http.Request) {
-//
-//	//res.Header().Set("text/plain", "charset=utf-8")
-//	res.WriteHeader(http.StatusBadRequest)
-//	body := fmt.Sprintf("%v", http.StatusBadRequest)
-//	res.Write([]byte(body))
-//}

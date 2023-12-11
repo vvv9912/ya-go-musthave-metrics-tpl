@@ -7,31 +7,56 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"log"
 	"net/http"
+	"os"
 )
 
-//type Server struct {
-//	s *http.Server
-//}
+//	type Server struct {
+//		s *http.Server
+//	}
 
 type Server struct {
-	s *chi.Mux
+	s      *chi.Mux
+	Logger *log.Logger
 }
 
 func NewServer() *Server {
 	s := chi.NewRouter()
-	return &Server{s: s}
+	f, err := os.OpenFile("server.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Println(err)
+	}
+	logger := log.New(f, "server: ", log.LstdFlags)
+	logger.Println("Server start")
+	return &Server{s: s, Logger: logger}
 }
 
 func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage storage.GaugeStorager, counterStorage storage.CounterStorager) error {
+
 	m := mw.Mw{
 		GaugeStorage:   gaugeStorage,
 		CounterStorage: counterStorage,
+		Log:            s.Logger,
 	}
-	s.s.With(m.Middlware2Gauge).Post("/update/gauge/{SomeMetric}/{Value}", handler.HandlerGauge)
-	s.s.With(m.Middlware2Counter).Post("/update/counter/{SomeMetric}/{Value}", handler.HandlerCounter)
-	s.s.With(m.MiddlwareGetGauge).Get("/value/gauge/{SomeMetric}", handler.HandlerGetGauge)
-	s.s.With(m.MiddlwareGetCounter).Get("/value/counter/{SomeMetric}", handler.HandlerGetCounter)
+	s.s.Use(m.MwLogger)
+	//s.s.Route("/update", func(r chi.Router) {
+	//	r.Route("/gauge", func(r chi.Router) {
+	//		r.Use(m.Middlware2Gauge)
+	//		r.Post("/{SomeMetric}/{Value}", handler.HandlerGauge)
+	//	})
+	//	r.Route("/counter", func(r chi.Router) {
+	//		r.Use(m.Middlware2Counter)
+	//		r.Post("/{SomeMetric}/{Value}", handler.HandlerCounter)
+	//	})
+	//	r.NotFound(func(writer http.ResponseWriter, request *http.Request) {
+	//		writer.WriteHeader(http.StatusBadRequest)
+	//		writer.Write([]byte("Unknown endpoint"))
+	//	})
+	//})
+	s.s.With(m.MiddlewareType).Post("/update/{type}/{SomeMetric}/{Value}", handler.HandlerSucess)
+
+	s.s.Post("/update/", handler.HandlerErrType)
 	s.s.Get("/", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		handler.HandlerGetDef(res, req, gaugeStorage, counterStorage)
 	}))
@@ -54,7 +79,7 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 	//}
 	////http://localhost:8080/update/unknown/testCounter/100
 	//mux.Handle("/update/gauge/", m.Middlware(m.MiddlwareGauge(http.HandlerFunc(handler.HandlerGauge))))
-	//mux.Handle("/update/counter/", m.Middlware(m.MiddlwareCounter(http.HandlerFunc(handler.HandlerCounter))))
+	//mux.Handle("/update/counter/", m.Middlware(m.MiddlewareCounter(http.HandlerFunc(handler.HandlerCounter))))
 	//mux.Handle("/", http.HandlerFunc(handler.HandlerBase))
 	//s.s.Addr = addr
 	//s.s.Handler = mux
