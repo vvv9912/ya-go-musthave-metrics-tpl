@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"log"
 	"net/http"
 	"strconv"
@@ -15,11 +16,6 @@ type Mw struct {
 	CounterStorage storage.CounterStorager
 	Log            *log.Logger
 }
-type contextKey uint64
-
-const (
-	UserIDContextKey contextKey = 1
-)
 
 func (m *Mw) MwLogger(next http.Handler) http.Handler {
 	// получаем handler приведением типа http.HandlerFunc
@@ -122,7 +118,7 @@ func (m *Mw) MiddlwareGetGauge(next http.Handler) http.Handler {
 		}
 		log.Println("Получение значения метрики из хранилища:", name, ":", val)
 		valueMetric := strconv.FormatFloat(val, 'f', -1, 64)
-		ctx := context.WithValue(req.Context(), UserIDContextKey, valueMetric)
+		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 
 		next.ServeHTTP(res, req.WithContext(ctx))
 
@@ -149,7 +145,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 
 		valueMetric := strconv.FormatUint(val, 10)
 
-		ctx := context.WithValue(req.Context(), UserIDContextKey, valueMetric)
+		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 
 		next.ServeHTTP(res, req.WithContext(ctx))
 

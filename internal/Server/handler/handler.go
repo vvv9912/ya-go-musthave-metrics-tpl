@@ -3,8 +3,8 @@ package handler
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"net/http"
 )
 
@@ -41,7 +41,7 @@ func HandlerCounter(res http.ResponseWriter, req *http.Request) {
 func HandlerGetCounter(res http.ResponseWriter, req *http.Request) {
 
 	//a = key(valueMetric)
-	valCtx := req.Context().Value(mw.UserIDContextKey)
+	valCtx := req.Context().Value(typeconst.UserIDContextKey)
 	value := valCtx.(string)
 	name := chi.URLParam(req, "SomeMetric")
 
@@ -55,7 +55,7 @@ func HandlerGetCounter(res http.ResponseWriter, req *http.Request) {
 	//fmt.Println("Сработал Handler counter")
 }
 func HandlerGetGauge(res http.ResponseWriter, req *http.Request) {
-	valCtx := req.Context().Value(mw.UserIDContextKey)
+	valCtx := req.Context().Value(typeconst.UserIDContextKey)
 	value := valCtx.(string)
 	name := chi.URLParam(req, "SomeMetric")
 
