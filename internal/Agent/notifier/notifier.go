@@ -50,7 +50,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 			url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
 			err := n.PostReq(ctx, url)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 				return //return err?
 			}
 		}(key, values)
@@ -63,7 +63,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		url := "http://" + n.URL + "/update/" + "counter" + "/" + "PollCount" + "/" + coun
 		err := n.PostReq(ctx, url)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 			return //return err?
 		}
 	}()
