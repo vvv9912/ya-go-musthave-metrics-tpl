@@ -139,9 +139,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 			return
 		}
 		log.Println("Получение значения метрики из хранилища:", name, ":", val)
-
 		valueMetric := strconv.FormatUint(val, 10)
-
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 
 		next.ServeHTTP(res, req.WithContext(ctx))

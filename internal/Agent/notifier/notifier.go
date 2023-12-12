@@ -22,7 +22,7 @@ type Notifier struct {
 
 	TimerUpdate time.Duration
 	TimerSend   time.Duration
-	URL         string //localhost:8080/update/
+	URL         string //localhost:8080
 }
 
 func NewNotifier(eventsMetric EventsMetric, postReq PostRequester, timeupdate time.Duration, timesend time.Duration, url string) *Notifier {
@@ -50,12 +50,10 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 			url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
 			err := n.PostReq(ctx, url)
 			if err != nil {
-				fmt.Println(err)
-
+				log.Fatal(err)
 				return //return err?
 			}
-			//fmt.Println("Key:", key, "Values:", values)
-		}(key, values) //передаем по http
+		}(key, values)
 	}
 	//Передаем counter
 	wg.Add(1)
@@ -65,8 +63,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		url := "http://" + n.URL + "/update/" + "counter" + "/" + "PollCount" + "/" + coun
 		err := n.PostReq(ctx, url)
 		if err != nil {
-			fmt.Println(err)
-
+			log.Fatal(err)
 			return //return err?
 		}
 	}()
@@ -89,16 +86,10 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 
 			gauge, couter, err = n.NotifyPending(ctx)
 			if err != nil {
-				fmt.Println(err)
-				//log.Fatal(err)
+
+				log.Fatal(err)
 				return
 			}
-			//err = n.SendNotification(ctx, gauge, couter)
-			//if err != nil {
-			//	fmt.Println(err)
-			//	//log.Fatal(err)
-			//	return
-			//}
 			time.Sleep(n.TimerUpdate)
 
 		}
