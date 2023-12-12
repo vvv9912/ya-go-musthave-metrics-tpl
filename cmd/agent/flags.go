@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"flag"
+	"log"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -65,12 +67,25 @@ func parseFlags() {
 			panic("лишний флаг:" + f.Name)
 		}
 	})
-	//значения по умолчанию
-	//fmt.Println(flag.Lookup("a"))
-	//if flag.Lookup("a") == nil {
-	//	addr.Host = "localhost"
-	//	addr.Port = 8080
-	//	fmt.Println(addr)
-	//}
+	//os.Setenv("ADDRESS", "localhost:8085")
+	//os.Setenv("REPORT_INTERVAL", "3")
+	//os.Setenv("POLL_INTERVAL", "7")
 	URLserver = addr.String()
+	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
+		URLserver = envRunAddr
+	}
+	if envReport := os.Getenv("REPORT_INTERVAL"); envReport != "" {
+		uintValue, err := strconv.ParseUint(envReport, 10, 64)
+		if err != nil {
+			log.Panic(err)
+		}
+		reportInterval = uint(uintValue)
+	}
+	if envPoll := os.Getenv("POLL_INTERVAL"); envPoll != "" {
+		uintValue, err := strconv.ParseUint(envPoll, 10, 64)
+		if err != nil {
+			log.Panic(err)
+		}
+		pollInterval = uint(uintValue)
+	}
 }

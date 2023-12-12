@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"flag"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -50,4 +51,7 @@ func parseFlags() {
 	flag.Var(addr, "a", "Net address host:port")
 	flag.Parse()
 	URLserver = addr.String()
+	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
+		URLserver = envRunAddr
+	}
 }
