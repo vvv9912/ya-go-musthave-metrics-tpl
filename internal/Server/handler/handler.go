@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"net/http"
 )
@@ -38,10 +39,10 @@ func HandlerCounter(res http.ResponseWriter, req *http.Request) {
 }
 
 func HandlerGetCounter(res http.ResponseWriter, req *http.Request) {
-	type key string
+
 	//a = key(valueMetric)
-	val := req.Context().Value("value_metric").(key)
-	value := string(val)
+	valCtx := req.Context().Value(mw.UserIDContextKey)
+	value := valCtx.(string)
 	name := chi.URLParam(req, "SomeMetric")
 
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -54,10 +55,10 @@ func HandlerGetCounter(res http.ResponseWriter, req *http.Request) {
 	//fmt.Println("Сработал Handler counter")
 }
 func HandlerGetGauge(res http.ResponseWriter, req *http.Request) {
-	type key string
-	val := req.Context().Value("value_metric").(key)
-	value := string(val)
+	valCtx := req.Context().Value(mw.UserIDContextKey)
+	value := valCtx.(string)
 	name := chi.URLParam(req, "SomeMetric")
+
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res.Header().Set(name, value)
 	res.WriteHeader(http.StatusOK)

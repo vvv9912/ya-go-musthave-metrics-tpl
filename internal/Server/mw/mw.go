@@ -15,6 +15,11 @@ type Mw struct {
 	CounterStorage storage.CounterStorager
 	Log            *log.Logger
 }
+type contextKey uint64
+
+const (
+	UserIDContextKey contextKey = 1
+)
 
 func (m *Mw) MwLogger(next http.Handler) http.Handler {
 	// получаем handler приведением типа http.HandlerFunc
@@ -117,7 +122,7 @@ func (m *Mw) MiddlwareGetGauge(next http.Handler) http.Handler {
 		}
 		log.Println("Получение значения метрики из хранилища:", name, ":", val)
 		valueMetric := strconv.FormatFloat(val, 'f', -1, 64)
-		ctx := context.WithValue(req.Context(), "value_metric", valueMetric)
+		ctx := context.WithValue(req.Context(), UserIDContextKey, valueMetric)
 
 		next.ServeHTTP(res, req.WithContext(ctx))
 
@@ -143,10 +148,8 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 		log.Println("Получение значения метрики из хранилища:", name, ":", val)
 
 		valueMetric := strconv.FormatUint(val, 10)
-		type key string
-		var a key
-		a = key(valueMetric)
-		ctx := context.WithValue(req.Context(), "value_metric", a)
+
+		ctx := context.WithValue(req.Context(), UserIDContextKey, valueMetric)
 
 		next.ServeHTTP(res, req.WithContext(ctx))
 
