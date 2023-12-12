@@ -1,31 +1,49 @@
 package metrics
 
 import (
-	"reflect"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestMetrics_UpdateMetricsGauge(t *testing.T) {
-	type fields struct {
-		MetricsGauge   map[string]string
-		MetricsCounter map[string]uint64
-	}
+func TestMetrics_UpdateMetricsCounter(t *testing.T) {
+
 	tests := []struct {
-		name   string
-		fields fields
-		want   *map[string]string
+		name string
+		//values map[string]uint64
+		n    int
+		want map[string]uint64
 	}{
-		// TODO: Add test cases.
+		{
+			name: "test #1",
+			n:    3,
+
+			want: map[string]uint64{
+				"PollCount": 3,
+			},
+		},
+		{
+			name: "test #2",
+			n:    100,
+
+			want: map[string]uint64{
+				"PollCount": 100,
+			},
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &Metrics{
-				MetricsGauge:   tt.fields.MetricsGauge,
-				MetricsCounter: tt.fields.MetricsCounter,
+			cout := NewMetriсs()
+			var c uint64
+			var err error
+			for i := 0; i < tt.n; i++ {
+				c, err = cout.UpdateMetricsCounter()
+				if err != nil {
+					t.Error(err)
+				}
 			}
-			if got := m.UpdateMetricsGauge(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UpdateMetricsGauge() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, c, tt.want["PollCount"])
+
 		})
 	}
 }
