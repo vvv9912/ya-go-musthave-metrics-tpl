@@ -158,9 +158,9 @@ func TestMw_MiddlwareCounter(t *testing.T) {
 		want want
 	}{
 		{name: "#1 positive test",
-			args: args{next: m.Middlware(m.Middlware(http.HandlerFunc(handler.HandlerSucess)))},
-			URL:  "/update/counter/someMetric/527",
-			want: want{code: 200, contentType: "text/plain; charset=utf-8"},
+			args: args{next: m.MiddlewareType(http.HandlerFunc(handler.HandlerSucess))},
+			URL:  "/update/gauge/someMetric/527",
+			want: want{code: 400, contentType: "text/plain; charset=utf-8"},
 		},
 		//{name: "#2 negative test",
 		//	args: args{next: m.Middlware(m.Middlware(http.HandlerFunc(handler.HandlerSucess)))},
@@ -180,7 +180,7 @@ func TestMw_MiddlwareCounter(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Log(test)
-		request := httptest.NewRequest(http.MethodPost, test.URL, nil)
+		request := httptest.NewRequest(http.MethodPost, test.URL, nil) //не рааботает тест
 		w := httptest.NewRecorder()
 		test.args.next.ServeHTTP(w, request)
 		res := w.Result()
