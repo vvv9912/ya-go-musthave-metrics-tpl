@@ -38,7 +38,10 @@ func HandlerCounter(res http.ResponseWriter, req *http.Request) {
 }
 
 func HandlerGetCounter(res http.ResponseWriter, req *http.Request) {
-	value := req.Context().Value("value_metric").(string)
+	type key string
+	//a = key(valueMetric)
+	val := req.Context().Value("value_metric").(key)
+	value := string(val)
 	name := chi.URLParam(req, "SomeMetric")
 
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -51,7 +54,9 @@ func HandlerGetCounter(res http.ResponseWriter, req *http.Request) {
 	//fmt.Println("Сработал Handler counter")
 }
 func HandlerGetGauge(res http.ResponseWriter, req *http.Request) {
-	value := req.Context().Value("value_metric").(string)
+	type key string
+	val := req.Context().Value("value_metric").(key)
+	value := string(val)
 	name := chi.URLParam(req, "SomeMetric")
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res.Header().Set(name, value)

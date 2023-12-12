@@ -17,7 +17,7 @@ func TestStartNotifyCron(t *testing.T) {
 	defer cancel()
 	err := n.StartNotifyCron(ctx)
 	if err != nil {
-		return
+		t.Error(err)
 	}
 	go func() {
 		time.Sleep(1 * time.Second)
@@ -30,7 +30,5 @@ func TestStartNotifyCron(t *testing.T) {
 		done <- struct{}{}
 	}()
 	<-done
-	if err != nil {
-		t.Errorf("Expected no error, but got: %v", err)
-	}
+
 }

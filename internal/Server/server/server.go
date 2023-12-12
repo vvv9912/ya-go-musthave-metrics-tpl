@@ -109,5 +109,4 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 	case err := <-ch:
 		return err
 	}
-	return nil
 }
