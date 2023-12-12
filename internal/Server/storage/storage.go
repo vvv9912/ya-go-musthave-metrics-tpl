@@ -5,21 +5,14 @@ import (
 	"sync"
 )
 
+// TODO переделать под общий интерфейс get, update
 type GaugeStorager interface {
-	//AddGauge(key string, val float64) error
-	//GetGauge(key string, val float64) (float64, error)
-	//DeleteGauge(key string) error
-	//UpdateGauge(key string, val float64) error
 	UpdateGauge(key string, val float64) error
 	GetGauge(key string) (float64, error)
 	GetAllGauge() map[string]float64
 }
 
 type CounterStorager interface {
-	//AddCounter(key string, val int64) error
-	//GetCounter(key string, val int64) (int64, error)
-	//DeleteCounter(key string, val int64) error
-	//UpdateCounter(key string, val int64) error
 	UpdateCounter(key string, val uint64) error
 	GetCounter(key string) (uint64, error)
 	GetAllCounter() map[string]uint64

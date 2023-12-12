@@ -8,16 +8,22 @@ import (
 )
 
 func main() {
+	parseFlags()
 
+	if err := run(); err != nil {
+		panic(err)
+	}
+}
+func run() error {
 	counter := storage.NewCounterStorage()
 	gauge := storage.NewGaugeStorage()
 
 	s := server.NewServer()
 	ctx := context.TODO()
-	err := s.StartServer(ctx, "localhost:8080", gauge, counter)
+	err := s.StartServer(ctx, URLserver, gauge, counter)
 	if err != nil {
 		log.Fatal(err)
-		return
+		return err
 	}
 	done := make(chan struct{})
 	go func() {
@@ -25,4 +31,5 @@ func main() {
 		done <- struct{}{}
 	}()
 	<-done
+	return nil
 }

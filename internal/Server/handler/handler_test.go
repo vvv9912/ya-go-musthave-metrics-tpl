@@ -46,7 +46,7 @@ func TestHandlerGauge(t *testing.T) {
 		t.Log(test)
 		request := httptest.NewRequest(http.MethodPost, test.url, nil)
 		w := httptest.NewRecorder()
-		HandlerGauge(w, request)
+		HandlerSucess(w, request)
 
 		res := w.Result()
 		assert.Equal(t, test.want.code, res.StatusCode)

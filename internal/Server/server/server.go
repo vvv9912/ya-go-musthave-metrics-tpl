@@ -66,11 +66,7 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 	server.Handler = s.s
 	server.Addr = addr
 	go func() {
-
-		//defer s.s.Close()
-		fmt.Println("server start, addr:", addr)
-
-		//err := http.ListenAndServe(addr, s.s)
+		log.Println("server start, addr:", addr)
 		err := server.ListenAndServe()
 		if err != nil {
 			fmt.Println(err)
@@ -78,30 +74,6 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 			return
 		}
 	}()
-
-	//mux := http.NewServeMux()
-	//m := mw.Mw{
-	//	GaugeStorage:   gaugeStorage,
-	//	CounterStorage: counterStorage,
-	//}
-	////http://localhost:8080/update/unknown/testCounter/100
-	//mux.Handle("/update/gauge/", m.Middlware(m.MiddlwareGauge(http.HandlerFunc(handler.HandlerGauge))))
-	//mux.Handle("/update/counter/", m.Middlware(m.MiddlewareCounter(http.HandlerFunc(handler.HandlerCounter))))
-	//mux.Handle("/", http.HandlerFunc(handler.HandlerBase))
-	//s.s.Addr = addr
-	//s.s.Handler = mux
-	//ch := make(chan error)
-	//go func() {
-	//	defer s.s.Close()
-	//	fmt.Println("server start, addr:", addr)
-	//	err := s.s.ListenAndServe()
-	//	if err != nil {
-	//		fmt.Println(err)
-	//		ch <- err
-	//		return
-	//	}
-	//}()
-	//
 
 	select {
 	case <-ctx.Done():

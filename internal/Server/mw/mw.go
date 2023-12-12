@@ -17,6 +17,7 @@ type Mw struct {
 	Log            *log.Logger
 }
 
+// mw логера
 func (m *Mw) MwLogger(next http.Handler) http.Handler {
 	// получаем handler приведением типа http.HandlerFunc
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -28,18 +29,8 @@ func (m *Mw) MwLogger(next http.Handler) http.Handler {
 		log.Println("Запрос обработан:", r.Method, ";", r.URL.Path)
 	})
 }
-func (m *Mw) Middlware(next http.Handler) http.Handler {
-	// получаем handler приведением типа http.HandlerFunc
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// здесь пишем логику обработки
-		if r.Method != http.MethodPost {
-			http.Error(w, "Метод не соответствует Post; Метод: "+r.Method, http.StatusBadRequest)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
 
+// mw запросов, выбор типа counter/gauge/etc
 func (m *Mw) MiddlewareType(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		typeMetrics := chi.URLParam(req, "type")
@@ -54,9 +45,10 @@ func (m *Mw) MiddlewareType(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		//next.ServeHTTP(res, req)
 	})
 }
+
+// mw для gauge Post запросы, работа с хранилищем
 func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		name := chi.URLParam(req, "SomeMetric")
@@ -80,6 +72,7 @@ func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {
 	})
 }
 
+// mw для counter Post запросы, работа с хранилищем
 func (m *Mw) MiddlewareCounter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		name := chi.URLParam(req, "SomeMetric")
@@ -103,6 +96,8 @@ func (m *Mw) MiddlewareCounter(next http.Handler) http.Handler {
 
 	})
 }
+
+// mw для получения значения из gauge, работа с хранилищем
 func (m *Mw) MiddlwareGetGauge(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		name := chi.URLParam(req, "SomeMetric")
@@ -124,6 +119,8 @@ func (m *Mw) MiddlwareGetGauge(next http.Handler) http.Handler {
 
 	})
 }
+
+// mw для получения значения из counter, работа с хранилищем
 func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		name := chi.URLParam(req, "SomeMetric")

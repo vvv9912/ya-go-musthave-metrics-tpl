@@ -47,7 +47,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		wg.Add(1)
 		go func(key string, values string) {
 			defer wg.Done()
-			url := n.URL + "gauge" + "/" + key + "/" + values
+			url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
 			err := n.PostReq(ctx, url)
 			if err != nil {
 				fmt.Println(err)
@@ -62,7 +62,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 	go func() {
 		defer wg.Done()
 		coun := strconv.FormatUint(counter, 10)
-		url := n.URL + "counter" + "/" + "PollCount" + "/" + coun
+		url := "http://" + n.URL + "/update/" + "counter" + "/" + "PollCount" + "/" + coun
 		err := n.PostReq(ctx, url)
 		if err != nil {
 			fmt.Println(err)
