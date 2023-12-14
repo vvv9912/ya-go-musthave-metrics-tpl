@@ -7,6 +7,8 @@ import (
 	"log"
 )
 
+var URLserver string
+
 func main() {
 	parseFlags()
 

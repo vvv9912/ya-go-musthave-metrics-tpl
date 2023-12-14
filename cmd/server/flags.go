@@ -17,8 +17,6 @@ func (o *NetAddress) String() string {
 	return o.Host + ":" + strconv.Itoa(o.Port)
 }
 
-var URLserver string
-
 // Set связывает переменную типа со значением флага
 // и устанавливает правила парсинга для пользовательского типа.
 func (o *NetAddress) Set(flagValue string) error {

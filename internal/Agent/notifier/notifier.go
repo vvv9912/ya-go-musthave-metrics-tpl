@@ -85,9 +85,9 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 			}
 
 			gauge, couter, err = n.NotifyPending(ctx)
-			if err != nil {
 
-				log.Fatal(err)
+			if err != nil {
+				log.Println(err)
 				return
 			}
 			time.Sleep(n.TimerUpdate)

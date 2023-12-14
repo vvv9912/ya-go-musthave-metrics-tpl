@@ -21,7 +21,6 @@ type Mw struct {
 func (m *Mw) MwLogger(next http.Handler) http.Handler {
 	// получаем handler приведением типа http.HandlerFunc
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// здесь пишем логику обработки
 		m.Log.Println("Новый запрос:", r.Method, ";", r.URL.Path)
 		log.Println("Новый запрос:", r.Method, ";", r.URL.Path)
 		next.ServeHTTP(w, r)
@@ -103,15 +102,14 @@ func (m *Mw) MiddlwareGetGauge(next http.Handler) http.Handler {
 		name := chi.URLParam(req, "SomeMetric")
 
 		val, err := m.GaugeStorage.GetGauge(name)
-		m.Log.Println("Получения значения метрики из хранилища:", name, ":", val)
 
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusNotFound), http.StatusNotFound)
 			log.Println("Получение значения метрики из хранилища:", name, ":", val, "err:", err)
-
 			return
 		}
 		log.Println("Получение значения метрики из хранилища:", name, ":", val)
+		m.Log.Println("Получения значения метрики из хранилища:", name, ":", val)
 		valueMetric := strconv.FormatFloat(val, 'f', -1, 64)
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 
@@ -126,7 +124,6 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 		name := chi.URLParam(req, "SomeMetric")
 
 		val, err := m.CounterStorage.GetCounter(name)
-		m.Log.Println("Получения значения метрики из хранилища:", name, ":", val)
 
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusNotFound), http.StatusNotFound)
@@ -139,6 +136,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 			return
 		}
 		log.Println("Получение значения метрики из хранилища:", name, ":", val)
+		m.Log.Println("Получения значения метрики из хранилища:", name, ":", val)
 		valueMetric := strconv.FormatUint(val, 10)
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 

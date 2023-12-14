@@ -18,10 +18,6 @@ func (o *NetAddress) String() string {
 	return o.Host + ":" + strconv.Itoa(o.Port)
 }
 
-var URLserver string
-var reportInterval uint
-var pollInterval uint
-
 // Set связывает переменную типа со значением флага
 // и устанавливает правила парсинга для пользовательского типа.
 func (o *NetAddress) Set(flagValue string) error {
