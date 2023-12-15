@@ -14,6 +14,10 @@ type NetAddress struct {
 	Port int
 }
 
+var URLserver string
+var reportInterval uint
+var pollInterval uint
+
 func (o *NetAddress) String() string {
 	return o.Host + ":" + strconv.Itoa(o.Port)
 }

@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
@@ -11,10 +10,6 @@ import (
 	"net/http"
 	"os"
 )
-
-//	type Server struct {
-//		s *http.Server
-//	}
 
 type Server struct {
 	s      *chi.Mux
@@ -40,39 +35,31 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 		Log:            s.Logger,
 	}
 	s.s.Use(m.MwLogger)
-	//s.s.Route("/update", func(r chi.Router) {
-	//	r.Route("/gauge", func(r chi.Router) {
-	//		r.Use(m.Middlware2Gauge)
-	//		r.Post("/{SomeMetric}/{Value}", handler.HandlerGauge)
-	//	})
-	//	r.Route("/counter", func(r chi.Router) {
-	//		r.Use(m.Middlware2Counter)
-	//		r.Post("/{SomeMetric}/{Value}", handler.HandlerCounter)
-	//	})
-	//	r.NotFound(func(writer http.ResponseWriter, request *http.Request) {
-	//		writer.WriteHeader(http.StatusBadRequest)
-	//		writer.Write([]byte("Unknown endpoint"))
-	//	})
-	//})
+
 	s.s.With(m.MiddlewareType).Post("/update/{type}/{SomeMetric}/{Value}", handler.HandlerSucess)
 	s.s.With(m.MiddlwareGetCounter).Get("/value/counter/{SomeMetric}", handler.HandlerGetCounter)
 	s.s.With(m.MiddlwareGetGauge).Get("/value/gauge/{SomeMetric}", handler.HandlerGetGauge)
+
 	s.s.Post("/update/", handler.HandlerErrType)
-	s.s.Get("/", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		handler.HandlerGetDef(res, req, gaugeStorage, counterStorage)
-	}))
+
+	s.s.Get("/", handler.HandlerGetMetrics(gaugeStorage, counterStorage))
+
+	server := http.Server{
+		Addr:    addr,
+		Handler: s.s,
+	}
+
 	ch := make(chan error)
-	server := http.Server{}
-	server.Handler = s.s
-	server.Addr = addr
+
 	go func() {
-		log.Println("server start, addr:", addr)
+
 		err := server.ListenAndServe()
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			ch <- err
 			return
 		}
+		log.Println("server start, addr:", addr)
 	}()
 
 	select {

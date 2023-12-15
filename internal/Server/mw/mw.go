@@ -19,7 +19,6 @@ type Mw struct {
 
 // mw логера
 func (m *Mw) MwLogger(next http.Handler) http.Handler {
-	// получаем handler приведением типа http.HandlerFunc
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.Log.Println("Новый запрос:", r.Method, ";", r.URL.Path)
 		log.Println("Новый запрос:", r.Method, ";", r.URL.Path)
@@ -66,7 +65,7 @@ func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(res, req) //req.WithContext(ctx) //- передать контекст
+		next.ServeHTTP(res, req)
 
 	})
 }
@@ -83,6 +82,7 @@ func (m *Mw) MiddlewareCounter(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
+
 		m.Log.Println("Обновление значения метрики:", name, ":", value)
 		log.Println("Обновление значения метрики:", name, ":", value)
 		err = m.CounterStorage.UpdateCounter(name, value)

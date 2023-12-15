@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-var URLserver string
-var reportInterval uint
-var pollInterval uint
-
 func main() {
 	parseFlags()
 

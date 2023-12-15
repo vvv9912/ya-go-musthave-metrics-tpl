@@ -43,18 +43,20 @@ func HandlerGetGauge(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(body))
 }
 
-func HandlerGetDef(res http.ResponseWriter, req *http.Request, gauger storage.GaugeStorager, counter storage.CounterStorager) {
-	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	gauge := gauger.GetAllGauge()
-	body := ""
-	for key, value := range gauge {
-		body += fmt.Sprintf("%s: %f\n", key, value)
-	}
-	count := counter.GetAllCounter()
-	for key, value := range count {
-		body += fmt.Sprintf("%s: %v\n", key, value)
-	}
-	res.WriteHeader(http.StatusOK)
+func HandlerGetMetrics(gauger storage.GaugeStorager, counter storage.CounterStorager) func(res http.ResponseWriter, req *http.Request) {
+	return func(res http.ResponseWriter, req *http.Request) {
+		res.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		gauge := gauger.GetAllGauge()
+		body := ""
+		for key, value := range gauge {
+			body += fmt.Sprintf("%s: %f\n", key, value)
+		}
+		count := counter.GetAllCounter()
+		for key, value := range count {
+			body += fmt.Sprintf("%s: %v\n", key, value)
+		}
+		res.WriteHeader(http.StatusOK)
 
-	res.Write([]byte(body))
+		res.Write([]byte(body))
+	}
 }
