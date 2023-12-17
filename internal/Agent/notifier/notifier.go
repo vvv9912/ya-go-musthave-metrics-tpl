@@ -29,7 +29,7 @@ func NewNotifier(eventsMetric EventsMetric, postReq PostRequester, timeupdate ti
 	return &Notifier{EventsMetric: eventsMetric, PostRequester: postReq, TimerUpdate: timeupdate, TimerSend: timesend, URL: url}
 }
 
-func (n *Notifier) NotifyPending(ctx context.Context) (*map[string]string, uint64, error) {
+func (n *Notifier) NotifyPending() (*map[string]string, uint64, error) {
 	gauge := n.UpdateMetricsGauge()
 	counter, err := n.UpdateMetricsCounter()
 	counter++
@@ -51,7 +51,6 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 			err := n.PostReq(ctx, url)
 			if err != nil {
 				log.Println(err)
-				return //return err?
 			}
 		}(key, values)
 	}
@@ -64,7 +63,6 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		err := n.PostReq(ctx, url)
 		if err != nil {
 			log.Println(err)
-			return //return err?
 		}
 	}()
 	wg.Wait()
@@ -82,9 +80,10 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 				// Обработка завершения программы
 				return
 			default:
+
 			}
 
-			gauge, couter, err = n.NotifyPending(ctx)
+			gauge, couter, err = n.NotifyPending()
 
 			if err != nil {
 				log.Println(err)

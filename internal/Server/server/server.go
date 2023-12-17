@@ -2,10 +2,12 @@ package server
 
 import (
 	"context"
+	"errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -22,7 +24,9 @@ func NewServer() *Server {
 	if err != nil {
 		log.Println(err)
 	}
-	logger := log.New(f, "server: ", log.LstdFlags)
+	//logger := log.New(f, "server: ", log.LstdFlags)
+	//логгер с выводом в консоль и файл
+	logger := log.New(io.MultiWriter(f, os.Stdout), "server: ", log.LstdFlags)
 	logger.Println("Server start")
 	return &Server{s: s, Logger: logger}
 }
@@ -49,23 +53,23 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 		Handler: s.s,
 	}
 
-	ch := make(chan error)
+	ctxServer, cancel := context.WithCancel(ctx)
 
 	go func() {
-
+		log.Println("server start, addr:", addr)
 		err := server.ListenAndServe()
 		if err != nil {
 			log.Println(err)
-			ch <- err
-			return
+			cancel()
 		}
-		log.Println("server start, addr:", addr)
 	}()
 
 	select {
 	case <-ctx.Done():
-		return server.Shutdown(context.Background()) //s.s.Shutdown(context.Background())
-	case err := <-ch:
-		return err
+		log.Println("ctx:", ctxServer.Err())
+		return server.Shutdown(context.Background())
+	case <-ctxServer.Done():
+		log.Println("ctxServer:", ctxServer.Err())
+		return errors.New("canceled by ctxServer")
 	}
 }

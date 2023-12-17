@@ -6,6 +6,9 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/notifier"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/server"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -15,31 +18,25 @@ func main() {
 	if err := run(); err != nil {
 		panic(err)
 	}
-	//select { //почему лучше так?
-	//case <-ctx.Done():
-	//	// Обработка завершения программы
-	//	return
-	//}
-
 }
 func run() error {
-	log.Println("poll=", pollInterval)
+	log.Println("pollInterval=", pollInterval)
 	log.Println("reportInterval=", reportInterval)
-	log.Println("serv=", URLserver)
+	log.Println("URLserver=", URLserver)
+
 	metrics := metrics.NewMetriсs()
 	postreq := server.NewPostRequest()
 
 	n := notifier.NewNotifier(metrics, postreq, time.Duration(time.Duration(pollInterval)*time.Second), time.Duration(time.Duration(reportInterval)*time.Second), URLserver)
-	ctx := context.Background()
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
 	err := n.StartNotifyCron(ctx)
 	if err != nil {
 		return err
 	}
-	done := make(chan struct{})
-	go func() {
-		<-ctx.Done()
-		done <- struct{}{}
-	}()
-	<-done
+
+	<-ctx.Done()
+
 	return nil
 }

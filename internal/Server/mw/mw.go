@@ -21,10 +21,8 @@ type Mw struct {
 func (m *Mw) MwLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.Log.Println("Новый запрос:", r.Method, ";", r.URL.Path)
-		log.Println("Новый запрос:", r.Method, ";", r.URL.Path)
 		next.ServeHTTP(w, r)
 		m.Log.Println("Запрос обработан:", r.Method, ";", r.URL.Path)
-		log.Println("Запрос обработан:", r.Method, ";", r.URL.Path)
 	})
 }
 
@@ -58,7 +56,6 @@ func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {
 			return
 		}
 		m.Log.Println("Обновление значения метрики:", name, ":", value)
-		log.Println("Обновление значения метрики:", name, ":", value)
 		err = m.GaugeStorage.UpdateGauge(name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
@@ -84,7 +81,6 @@ func (m *Mw) MiddlewareCounter(next http.Handler) http.Handler {
 		}
 
 		m.Log.Println("Обновление значения метрики:", name, ":", value)
-		log.Println("Обновление значения метрики:", name, ":", value)
 		err = m.CounterStorage.UpdateCounter(name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
@@ -105,11 +101,10 @@ func (m *Mw) MiddlwareGetGauge(next http.Handler) http.Handler {
 
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusNotFound), http.StatusNotFound)
-			log.Println("Получение значения метрики из хранилища:", name, ":", val, "err:", err)
+			m.Log.Println("Получение значения метрики из хранилища:", name, ":", val, "err:", err)
 			return
 		}
-		log.Println("Получение значения метрики из хранилища:", name, ":", val)
-		m.Log.Println("Получения значения метрики из хранилища:", name, ":", val)
+		m.Log.Println("Получение значения метрики из хранилища:", name, ":", val)
 		valueMetric := strconv.FormatFloat(val, 'f', -1, 64)
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 
@@ -127,7 +122,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusNotFound), http.StatusNotFound)
-			log.Println("Получение значения метрики из хранилища:", name, ":", val, "err:", err)
+			m.Log.Println("Получение значения метрики из хранилища:", name, ":", val, "err:", err)
 			err = m.CounterStorage.UpdateCounter(name, http.StatusNotFound) //Зачем добавлять значение метрики 404, если не найдено?. Без этого тест не проходит
 			if err != nil {
 				log.Println(err)
@@ -135,8 +130,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 			}
 			return
 		}
-		log.Println("Получение значения метрики из хранилища:", name, ":", val)
-		m.Log.Println("Получения значения метрики из хранилища:", name, ":", val)
+		m.Log.Println("Получение значения метрики из хранилища:", name, ":", val)
 		valueMetric := strconv.FormatUint(val, 10)
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 

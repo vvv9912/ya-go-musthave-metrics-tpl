@@ -49,7 +49,7 @@ func parseFlags() {
 	addr.Port = 8080
 	// если интерфейс не реализован,
 	// здесь будет ошибка компиляции
-	_ = flag.Value(addr)
+	var _ = flag.Value(addr)
 
 	flag.Var(addr, "a", "Net address host:port")
 	flag.UintVar(&reportInterval, "r", 10, "частота отправки метрик на сервер (по умолчанию 10 секунд)")
@@ -64,12 +64,11 @@ func parseFlags() {
 	flag.Visit(func(f *flag.Flag) {
 		_, ok := flagValid[f.Name]
 		if !ok {
-			panic("лишний флаг:" + f.Name)
+			flag.PrintDefaults()
+			log.Panic("лишний флаг:" + f.Name)
 		}
 	})
-	//os.Setenv("ADDRESS", "localhost:8085")
-	//os.Setenv("REPORT_INTERVAL", "3")
-	//os.Setenv("POLL_INTERVAL", "7")
+
 	URLserver = addr.String()
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		URLserver = envRunAddr

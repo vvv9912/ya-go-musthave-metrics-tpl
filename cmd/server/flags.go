@@ -41,10 +41,7 @@ func parseFlags() {
 	addr.Port = 8080
 	// если интерфейс не реализован,
 	// здесь будет ошибка компиляции
-	_ = flag.Value(addr)
-	//flag.StringVar(addr, "a", "localhost:8080", "address and port to run server")
-	// парсим переданные серверу аргументы в зарегистрированные переменные
-	//lag.StringVar(addr, "a", "localhost:8080", "address and port to run server")
+	var _ = flag.Value(addr)
 
 	flag.Var(addr, "a", "Net address host:port")
 	flag.Parse()
