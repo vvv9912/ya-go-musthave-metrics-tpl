@@ -6,23 +6,59 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
+	"go.uber.org/zap"
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type Mw struct {
 	GaugeStorage   storage.GaugeStorager
 	CounterStorage storage.CounterStorager
-	Log            *log.Logger
+	//	Log            *log.Logger
+}
+type responseData struct {
+	status int
+	size   int
+}
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	responseData *responseData
+}
+
+func (r *loggingResponseWriter) Write(b []byte) (int, error) {
+	// записываем ответ, используя оригинальный http.ResponseWriter
+	size, err := r.ResponseWriter.Write(b)
+	r.responseData.size += size
+	return size, err
+}
+func (r *loggingResponseWriter) WriteHeader(statusCode int) {
+	// записываем код статуса, используя оригинальный http.ResponseWriter
+	r.ResponseWriter.WriteHeader(statusCode)
+	r.responseData.status = statusCode
 }
 
 // mw логера
 func (m *Mw) MwLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		m.Log.Println("Новый запрос:", r.Method, ";", r.URL.Path)
-		next.ServeHTTP(w, r)
-		m.Log.Println("Запрос обработан:", r.Method, ";", r.URL.Path)
+		start := time.Now()
+		responsedata := &responseData{
+			status: 0,
+			size:   0,
+		}
+		lw := loggingResponseWriter{
+			ResponseWriter: w,
+			responseData:   responsedata,
+		}
+		next.ServeHTTP(&lw, r)
+		duration := time.Since(start)
+		//Сведения о запросах должны содержать URI, метод запроса и время, затраченное на его выполнение.
+		//Сведения об ответах должны содержать код статуса и размер содержимого ответа.
+		logger.Log.Info("Сведения о запросах", zap.String("URI", r.RequestURI), zap.String("method", r.Method), zap.Duration("duration", duration))
+		logger.Log.Info("Сведения об ответах", zap.Int("status", responsedata.status), zap.Int("size", responsedata.size))
+
 	})
 }
 
@@ -55,7 +91,7 @@ func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		m.Log.Println("Обновление значения метрики:", name, ":", value)
+		logger.Log.Info("Обновление значения метрик", zap.Float64(name, value))
 		err = m.GaugeStorage.UpdateGauge(name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
@@ -79,8 +115,7 @@ func (m *Mw) MiddlewareCounter(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-
-		m.Log.Println("Обновление значения метрики:", name, ":", value)
+		logger.Log.Info("Обновление значения метрик", zap.Uint64(name, value))
 		err = m.CounterStorage.UpdateCounter(name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
@@ -101,10 +136,11 @@ func (m *Mw) MiddlwareGetGauge(next http.Handler) http.Handler {
 
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusNotFound), http.StatusNotFound)
-			m.Log.Println("Получение значения метрики из хранилища:", name, ":", val, "err:", err)
+			logger.Log.Info("Получение значения метрики из хранилища:", zap.Float64(name, val), zap.Error(err))
 			return
 		}
-		m.Log.Println("Получение значения метрики из хранилища:", name, ":", val)
+		logger.Log.Info("Получение значения метрики из хранилища:", zap.Float64(name, val))
+
 		valueMetric := strconv.FormatFloat(val, 'f', -1, 64)
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 
@@ -122,7 +158,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusNotFound), http.StatusNotFound)
-			m.Log.Println("Получение значения метрики из хранилища:", name, ":", val, "err:", err)
+			logger.Log.Info("Получение значения метрики из хранилища:", zap.Uint64(name, val), zap.Error(err))
 			err = m.CounterStorage.UpdateCounter(name, http.StatusNotFound) //Зачем добавлять значение метрики 404, если не найдено?. Без этого тест не проходит
 			if err != nil {
 				log.Println(err)
@@ -130,7 +166,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 			}
 			return
 		}
-		m.Log.Println("Получение значения метрики из хранилища:", name, ":", val)
+		logger.Log.Info("Получение значения метрики из хранилища:", zap.Uint64(name, val))
 		valueMetric := strconv.FormatUint(val, 10)
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 

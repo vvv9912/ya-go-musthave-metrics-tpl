@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"log"
 	"os"
 	"os/signal"
@@ -20,7 +21,10 @@ func main() {
 	}
 }
 func run() error {
-	log.Println("URLserver=", URLserver)
+	if err := logger.Initialize(flagLogLevel); err != nil {
+		return err
+	}
+	logger.Log.Info("URLserver=" + URLserver)
 	counter := storage.NewCounterStorage()
 	gauge := storage.NewGaugeStorage()
 
