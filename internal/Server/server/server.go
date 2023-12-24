@@ -15,19 +15,10 @@ import (
 
 type Server struct {
 	s *chi.Mux
-	//Logger *log.Logger
 }
 
 func NewServer() *Server {
 	s := chi.NewRouter()
-	//f, err := os.OpenFile("server.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	//if err != nil {
-	//	log.Println(err)
-	//}
-	//logger := log.New(f, "server: ", log.LstdFlags)
-	//логгер с выводом в консоль и файл
-	//logger := log.New(io.MultiWriter(f, os.Stdout), "server: ", log.LstdFlags)
-	//logger.Println("Server start")
 	return &Server{s: s}
 }
 
