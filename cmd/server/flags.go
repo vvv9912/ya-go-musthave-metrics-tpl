@@ -13,6 +13,10 @@ type NetAddress struct {
 	Port int
 }
 
+var (
+	flagLogLevel string
+)
+
 func (o *NetAddress) String() string {
 	return o.Host + ":" + strconv.Itoa(o.Port)
 }
@@ -44,9 +48,14 @@ func parseFlags() {
 	var _ = flag.Value(addr)
 
 	flag.Var(addr, "a", "Net address host:port")
+	flag.StringVar(&flagLogLevel, "l", "info", "log level")
+
 	flag.Parse()
 	URLserver = addr.String()
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		URLserver = envRunAddr
+	}
+	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
+		flagLogLevel = envLogLevel
 	}
 }
