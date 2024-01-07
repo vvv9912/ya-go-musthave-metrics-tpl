@@ -20,6 +20,7 @@ func main() {
 	}
 }
 func run() error {
+	log.Println("Start agent")
 	log.Println("pollInterval=", pollInterval)
 	log.Println("reportInterval=", reportInterval)
 	log.Println("URLserver=", URLserver)
