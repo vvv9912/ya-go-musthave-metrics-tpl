@@ -8,6 +8,7 @@ import (
 
 type PostRequester interface {
 	PostReq(ctx context.Context, url string) error
+	PostReqJSON(ctx context.Context, url string, data []byte) error
 }
 type PostRequest struct {
 	PostRequester
@@ -22,6 +23,17 @@ func (p *PostRequest) PostReq(ctx context.Context, url string) error {
 	_, err := client.R().SetHeaders(map[string]string{
 		"Content-Type": "text/plain",
 	}).Post(url)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) error {
+	client := resty.New()
+	_, err := client.R().SetHeaders(map[string]string{
+		"Content-Type": "application/json",
+	}).SetBody(data).Post(url)
 	if err != nil {
 		fmt.Println(err)
 		return err
