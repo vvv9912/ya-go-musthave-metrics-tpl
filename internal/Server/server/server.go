@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/project"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
@@ -23,7 +24,8 @@ func NewServer() *Server {
 }
 
 func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage storage.GaugeStorager, counterStorage storage.CounterStorager) error {
-
+	p := project.NewProject(counterStorage, gaugeStorage)
+	h := handler.NewHandler(*p)
 	m := mw.Mw{
 		GaugeStorage:   gaugeStorage,
 		CounterStorage: counterStorage,
@@ -35,7 +37,9 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 	s.s.With(m.MiddlwareGetCounter).Get("/value/counter/{SomeMetric}", handler.HandlerGetCounter)
 	s.s.With(m.MiddlwareGetGauge).Get("/value/gauge/{SomeMetric}", handler.HandlerGetGauge)
 
-	s.s.Post("/update/", handler.HandlerErrType)
+	s.s.With(m.MiddlwareCheckJson).Post("/update/", h.HandlerGetJSON)
+
+	//	s.s.Post("/update/", handler.HandlerErrType)
 
 	s.s.Get("/", handler.HandlerGetMetrics(gaugeStorage, counterStorage))
 

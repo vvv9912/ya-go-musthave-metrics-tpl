@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
@@ -171,6 +172,18 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 
 		next.ServeHTTP(res, req.WithContext(ctx))
+
+	})
+}
+func (m *Mw) MiddlwareCheckJson(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+
+		if req.Header.Get("Content-Type") != "application/json" {
+			handler.HandlerErrType(res, req)
+			return
+		}
+
+		next.ServeHTTP(res, req)
 
 	})
 }
