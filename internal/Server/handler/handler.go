@@ -72,7 +72,7 @@ func HandlerGetMetrics(gauger storage.GaugeStorager, counter storage.CounterStor
 		res.Write([]byte(body))
 	}
 }
-func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
+func (h *Handler) HandlerPostJSON(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		// Обработка ошибки чтения тела запроса
@@ -90,7 +90,38 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Failed to read request body", http.StatusBadRequest)
 		return
 	}
+
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte(body))
+}
+
+func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		// Обработка ошибки чтения тела запроса
+		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	var metrics model.Metrics
+	err = json.Unmarshal(body, &metrics)
+	if err != nil {
+		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+	metrics, err = h.P.GetMetrics(metrics)
+	if err != nil {
+		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+
+	bodyWrite, err := json.Marshal(metrics)
+	if err != nil {
+		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		return
+	}
+
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusOK)
+	res.Write(bodyWrite)
 }

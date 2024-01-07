@@ -175,7 +175,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 
 	})
 }
-func (m *Mw) MiddlwareCheckJson(next http.Handler) http.Handler {
+func (m *Mw) MiddlwareCheckJSON(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 
 		if req.Header.Get("Content-Type") != "application/json" {

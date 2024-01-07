@@ -37,8 +37,8 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 	s.s.With(m.MiddlwareGetCounter).Get("/value/counter/{SomeMetric}", handler.HandlerGetCounter)
 	s.s.With(m.MiddlwareGetGauge).Get("/value/gauge/{SomeMetric}", handler.HandlerGetGauge)
 
-	s.s.With(m.MiddlwareCheckJson).Post("/update/", h.HandlerGetJSON)
-
+	s.s.With(m.MiddlwareCheckJSON).Post("/update/", h.HandlerPostJSON)
+	s.s.With(m.MiddlwareCheckJSON).Post("/value/", h.HandlerGetJSON)
 	//	s.s.Post("/update/", handler.HandlerErrType)
 
 	s.s.Get("/", handler.HandlerGetMetrics(gaugeStorage, counterStorage))
