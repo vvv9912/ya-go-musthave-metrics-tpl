@@ -59,7 +59,7 @@ func HandlerGetGauge(res http.ResponseWriter, req *http.Request) {
 
 func HandlerGetMetrics(gauger storage.GaugeStorager, counter storage.CounterStorager) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
-		res.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		res.Header().Set("Content-Type", "text/html")
 		gauge := gauger.GetAllGauge()
 		body := ""
 		for key, value := range gauge {
