@@ -32,7 +32,7 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 		//	Log:            s.Logger,
 	}
 	s.s.Use(m.MwLogger)
-
+	s.s.Use(m.MiddlewareGzip)
 	s.s.With(m.MiddlewareType).Post("/update/{type}/{SomeMetric}/{Value}", handler.HandlerSucess)
 	s.s.With(m.MiddlwareGetCounter).Get("/value/counter/{SomeMetric}", handler.HandlerGetCounter)
 	s.s.With(m.MiddlwareGetGauge).Get("/value/gauge/{SomeMetric}", handler.HandlerGetGauge)

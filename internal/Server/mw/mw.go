@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/gzipwrapper"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
@@ -11,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -60,6 +62,48 @@ func (m *Mw) MwLogger(next http.Handler) http.Handler {
 		logger.Log.Info("Сведения об ответах", zap.Int("status", responsedata.status), zap.Int("size", responsedata.size))
 
 	})
+}
+func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// по умолчанию устанавливаем оригинальный http.ResponseWriter как тот,
+		// который будем передавать следующей функции
+		ow := w
+
+		//
+
+		// проверяем, что клиент умеет получать от сервера сжатые данные в формате gzip
+		acceptEncoding := r.Header.Get("Accept-Encoding")
+		supportsGzip := strings.Contains(acceptEncoding, "gzip")
+		if supportsGzip {
+			// оборачиваем оригинальный http.ResponseWriter новым с поддержкой сжатия
+
+			cw := gzipwrapper.NewCompressWriter(w)
+			// меняем оригинальный http.ResponseWriter на новый
+			ow = cw
+			// не забываем отправить клиенту все сжатые данные после завершения middleware
+			defer cw.Close()
+		}
+
+		// проверяем, что клиент отправил серверу сжатые данные в формате gzip
+		contentEncoding := r.Header.Get("Content-Encoding")
+		sendsGzip := strings.Contains(contentEncoding, "gzip")
+		if sendsGzip {
+			// оборачиваем тело запроса в io.Reader с поддержкой декомпрессии
+			cr, err := gzipwrapper.NewCompressReader(r.Body)
+			if err != nil {
+				logger.Log.Error("ошибка декомпрессии", zap.Error(err))
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			// меняем тело запроса на новое
+			r.Body = cr
+			defer cr.Close()
+		}
+
+		// передаём управление хендлеру
+		next.ServeHTTP(ow, r)
+	})
+
 }
 
 // mw запросов, выбор типа counter/gauge/etc

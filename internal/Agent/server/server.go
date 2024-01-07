@@ -1,6 +1,8 @@
 package server
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"github.com/go-resty/resty/v2"
@@ -19,21 +21,32 @@ func NewPostRequest() *PostRequest {
 }
 
 func (p *PostRequest) PostReq(ctx context.Context, url string) error {
-	client := resty.New()
-	_, err := client.R().SetHeaders(map[string]string{
-		"Content-Type": "text/plain",
-	}).Post(url)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
+	//client := resty.New()
+	//_, err := client.R().SetHeaders(map[string]string{
+	//	"Content-Type": "text/plain",
+	//}).Post(url)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return err
+	//}
 	return nil
 }
 func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) error {
 	client := resty.New()
-	_, err := client.R().SetHeaders(map[string]string{
-		"Content-Type": "application/json",
-	}).SetBody(data).Post(url)
+
+	buf := bytes.NewBuffer(nil)
+	zb := gzip.NewWriter(buf)
+	_, err := zb.Write(data)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	zb.Close() // Закройте gzip.Writer, чтобы данные были записаны в buf
+	//fmt.Println(string(buf))
+	_, err = client.R().SetHeaders(map[string]string{
+		"Content-Type": "application/json", "Content-Encoding": "gzip",
+	}).SetBody(buf).Post(url)
+
 	if err != nil {
 		fmt.Println(err)
 		return err

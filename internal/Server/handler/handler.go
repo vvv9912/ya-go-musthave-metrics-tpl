@@ -77,7 +77,6 @@ func HandlerGetMetrics(gauger storage.GaugeStorager, counter storage.CounterStor
 func (h *Handler) HandlerPostJSON(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		// Обработка ошибки чтения тела запроса
 		logger.Log.Info("Failed to read request body", zap.Error(err))
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
