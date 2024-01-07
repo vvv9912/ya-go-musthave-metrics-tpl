@@ -70,16 +70,16 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 		ow := w
 
 		// Проверка content-type
-		contentType := make(map[string]struct{})
-		contentType["application/json"] = struct{}{}
-		contentType["html/text"] = struct{}{}
-		contentType["text/html"] = struct{}{}
+		acceptType := make(map[string]struct{})
+		acceptType["application/json"] = struct{}{}
+		acceptType["html/text"] = struct{}{}
+		//acceptType["text/html"] = struct{}{}
 		// проверяем, что клиент умеет получать от сервера сжатые данные в формате gzip и соответствует content-type
 		acceptEncoding := r.Header.Get("Accept-Encoding")
 		supportsGzip := strings.Contains(acceptEncoding, "gzip")
 
-		acceptContentType := r.Header.Get("Content-Type")
-		_, supportContentType := contentType[acceptContentType]
+		acceptContentType := r.Header.Get("Accept")
+		_, supportContentType := acceptType[acceptContentType]
 
 		if supportContentType {
 			if supportsGzip {
