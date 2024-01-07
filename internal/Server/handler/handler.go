@@ -7,7 +7,9 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/project"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 )
@@ -76,52 +78,55 @@ func (h *Handler) HandlerPostJSON(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		// Обработка ошибки чтения тела запроса
-		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		logger.Log.Info("Failed to read request body", zap.Error(err))
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
 	var metrics model.Metrics
 	err = json.Unmarshal(body, &metrics)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		logger.Log.Info("Failed to read request body JSON UNMARSHAL", zap.Error(err))
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
 	err = h.P.PutMetrics(metrics)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		logger.Log.Info("Failed to read request body", zap.Error(err))
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
-
+	response := body
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
-	res.Write([]byte(body))
+	res.Write(response)
 }
 
 func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
+
 	if err != nil {
 		// Обработка ошибки чтения тела запроса
-		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
 	var metrics model.Metrics
 	err = json.Unmarshal(body, &metrics)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
 	metrics, err = h.P.GetMetrics(metrics)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
 
-	bodyWrite, err := json.Marshal(metrics)
+	response, err := json.Marshal(metrics)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusBadRequest)
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
 
-	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
-	res.Write(bodyWrite)
+	res.Write(response)
 }

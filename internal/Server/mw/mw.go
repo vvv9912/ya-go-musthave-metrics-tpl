@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
@@ -177,9 +176,11 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 }
 func (m *Mw) MiddlwareCheckJSON(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-
+		res.Header().Set("Content-Type", "application/json")
 		if req.Header.Get("Content-Type") != "application/json" {
-			handler.HandlerErrType(res, req)
+			logger.Log.Info("Content-Type не application/json")
+
+			http.Error(res, "Failed to read request body", http.StatusBadRequest)
 			return
 		}
 
