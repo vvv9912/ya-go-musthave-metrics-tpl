@@ -21,6 +21,7 @@ func main() {
 	}
 }
 func run() error {
+	log.Println("Start server")
 	if err := logger.Initialize(flagLogLevel); err != nil {
 		return err
 	}

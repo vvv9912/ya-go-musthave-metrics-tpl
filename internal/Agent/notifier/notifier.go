@@ -139,9 +139,10 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 
 		}
 	}()
-	time.Sleep(time.Second)
+
 	go func() {
 		for {
+			time.Sleep(n.TimerSend)
 			select {
 			case <-ctx.Done():
 				// Обработка завершения программы
@@ -155,7 +156,7 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 				fmt.Println(err)
 				return
 			}
-			time.Sleep(n.TimerSend)
+			//time.Sleep(n.TimerSend)
 
 		}
 	}()
