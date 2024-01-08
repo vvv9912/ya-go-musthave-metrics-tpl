@@ -3,7 +3,6 @@ package notifier
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"log"
 	"strconv"
@@ -138,7 +137,7 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 			gauge, couter, err = n.NotifyPending()
 
 			if err != nil {
-				log.Println(err)
+				//log.Println(err)
 				return
 			}
 			time.Sleep(n.TimerUpdate)
@@ -159,7 +158,7 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 				err = n.SendNotification(ctx, gauge, couter)
 			}
 			if err != nil {
-				fmt.Println(err)
+				//fmt.Println(err)
 				return
 			}
 			//time.Sleep(n.TimerSend)
