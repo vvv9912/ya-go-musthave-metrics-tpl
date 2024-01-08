@@ -47,13 +47,13 @@ func parseFlags() {
 	// если интерфейс не реализован,
 	// здесь будет ошибка компиляции
 	var _ = flag.Value(addr)
-
+	//var restore string
 	flag.Var(addr, "a", "Net address host:port")
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")
 	flag.StringVar(&FileStoragePath, "f", "/tmp/metrics-db.json", "file storage path")
 	flag.IntVar(&timerSend, "i", 300, "send timer")
 	flag.BoolVar(&RESTORE, "r", true, "restore")
-
+	//flag.StringVar(&restore, "restore", "true", "restore")
 	flag.Parse()
 	URLserver = addr.String()
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
@@ -65,14 +65,14 @@ func parseFlags() {
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
 		FileStoragePath = envFileStoragePath
 	}
-	if envtimerSend := os.Getenv("FILE_STORAGE_PATH"); envtimerSend != "" {
+	if envtimerSend := os.Getenv("STORE_INTERVAL"); envtimerSend != "" {
 		num, err := strconv.Atoi(envtimerSend)
 		if err != nil {
 			logger.Log.Panic("timerSend must be int")
 		}
 		timerSend = num
 	}
-	if envRESTORE := os.Getenv("FILE_STORAGE_PATH"); envRESTORE != "" {
+	if envRESTORE := os.Getenv("RESTORE"); envRESTORE != "" {
 		boolValue, err := strconv.ParseBool(envRESTORE)
 		if err != nil {
 			logger.Log.Panic("RESTORE must be bool")
