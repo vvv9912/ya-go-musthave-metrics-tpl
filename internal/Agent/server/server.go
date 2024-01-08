@@ -41,8 +41,8 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		fmt.Println(err)
 		return err
 	}
-	zb.Close() // Закройте gzip.Writer, чтобы данные были записаны в buf
-	//fmt.Println(string(buf))
+	zb.Close()
+
 	_, err = client.R().SetHeaders(map[string]string{
 		"Content-Type": "application/json", "Content-Encoding": "gzip",
 	}).SetBody(buf).Post(url)
@@ -51,6 +51,7 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		fmt.Println(err)
 		return err
 	}
+
 	return nil
 }
 

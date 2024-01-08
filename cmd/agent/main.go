@@ -32,6 +32,7 @@ func run() error {
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
+
 	err := n.StartNotifyCron(ctx)
 	if err != nil {
 		return err

@@ -6,12 +6,14 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/project"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
 	"log"
 	"net/http"
+	"time"
 )
 
 type Server struct {
@@ -19,11 +21,18 @@ type Server struct {
 }
 
 func NewServer() *Server {
+
 	s := chi.NewRouter()
 	return &Server{s: s}
 }
 
-func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage storage.GaugeStorager, counterStorage storage.CounterStorager) error {
+func (s *Server) StartServer(
+	ctx context.Context,
+	addr string,
+	gaugeStorage storage.GaugeStorager,
+	counterStorage storage.CounterStorager, timeSend time.Duration, writer notifier.Writer) error {
+
+	e := notifier.NewNotifier(gaugeStorage, counterStorage, timeSend, writer)
 	p := project.NewProject(counterStorage, gaugeStorage)
 	h := handler.NewHandler(*p)
 	m := mw.Mw{
@@ -33,6 +42,7 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 	}
 	s.s.Use(m.MwLogger)
 	s.s.Use(m.MiddlewareGzip)
+
 	s.s.With(m.MiddlewareType).Post("/update/{type}/{SomeMetric}/{Value}", handler.HandlerSucess)
 	s.s.With(m.MiddlwareGetCounter).Get("/value/counter/{SomeMetric}", handler.HandlerGetCounter)
 	s.s.With(m.MiddlwareGetGauge).Get("/value/gauge/{SomeMetric}", handler.HandlerGetGauge)
@@ -49,6 +59,8 @@ func (s *Server) StartServer(ctx context.Context, addr string, gaugeStorage stor
 	}
 
 	ctxServer, cancel := context.WithCancel(ctx)
+
+	e.StartNotifier(ctxServer)
 
 	go func() {
 		logger.Log.Info("server start", zap.String("addr", addr))

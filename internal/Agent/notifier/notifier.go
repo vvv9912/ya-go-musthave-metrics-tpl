@@ -50,7 +50,9 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		wg.Add(1)
 		go func(key string, values string) {
 			defer wg.Done()
+
 			url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
+
 			err := n.PostReq(ctx, url)
 			if err != nil {
 				log.Println(err)
@@ -67,7 +69,9 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 				Delta: nil,
 				Value: &val,
 			}
+
 			data, err := json.Marshal(m)
+
 			if err != nil {
 				log.Println(err)
 			}
@@ -84,16 +88,16 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+
 		coun := strconv.FormatUint(counter, 10)
+
 		url := "http://" + n.URL + "/update/" + "counter" + "/" + "PollCount" + "/" + coun
+
 		err := n.PostReq(ctx, url)
 		if err != nil {
 			log.Println(err)
 		}
 
-		if err != nil {
-			log.Println(err)
-		}
 		counterInt64 := int64(counter)
 		m := model.Metrics{
 			ID:    "PollCount",
@@ -101,10 +105,12 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 			Delta: &counterInt64,
 			Value: nil,
 		}
+
 		data, err := json.Marshal(m)
 		if err != nil {
 			log.Println(err)
 		}
+
 		url2 := "http://" + n.URL + "/update/"
 		err = n.PostReqJSON(ctx, url2, data)
 		if err != nil {

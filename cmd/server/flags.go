@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"flag"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"os"
 	"strconv"
 	"strings"
@@ -49,6 +50,9 @@ func parseFlags() {
 
 	flag.Var(addr, "a", "Net address host:port")
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")
+	flag.StringVar(&FILE_STORAGE_PATH, "f", "/tmp/metrics-db.json", "file storage path")
+	flag.IntVar(&timerSend, "i", 1, "send timer")
+	flag.BoolVar(&RESTORE, "r", true, "restore")
 
 	flag.Parse()
 	URLserver = addr.String()
@@ -58,4 +62,22 @@ func parseFlags() {
 	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
 		flagLogLevel = envLogLevel
 	}
+	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
+		FILE_STORAGE_PATH = envFileStoragePath
+	}
+	if envtimerSend := os.Getenv("FILE_STORAGE_PATH"); envtimerSend != "" {
+		num, err := strconv.Atoi(envtimerSend)
+		if err != nil {
+			logger.Log.Panic("timerSend must be int")
+		}
+		timerSend = num
+	}
+	if envRESTORE := os.Getenv("FILE_STORAGE_PATH"); envRESTORE != "" {
+		boolValue, err := strconv.ParseBool(envRESTORE)
+		if err != nil {
+			logger.Log.Panic("RESTORE must be bool")
+		}
+		RESTORE = boolValue
+	}
+
 }
