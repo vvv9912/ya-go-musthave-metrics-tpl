@@ -129,8 +129,11 @@ func (m *Metrics) UpdateMetricsCounter() (uint64, error) {
 	if !ok {
 		return 0, errors.New("")
 	}
+
 	newValue := value + 1
+
 	m.MetricsCounter[PollCount] = newValue
+
 	return newValue, nil
 }
 
