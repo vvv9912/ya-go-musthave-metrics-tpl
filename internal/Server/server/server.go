@@ -49,7 +49,6 @@ func (s *Server) StartServer(
 
 	s.s.With(m.MiddlwareCheckJSON).Post("/update/", h.HandlerPostJSON)
 	s.s.With(m.MiddlwareCheckJSON).Post("/value/", h.HandlerGetJSON)
-	//	s.s.Post("/update/", handler.HandlerErrType)
 
 	s.s.Get("/", handler.HandlerGetMetrics(gaugeStorage, counterStorage))
 
