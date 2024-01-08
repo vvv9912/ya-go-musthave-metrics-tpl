@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/gzipwrapper"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/project"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
@@ -19,8 +20,14 @@ import (
 type Mw struct {
 	GaugeStorage   storage.GaugeStorager
 	CounterStorage storage.CounterStorager
+	project        project.Project
 	//	Log            *log.Logger
 }
+
+func NewMw(gaugeStorage storage.GaugeStorager, counterStorage storage.CounterStorager, project project.Project) *Mw {
+	return &Mw{GaugeStorage: gaugeStorage, CounterStorage: counterStorage, project: project}
+}
+
 type responseData struct {
 	status int
 	size   int
@@ -151,7 +158,10 @@ func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-
+		err = m.project.SendMetricstoFile()
+		if err != nil {
+			logger.Log.Error("ошибка отправки метрик в файл", zap.Error(err))
+		}
 		next.ServeHTTP(res, req)
 
 	})
@@ -175,7 +185,10 @@ func (m *Mw) MiddlewareCounter(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-
+		err = m.project.SendMetricstoFile()
+		if err != nil {
+			logger.Log.Error("ошибка отправки метрик в файл", zap.Error(err))
+		}
 		next.ServeHTTP(res, req)
 
 	})

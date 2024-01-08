@@ -11,7 +11,9 @@ import (
 type Writer interface {
 	WriteEvent(event *fileutils.Event) error
 }
-
+type NotifierSend interface {
+	NotifierPending() error
+}
 type Notifier struct {
 	gauge   model.GaugeStorager
 	counter model.CounterStorager
@@ -23,7 +25,27 @@ func NewNotifier(gauge model.GaugeStorager, counter model.CounterStorager, timer
 	return &Notifier{gauge: gauge, counter: counter, TimerSend: timerSend, Writer: writer}
 }
 
+// Отправка при таймере =0
+func (n *Notifier) NotifierPending() error {
+	if n.TimerSend != 0 {
+		return nil
+	}
+	gauge := n.gauge.GetAllGauge()
+	counter := n.counter.GetAllCounter()
+	err := n.WriteEvent(&fileutils.Event{
+		Gauge:   gauge,
+		Counter: counter,
+	})
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
 func (n *Notifier) StartNotifier(ctx context.Context) {
+	if n.TimerSend == 0 {
+		return
+	}
 	go func() {
 		for {
 			select {
@@ -52,4 +74,5 @@ func (n *Notifier) StartNotifier(ctx context.Context) {
 		}
 
 	}()
+
 }

@@ -1,14 +1,18 @@
 package project
 
-import "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
+import (
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
+)
 
 type Project struct {
 	counter model.CounterStorager
 	gauge   model.GaugeStorager
+	notify  notifier.NotifierSend
 }
 
-func NewProject(counter model.CounterStorager, gauge model.GaugeStorager) *Project {
-	return &Project{counter: counter, gauge: gauge}
+func NewProject(counter model.CounterStorager, gauge model.GaugeStorager, notify notifier.NotifierSend) *Project {
+	return &Project{counter: counter, gauge: gauge, notify: notify}
 }
 func (p *Project) GetMetrics(metrics model.Metrics) (model.Metrics, error) {
 	switch metrics.MType {
@@ -57,4 +61,8 @@ func (p *Project) PutGauge(key string, val float64) error {
 
 func (p *Project) PutCounter(key string, val uint64) error {
 	return p.counter.UpdateCounter(key, val)
+}
+
+func (p *Project) SendMetricstoFile() error {
+	return p.notify.NotifierPending()
 }

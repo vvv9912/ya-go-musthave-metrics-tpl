@@ -8,8 +8,8 @@ import (
 )
 
 type Event struct {
-	Gauge   map[string]float64 `json:"gauge"`
-	Counter map[string]uint64  `json:"counter"`
+	Gauge   map[string]float64 `json:"gauge,omitempty"`
+	Counter map[string]uint64  `json:"counter,omitempty"`
 }
 
 type Producer struct {

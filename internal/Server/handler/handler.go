@@ -15,22 +15,17 @@ import (
 )
 
 type Handler struct {
-	P project.Project
+	project project.Project
 }
 
 func NewHandler(p project.Project) *Handler {
-	return &Handler{P: p}
+	return &Handler{project: p}
 }
 
 func HandlerSucess(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	body := fmt.Sprintf("%v", http.StatusOK)
-	res.Write([]byte(body))
-}
-func HandlerErrType(res http.ResponseWriter, req *http.Request) {
-	res.WriteHeader(http.StatusBadRequest)
-	body := fmt.Sprintf("%v", http.StatusBadRequest)
 	res.Write([]byte(body))
 }
 
@@ -88,11 +83,15 @@ func (h *Handler) HandlerPostJSON(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
-	err = h.P.PutMetrics(metrics)
+	err = h.project.PutMetrics(metrics)
 	if err != nil {
 		logger.Log.Info("Failed to read request body", zap.Error(err))
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
+	}
+	err = h.project.SendMetricstoFile()
+	if err != nil {
+		logger.Log.Error("ошибка отправки метрик в файл", zap.Error(err))
 	}
 	response := body
 	res.Header().Set("Content-Type", "application/json")
@@ -114,7 +113,7 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
-	metrics, err = h.P.GetMetrics(metrics)
+	metrics, err = h.project.GetMetrics(metrics)
 	if err != nil {
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return

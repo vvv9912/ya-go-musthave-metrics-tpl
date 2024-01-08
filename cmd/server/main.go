@@ -20,13 +20,6 @@ var timerSend int
 var FileStoragePath string
 var RESTORE bool
 
-//metricstest -test.v -test.run=^TestIteration9$ \
-//-agent-binary-path=cmd/agent/agent \
-//-binary-path=cmd/server/server \
-//-file-storage-path=tmp/ada.json \
-//-server-port=8080 \
-//-source-path=.
-
 func main() {
 	parseFlags()
 
@@ -47,7 +40,6 @@ func run() error {
 	counter := storage.NewCounterStorage()
 	gauge := storage.NewGaugeStorage()
 
-	//	RESTORE = false
 	if RESTORE {
 
 		consumer, err := fileutils.NewConsumer(FileStoragePath)
@@ -55,6 +47,7 @@ func run() error {
 			logger.Log.Info("error consumer", zap.Error(err))
 			//return err
 		}
+
 		event, err := consumer.ReadLastEvent(FileStoragePath)
 		if err != nil {
 			logger.Log.Info("error read last event", zap.Error(err))

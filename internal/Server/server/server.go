@@ -32,14 +32,13 @@ func (s *Server) StartServer(
 	gaugeStorage storage.GaugeStorager,
 	counterStorage storage.CounterStorager, timeSend time.Duration, writer notifier.Writer) error {
 
-	e := notifier.NewNotifier(gaugeStorage, counterStorage, timeSend, writer)
-	p := project.NewProject(counterStorage, gaugeStorage)
-	h := handler.NewHandler(*p)
-	m := mw.Mw{
-		GaugeStorage:   gaugeStorage,
-		CounterStorage: counterStorage,
-		//	Log:            s.Logger,
-	}
+	var (
+		e = notifier.NewNotifier(gaugeStorage, counterStorage, timeSend, writer)
+		p = project.NewProject(counterStorage, gaugeStorage, e)
+		h = handler.NewHandler(*p)
+		m = mw.NewMw(gaugeStorage, counterStorage, *p)
+	)
+
 	s.s.Use(m.MwLogger)
 	s.s.Use(m.MiddlewareGzip)
 
