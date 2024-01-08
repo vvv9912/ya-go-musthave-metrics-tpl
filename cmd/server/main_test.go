@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"log"
 	"testing"
 	"time"
 )
@@ -27,8 +29,13 @@ func TestStartServer(t *testing.T) {
 		time.Sleep(1 * time.Second)
 		cancel()
 	}()
+	produce, err := fileutils.NewProducer("test.json")
+	if err != nil {
+		log.Println(err)
+	}
+	defer produce.Close()
 
-	err := s.StartServer(ctx, "localhost:8080", gauge, counter)
+	err = s.StartServer(ctx, "localhost:8080", gauge, counter, time.Duration(1*time.Second), produce)
 	if err != nil {
 		t.Errorf("Expected no error, but got: %v", err)
 	}

@@ -37,8 +37,10 @@ func run() error {
 
 	counter := storage.NewCounterStorage()
 	gauge := storage.NewGaugeStorage()
+
 	//	RESTORE = false
 	if RESTORE {
+
 		consumer, err := fileutils.NewConsumer(FILE_STORAGE_PATH)
 		if err != nil {
 			logger.Log.Panic("error consumer", zap.Error(err))
