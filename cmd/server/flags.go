@@ -51,7 +51,7 @@ func parseFlags() {
 	flag.Var(addr, "a", "Net address host:port")
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")
 	flag.StringVar(&FileStoragePath, "f", "/tmp/metrics-db.json", "file storage path")
-	flag.IntVar(&timerSend, "i", 1, "send timer")
+	flag.IntVar(&timerSend, "i", 300, "send timer")
 	flag.BoolVar(&RESTORE, "r", true, "restore")
 
 	flag.Parse()

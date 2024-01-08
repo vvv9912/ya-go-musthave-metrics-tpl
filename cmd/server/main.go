@@ -20,6 +20,13 @@ var timerSend int
 var FileStoragePath string
 var RESTORE bool
 
+//metricstest -test.v -test.run=^TestIteration9$ \
+//-agent-binary-path=cmd/agent/agent \
+//-binary-path=cmd/server/server \
+//-file-storage-path=tmp/ada.json \
+//-server-port=8080 \
+//-source-path=.
+
 func main() {
 	parseFlags()
 
