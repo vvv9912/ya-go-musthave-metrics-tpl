@@ -1,11 +1,18 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	service_mock "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service/mock"
 	"io"
 	"net/http"
 	"net/http/httptest"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"testing"
 )
 
@@ -63,5 +70,70 @@ func TestHandlerGauge(t *testing.T) {
 		assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 
 		//	})
+	}
+}
+func TestHandler_HandlerGetJSON(t *testing.T) {
+	type mockBehavior func(s *service_mock.MockMetrics, metric model.Metrics)
+
+	var val float64
+	val = 0.123
+	forTestMetric := model.Metrics{
+		ID:    "123",
+		MType: "gauge",
+		Delta: nil,
+		Value: &val,
+	}
+	jsonforTestMetric, err := json.Marshal(forTestMetric)
+	if err != nil {
+		t.Fatal(err)
+	}
+	testTable := []struct {
+		name                string
+		inputBody           string
+		inputMetric         model.Metrics
+		mockBehavior        mockBehavior
+		expectedStatusCode  int
+		expectedRequestBody string
+	}{
+		{
+			name:        "positive test #1",
+			inputBody:   string(jsonforTestMetric),
+			inputMetric: forTestMetric,
+			mockBehavior: func(s *service_mock.MockMetrics, metric model.Metrics) {
+				s.EXPECT().GetMetrics(gomock.Eq(metric)).Return(model.Metrics{
+					ID:    "123",
+					MType: "gauge",
+					Delta: nil,
+					Value: &val,
+				}, nil)
+			},
+			expectedStatusCode:  200,
+			expectedRequestBody: string(jsonforTestMetric),
+		},
+	}
+
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
+			// создаем mock проекта
+			metrics := service_mock.NewMockMetrics(c)
+
+			serviceMock := &service.Service{
+				Metrics: metrics,
+			}
+
+			handler := Handler{Service: serviceMock}
+			testCase.mockBehavior(metrics, testCase.inputMetric)
+
+			w := httptest.NewRecorder()
+
+			req := httptest.NewRequest("get", "/", bytes.NewBufferString(testCase.inputBody))
+
+			handler.HandlerGetJSON(w, req)
+
+			assert.Equal(t, w.Code, testCase.expectedStatusCode)
+
+		})
 	}
 }

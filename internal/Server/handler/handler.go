@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/project"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
@@ -15,11 +15,11 @@ import (
 )
 
 type Handler struct {
-	project project.Project
+	Service *service.Service
 }
 
-func NewHandler(p project.Project) *Handler {
-	return &Handler{project: p}
+func NewHandler(s *service.Service) *Handler {
+	return &Handler{Service: s}
 }
 
 func HandlerSucess(res http.ResponseWriter, req *http.Request) {
@@ -83,13 +83,13 @@ func (h *Handler) HandlerPostJSON(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
-	err = h.project.PutMetrics(metrics)
+	err = h.Service.Metrics.PutMetrics(metrics)
 	if err != nil {
 		logger.Log.Info("Failed to read request body", zap.Error(err))
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
-	err = h.project.SendMetricstoFile()
+	err = h.Service.Metrics.SendMetricstoFile()
 	if err != nil {
 		logger.Log.Error("ошибка отправки метрик в файл", zap.Error(err))
 	}
@@ -113,7 +113,8 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
-	metrics, err = h.project.GetMetrics(metrics)
+
+	metrics, err = h.Service.Metrics.GetMetrics(metrics)
 	if err != nil {
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return

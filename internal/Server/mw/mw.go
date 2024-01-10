@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/gzipwrapper"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/project"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
@@ -18,14 +17,11 @@ import (
 )
 
 type Mw struct {
-	GaugeStorage   storage.GaugeStorager
-	CounterStorage storage.CounterStorager
-	project        project.Project
-	//	Log            *log.Logger
+	Service *service.Service
 }
 
-func NewMw(gaugeStorage storage.GaugeStorager, counterStorage storage.CounterStorager, project project.Project) *Mw {
-	return &Mw{GaugeStorage: gaugeStorage, CounterStorage: counterStorage, project: project}
+func NewMw(s *service.Service) *Mw {
+	return &Mw{Service: s}
 }
 
 type responseData struct {
@@ -140,6 +136,22 @@ func (m *Mw) MiddlewareType(next http.Handler) http.Handler {
 		}
 	})
 }
+func (m *Mw) MiddlewareType2(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		typeMetrics := chi.URLParam(req, "type")
+		switch typeMetrics {
+		case "counter":
+			m.MiddlewareCounter(next).ServeHTTP(res, req)
+			return
+		case "gauge":
+			m.MiddlewareGauge(next).ServeHTTP(res, req)
+			return
+		default:
+			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+	})
+}
 
 // mw для gauge Post запросы, работа с хранилищем
 func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {
@@ -153,12 +165,13 @@ func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {
 			return
 		}
 		logger.Log.Info("Обновление значения метрик", zap.Float64(name, value))
-		err = m.GaugeStorage.UpdateGauge(name, value)
+		err = m.Service.GaugeStorager.UpdateGauge(name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		err = m.project.SendMetricstoFile()
+
+		err = m.Service.Metrics.SendMetricstoFile()
 		if err != nil {
 			logger.Log.Error("ошибка отправки метрик в файл", zap.Error(err))
 		}
@@ -180,12 +193,12 @@ func (m *Mw) MiddlewareCounter(next http.Handler) http.Handler {
 			return
 		}
 		logger.Log.Info("Обновление значения метрик", zap.Uint64(name, value))
-		err = m.CounterStorage.UpdateCounter(name, value)
+		err = m.Service.CounterStorager.UpdateCounter(name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		err = m.project.SendMetricstoFile()
+		err = m.Service.Metrics.SendMetricstoFile()
 		if err != nil {
 			logger.Log.Error("ошибка отправки метрик в файл", zap.Error(err))
 		}
@@ -199,7 +212,7 @@ func (m *Mw) MiddlwareGetGauge(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		name := chi.URLParam(req, "SomeMetric")
 
-		val, err := m.GaugeStorage.GetGauge(name)
+		val, err := m.Service.Metrics.GetGauge(name)
 
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusNotFound), http.StatusNotFound)
@@ -221,12 +234,13 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		name := chi.URLParam(req, "SomeMetric")
 
-		val, err := m.CounterStorage.GetCounter(name)
+		val, err := m.Service.Metrics.GetCounter(name)
 
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusNotFound), http.StatusNotFound)
 			logger.Log.Info("Получение значения метрики из хранилища:", zap.Uint64(name, val), zap.Error(err))
-			err = m.CounterStorage.UpdateCounter(name, http.StatusNotFound) //Зачем добавлять значение метрики 404, если не найдено?. Без этого тест не проходит
+
+			err = m.Service.CounterStorager.UpdateCounter(name, http.StatusNotFound) //Зачем добавлять значение метрики 404, если не найдено?. Без этого тест не проходит
 			if err != nil {
 				log.Println(err)
 				return

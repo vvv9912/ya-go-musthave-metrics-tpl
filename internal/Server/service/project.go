@@ -1,20 +1,19 @@
-package project
+package service
 
 import (
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
-type Project struct {
-	counter model.CounterStorager
-	gauge   model.GaugeStorager
-	notify  notifier.NotifierSend
+type MeticsService struct {
+	counter CounterStorager
+	gauge   GaugeStorager
+	notify  NotifierSend //н
 }
 
-func NewProject(counter model.CounterStorager, gauge model.GaugeStorager, notify notifier.NotifierSend) *Project {
-	return &Project{counter: counter, gauge: gauge, notify: notify}
+func NewMeticsService(counter CounterStorager, gauge GaugeStorager, notify NotifierSend) *MeticsService {
+	return &MeticsService{counter: counter, gauge: gauge, notify: notify}
 }
-func (p *Project) GetMetrics(metrics model.Metrics) (model.Metrics, error) {
+func (p *MeticsService) GetMetrics(metrics model.Metrics) (model.Metrics, error) {
 	switch metrics.MType {
 	case "counter":
 
@@ -40,7 +39,7 @@ func (p *Project) GetMetrics(metrics model.Metrics) (model.Metrics, error) {
 	}
 	return model.Metrics{}, nil
 }
-func (p *Project) PutMetrics(metrics model.Metrics) error {
+func (p *MeticsService) PutMetrics(metrics model.Metrics) error {
 	switch metrics.MType {
 	case "counter":
 		return p.PutCounter(metrics.ID, uint64(*metrics.Delta))
@@ -49,20 +48,20 @@ func (p *Project) PutMetrics(metrics model.Metrics) error {
 	}
 	return nil
 }
-func (p *Project) GetCounter(key string) (uint64, error) {
+func (p *MeticsService) GetCounter(key string) (uint64, error) {
 	return p.counter.GetCounter(key)
 }
-func (p *Project) GetGauge(key string) (float64, error) {
+func (p *MeticsService) GetGauge(key string) (float64, error) {
 	return p.gauge.GetGauge(key)
 }
-func (p *Project) PutGauge(key string, val float64) error {
+func (p *MeticsService) PutGauge(key string, val float64) error {
 	return p.gauge.UpdateGauge(key, val)
 }
 
-func (p *Project) PutCounter(key string, val uint64) error {
+func (p *MeticsService) PutCounter(key string, val uint64) error {
 	return p.counter.UpdateCounter(key, val)
 }
 
-func (p *Project) SendMetricstoFile() error {
+func (p *MeticsService) SendMetricstoFile() error {
 	return p.notify.NotifierPending()
 }

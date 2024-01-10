@@ -37,6 +37,7 @@ func run() error {
 	logger.Log.Info("timerSend=", zap.Int("timerSend", timerSend))
 	logger.Log.Info("FileStoragePath=" + FileStoragePath)
 	logger.Log.Info("Restore=", zap.Bool("RESTORE", RESTORE))
+
 	counter := storage.NewCounterStorage()
 	gauge := storage.NewGaugeStorage()
 

@@ -7,7 +7,7 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/project"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
@@ -33,10 +33,10 @@ func (s *Server) StartServer(
 	counterStorage storage.CounterStorager, timeSend time.Duration, writer notifier.Writer) error {
 
 	var (
-		e = notifier.NewNotifier(gaugeStorage, counterStorage, timeSend, writer)
-		p = project.NewProject(counterStorage, gaugeStorage, e)
-		h = handler.NewHandler(*p)
-		m = mw.NewMw(gaugeStorage, counterStorage, *p)
+		e       = notifier.NewNotifier(gaugeStorage, counterStorage, timeSend, writer)
+		Service = service.NewService(counterStorage, gaugeStorage, e)
+		h       = handler.NewHandler(Service)
+		m       = mw.NewMw(Service)
 	)
 
 	s.s.Use(m.MwLogger)
