@@ -42,7 +42,11 @@ func (s *Server) StartServer(
 	s.s.Use(m.MwLogger)
 	s.s.Use(m.MiddlewareGzip)
 
-	s.s.With(m.MiddlewareType).Post("/update/{type}/{SomeMetric}/{Value}", handler.HandlerSucess)
+	//s.s.With(m.MiddlewareType).Post("/update/{type}/{SomeMetric}/{Value}", handler.HandlerSucess)
+
+	s.s.With(m.MiddlewareCounter).Post("/update/counter/{SomeMetric}/{Value}", handler.HandlerSucess)
+	s.s.With(m.MiddlewareGauge).Post("/update/gauge/{SomeMetric}/{Value}", handler.HandlerSucess)
+
 	s.s.With(m.MiddlwareGetCounter).Get("/value/counter/{SomeMetric}", handler.HandlerGetCounter)
 	s.s.With(m.MiddlwareGetGauge).Get("/value/gauge/{SomeMetric}", handler.HandlerGetGauge)
 

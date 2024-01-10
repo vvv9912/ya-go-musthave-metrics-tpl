@@ -136,22 +136,8 @@ func (m *Mw) MiddlewareType(next http.Handler) http.Handler {
 		}
 	})
 }
-func (m *Mw) MiddlewareType2(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		typeMetrics := chi.URLParam(req, "type")
-		switch typeMetrics {
-		case "counter":
-			m.MiddlewareCounter(next).ServeHTTP(res, req)
-			return
-		case "gauge":
-			m.MiddlewareGauge(next).ServeHTTP(res, req)
-			return
-		default:
-			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
-			return
-		}
-	})
-}
+
+//тк для mW не нужна больше структура, можно сделать так
 
 // mw для gauge Post запросы, работа с хранилищем
 func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {

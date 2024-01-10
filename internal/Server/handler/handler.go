@@ -129,3 +129,33 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusOK)
 	res.Write(response)
 }
+func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
+	body, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		// Обработка ошибки чтения тела запроса
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		return
+	}
+	var metrics model.Metrics
+	err = json.Unmarshal(body, &metrics)
+	if err != nil {
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		return
+	}
+
+	metrics, err = h.Service.Metrics.GetMetrics(metrics)
+	if err != nil {
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		return
+	}
+
+	response, err := json.Marshal(metrics)
+	if err != nil {
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		return
+	}
+
+	res.WriteHeader(http.StatusOK)
+	res.Write(response)
+}
