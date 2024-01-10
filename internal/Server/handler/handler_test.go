@@ -75,8 +75,8 @@ func TestHandlerGauge(t *testing.T) {
 func TestHandler_HandlerGetJSON(t *testing.T) {
 	type mockBehavior func(s *service_mock.MockMetrics, metric model.Metrics)
 
-	var val float64
-	val = 0.123
+	val := 0.123
+
 	forTestMetric := model.Metrics{
 		ID:    "123",
 		MType: "gauge",
