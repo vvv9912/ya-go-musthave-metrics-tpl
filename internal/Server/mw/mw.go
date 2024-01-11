@@ -66,34 +66,70 @@ func (m *Mw) MwLogger(next http.Handler) http.Handler {
 
 	})
 }
+
+// проверяем, что клиент умеет получать от сервера сжатые данные в определенном формате
+func supportContentType(acceptType map[string]struct{}, acceptTypeReq string) bool {
+	var (
+		supportContentType = false
+	)
+
+	if acceptTypeReq == "*/*" {
+		supportContentType = true
+	} else {
+		for key, _ := range acceptType {
+			if strings.Contains(acceptTypeReq, key) {
+				supportContentType = true
+			}
+		}
+	}
+	if !supportContentType {
+		return false
+	}
+
+	return true
+}
+
+// проверяем, что клиент поддерживает соответствующий content-type
+func supportEnodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
+	var (
+		supportEncoding = false
+	)
+
+	for key, _ := range accpetEncoding {
+		if strings.Contains(acceptEncodingReq, key) {
+			supportEncoding = true
+		}
+	}
+
+	if !supportEncoding {
+		return false
+	}
+
+	return true
+}
 func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// по умолчанию устанавливаем оригинальный http.ResponseWriter как тот,
 		// который будем передавать следующей функции
 		ow := w
 
-		// Проверка content-type
-		acceptType := make(map[string]struct{})
-		acceptType["application/json"] = struct{}{}
-		acceptType["html/text"] = struct{}{}
-		acceptType["text/html"] = struct{}{}
+		acceptType := map[string]struct{}{
+			"application/json": struct{}{},
+			"text/html":        struct{}{},
+			"html/text":        struct{}{},
+		}
 
-		// проверяем, что клиент умеет получать от сервера сжатые данные в формате gzip и соответствует content-type
-		acceptEncoding := r.Header.Get("Accept-Encoding")
-		supportsGzip := strings.Contains(acceptEncoding, "gzip")
+		supportGzip := map[string]struct{}{
+			"gzip": struct{}{},
+		}
 
-		acceptContentType := r.Header.Get("Accept")
-		_, supportContentType := acceptType[acceptContentType]
-
-		if supportContentType {
-			if supportsGzip {
-				// оборачиваем оригинальный http.ResponseWriter новым с поддержкой сжатия
-				cw := gzipwrapper.NewCompressWriter(w)
-				// меняем оригинальный http.ResponseWriter на новый
-				ow = cw
-				// не забываем отправить клиенту все сжатые данные после завершения middleware
-				defer cw.Close()
-			}
+		if supportContentType(acceptType, r.Header.Get("Accept")) && supportEnodingType(supportGzip, r.Header.Get("Accept-Encoding")) {
+			// оборачиваем оригинальный http.ResponseWriter новым с поддержкой сжатия
+			cw := gzipwrapper.NewCompressWriter(w)
+			// меняем оригинальный http.ResponseWriter на новый
+			ow = cw
+			// не забываем отправить клиенту все сжатые данные после завершения middleware
+			defer cw.Close()
 		}
 
 		// проверяем, что клиент отправил серверу сжатые данные в формате gzip

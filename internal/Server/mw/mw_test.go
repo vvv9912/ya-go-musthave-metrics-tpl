@@ -433,3 +433,117 @@ func TestMw_MiddlewareCounter(t *testing.T) {
 
 	}
 }
+
+func Test_supportEncodingType(t *testing.T) {
+	type args struct {
+		accpetEncoding    map[string]struct{}
+		acceptEncodingReq string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "#1 positive test",
+			args: args{
+				accpetEncoding:    map[string]struct{}{"gzip": {}},
+				acceptEncodingReq: "gzip",
+			},
+			want: true,
+		},
+
+		{
+			name: "#2 negative test",
+			args: args{
+				accpetEncoding:    map[string]struct{}{"gzip": {}},
+				acceptEncodingReq: "",
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Log(tt.name)
+			got := supportEnodingType(tt.args.accpetEncoding, tt.args.acceptEncodingReq)
+			assert.Equal(t, tt.want, got, "supportEnodingType, want: %v, got: %v", tt.want, got)
+		})
+	}
+}
+func Test_supportContentType(t *testing.T) {
+	type args struct {
+		acceptType    map[string]struct{}
+		acceptTypeReq string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "#1 positive test",
+			args: args{
+				acceptType:    map[string]struct{}{"application/json": {}},
+				acceptTypeReq: "application/json",
+			},
+			want: true,
+		},
+		{
+			name: "#2 positive test",
+			args: args{
+				acceptType: map[string]struct{}{
+					"application/json": struct{}{},
+					"text/html":        struct{}{},
+					"html/text":        struct{}{},
+				},
+				acceptTypeReq: "text/html",
+			},
+			want: true,
+		},
+		{
+			name: "#3 positive test",
+			args: args{
+				acceptType: map[string]struct{}{
+					"application/json": struct{}{},
+					"text/html":        struct{}{},
+					"html/text":        struct{}{},
+				},
+				acceptTypeReq: "*/*",
+			},
+			want: true,
+		},
+		{
+			name: "#4 positive test",
+			args: args{
+				acceptType: map[string]struct{}{
+					"application/json": struct{}{},
+					"text/html":        struct{}{},
+					"html/text":        struct{}{},
+				},
+				acceptTypeReq: "application/json; charset=utf-8",
+			},
+			want: true,
+		},
+		{
+			name: "#5 negative test",
+			args: args{
+				acceptType: map[string]struct{}{
+					"application/json": struct{}{},
+					"text/html":        struct{}{},
+					"html/text":        struct{}{},
+				},
+				acceptTypeReq: "text/plain",
+			},
+			want: false,
+		},
+
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Log(tt.name)
+			got := supportContentType(tt.args.acceptType, tt.args.acceptTypeReq)
+			assert.Equal(t, tt.want, got, "supportType: want: %v, got: %v", tt.want, got)
+		})
+	}
+}
