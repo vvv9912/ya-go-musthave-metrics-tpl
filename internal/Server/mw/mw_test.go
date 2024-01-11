@@ -465,7 +465,7 @@ func Test_supportEncodingType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Log(tt.name)
-			got := supportEnodingType(tt.args.accpetEncoding, tt.args.acceptEncodingReq)
+			got := supportEncodingType(tt.args.accpetEncoding, tt.args.acceptEncodingReq)
 			assert.Equal(t, tt.want, got, "supportEnodingType, want: %v, got: %v", tt.want, got)
 		})
 	}

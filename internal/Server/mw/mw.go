@@ -49,20 +49,20 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 func (m *Mw) MwLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		responsedata := &responseData{
+		data := &responseData{
 			status: 0,
 			size:   0,
 		}
 		lw := loggingResponseWriter{
 			ResponseWriter: w,
-			responseData:   responsedata,
+			responseData:   data,
 		}
 		next.ServeHTTP(&lw, r)
 		duration := time.Since(start)
 		//Сведения о запросах должны содержать URI, метод запроса и время, затраченное на его выполнение.
 		//Сведения об ответах должны содержать код статуса и размер содержимого ответа.
 		logger.Log.Info("Сведения о запросах", zap.String("URI", r.RequestURI), zap.String("method", r.Method), zap.Duration("duration", duration))
-		logger.Log.Info("Сведения об ответах", zap.Int("status", responsedata.status), zap.Int("size", responsedata.size))
+		logger.Log.Info("Сведения об ответах", zap.Int("status", data.status), zap.Int("size", data.size))
 
 	})
 }
@@ -87,7 +87,7 @@ func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) boo
 }
 
 // проверяем, что клиент поддерживает соответствующий content-type
-func supportEnodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
+func supportEncodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
 	var (
 		supportEncoding = false
 	)
@@ -117,7 +117,7 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 		}
 
 		supportAccept := supportAcceptType(acceptType, r.Header.Get("Accept"))
-		supportEncoding := supportEnodingType(supportGzip, r.Header.Get("Accept-Encoding"))
+		supportEncoding := supportEncodingType(supportGzip, r.Header.Get("Accept-Encoding"))
 
 		if supportAccept && supportEncoding {
 			// оборачиваем оригинальный http.ResponseWriter новым с поддержкой сжатия
@@ -129,7 +129,7 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 		}
 
 		// проверяем, что клиент отправил серверу сжатые данные в формате gzip
-		supportContentEncoding := supportEnodingType(supportGzip, r.Header.Get("Content-Encoding"))
+		supportContentEncoding := supportEncodingType(supportGzip, r.Header.Get("Content-Encoding"))
 
 		if supportContentEncoding {
 			// оборачиваем тело запроса в io.Reader с поддержкой декомпрессии
