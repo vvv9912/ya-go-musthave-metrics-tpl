@@ -76,15 +76,10 @@ func (c *Consumer) ReadEvent() (*Event, error) {
 	return event, nil
 }
 func (c *Consumer) ReadLastEvent(fileName string) (*Event, error) {
-	consumer, err := NewConsumer(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer consumer.Close()
 
 	var lastEvent *Event
 	for {
-		event, err := consumer.ReadEvent()
+		event, err := c.ReadEvent()
 		if err != nil {
 			if err == io.EOF { // Достигнут конец файла
 				break

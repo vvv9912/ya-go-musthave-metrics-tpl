@@ -70,20 +70,20 @@ func (m *Mw) MwLogger(next http.Handler) http.Handler {
 // проверяем, что клиент умеет получать от сервера сжатые данные в определенном формате
 func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) bool {
 	var (
-		supContentType = false
+		supportContent = false
 	)
 
 	if acceptTypeReq == "*/*" {
-		supContentType = true
+		supportContent = true
 	} else {
-		for key, _ := range acceptType {
+		for key := range acceptType {
 			if strings.Contains(acceptTypeReq, key) {
-				supContentType = true
+				supportContent = true
 			}
 		}
 	}
 
-	return supContentType
+	return supportContent
 }
 
 // проверяем, что клиент поддерживает соответствующий content-type
@@ -92,7 +92,7 @@ func supportEnodingType(accpetEncoding map[string]struct{}, acceptEncodingReq st
 		supportEncoding = false
 	)
 
-	for key, _ := range accpetEncoding {
+	for key := range accpetEncoding {
 		if strings.Contains(acceptEncodingReq, key) {
 			supportEncoding = true
 		}
@@ -115,11 +115,11 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 		supportGzip := map[string]struct{}{
 			"gzip": struct{}{},
 		}
-		acceptReq := r.Header.Get("Accept")
-		accept := supportAcceptType(acceptType, acceptReq)
-		encodingReq := r.Header.Get("Accept-Encoding")
-		encoding := supportEnodingType(supportGzip, encodingReq)
-		if accept && encoding {
+
+		supportAccept := supportAcceptType(acceptType, r.Header.Get("Accept"))
+		supportEncoding := supportEnodingType(supportGzip, r.Header.Get("Accept-Encoding"))
+
+		if supportAccept && supportEncoding {
 			// оборачиваем оригинальный http.ResponseWriter новым с поддержкой сжатия
 			cw := gzipwrapper.NewCompressWriter(w)
 			// меняем оригинальный http.ResponseWriter на новый
@@ -129,10 +129,9 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 		}
 
 		// проверяем, что клиент отправил серверу сжатые данные в формате gzip
-		contentEncoding := r.Header.Get("Content-Encoding") //todo
-		sendsGzip := strings.Contains(contentEncoding, "gzip")
+		supportContentEncoding := supportEnodingType(supportGzip, r.Header.Get("Content-Encoding"))
 
-		if sendsGzip {
+		if supportContentEncoding {
 			// оборачиваем тело запроса в io.Reader с поддержкой декомпрессии
 			cr, err := gzipwrapper.NewCompressReader(r.Body)
 			if err != nil {
@@ -276,7 +275,8 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 func (m *Mw) MiddlwareCheckJSON(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Set("Content-Type", "application/json")
-		if req.Header.Get("Content-Type") != "application/json" {
+
+		if strings.Contains(req.Header.Get("Content-Type"), "application/json") {
 			logger.Log.Info("Content-Type не application/json")
 
 			http.Error(res, "Failed to read request body", http.StatusBadRequest)

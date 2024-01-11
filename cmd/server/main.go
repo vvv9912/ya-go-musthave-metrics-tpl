@@ -46,7 +46,7 @@ func run() error {
 		consumer, err := fileutils.NewConsumer(FileStoragePath)
 		if err != nil {
 			logger.Log.Info("error consumer", zap.Error(err))
-			//return err
+			return err
 		}
 
 		event, err := consumer.ReadLastEvent(FileStoragePath)
@@ -70,7 +70,7 @@ func run() error {
 			}
 		}
 
-		defer consumer.Close()
+		consumer.Close()
 	}
 	s := server.NewServer()
 
