@@ -99,33 +99,3 @@ func (c *Consumer) ReadLastEvent(fileName string) (*Event, error) {
 func (c *Consumer) Close() error {
 	return c.file.Close()
 }
-
-//func main() {
-//	fileName := "events.log"
-//	defer os.Remove(fileName)
-//
-//	Producer, err := NewProducer(fileName)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	defer Producer.Close()
-//
-//	Consumer, err := NewConsumer(fileName)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	defer Consumer.Close()
-//
-//	for _, event := range events {
-//		if err := Producer.WriteEvent(event); err != nil {
-//			log.Fatal(err)
-//		}
-//
-//		readEvent, err := Consumer.ReadEvent()
-//		if err != nil {
-//			log.Fatal(err)
-//		}
-//
-//		fmt.Println(readEvent)
-//	}
-//}
