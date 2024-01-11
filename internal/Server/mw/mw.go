@@ -278,7 +278,6 @@ func (m *Mw) MiddlwareCheckJSON(next http.Handler) http.Handler {
 
 		if req.Header.Get("Content-Type") != "application/json" {
 			logger.Log.Info("Content-Type не application/json")
-
 			http.Error(res, "Failed to read request body", http.StatusBadRequest)
 			return
 		}
