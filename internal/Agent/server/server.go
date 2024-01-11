@@ -21,14 +21,14 @@ func NewPostRequest() *PostRequest {
 }
 
 func (p *PostRequest) PostReq(ctx context.Context, url string) error {
-	//client := resty.New()
-	//_, err := client.R().SetHeaders(map[string]string{
-	//	"Content-Type": "text/plain",
-	//}).Post(url)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return err
-	//}
+	client := resty.New()
+	_, err := client.R().SetHeaders(map[string]string{
+		"Content-Type": "text/plain",
+	}).Post(url)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	return nil
 }
 func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) error {

@@ -542,7 +542,7 @@ func Test_supportContentType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Log(tt.name)
-			got := supportContentType(tt.args.acceptType, tt.args.acceptTypeReq)
+			got := supportAcceptType(tt.args.acceptType, tt.args.acceptTypeReq)
 			assert.Equal(t, tt.want, got, "supportType: want: %v, got: %v", tt.want, got)
 		})
 	}
