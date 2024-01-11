@@ -110,19 +110,19 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 	var metrics model.Metrics
 	err = json.Unmarshal(body, &metrics)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		http.Error(res, "Failed to retrieve metrics", http.StatusInternalServerError)
 		return
 	}
 
 	metrics, err = h.Service.Metrics.GetMetrics(metrics)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		http.Error(res, "Failed to get Metrics", http.StatusNotFound)
 		return
 	}
 
 	response, err := json.Marshal(metrics)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		http.Error(res, "Failed to unmarshal metrics", http.StatusInternalServerError)
 		return
 	}
 
@@ -133,26 +133,25 @@ func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 
 	if err != nil {
-		// Обработка ошибки чтения тела запроса
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
 	var metrics model.Metrics
 	err = json.Unmarshal(body, &metrics)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		http.Error(res, "Failed to retrieve metrics", http.StatusInternalServerError)
 		return
 	}
 
 	metrics, err = h.Service.Metrics.GetMetrics(metrics)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		http.Error(res, "Failed to get Metrics", http.StatusNotFound)
 		return
 	}
 
 	response, err := json.Marshal(metrics)
 	if err != nil {
-		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		http.Error(res, "Failed to marshal metrics", http.StatusInternalServerError)
 		return
 	}
 
