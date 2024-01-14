@@ -68,6 +68,7 @@ func (n *Notifier) StartNotifier(ctx context.Context) {
 				//time.Sleep(n.TimerSend)
 				return
 			default:
+				return
 			}
 		}
 

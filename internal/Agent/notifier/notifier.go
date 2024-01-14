@@ -141,6 +141,7 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 					return
 				}
 			default:
+				return
 			}
 		}
 	}()
@@ -161,6 +162,7 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 					return
 				}
 			default:
+				return
 			}
 		}
 	}()
