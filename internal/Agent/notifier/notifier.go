@@ -140,8 +140,9 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 					//log.Println(err)
 					return
 				}
+				continue
 			default:
-				return
+				continue
 			}
 		}
 	}()
@@ -161,8 +162,9 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 					//fmt.Println(err)
 					return
 				}
+				continue
 			default:
-				return
+				continue
 			}
 		}
 	}()
