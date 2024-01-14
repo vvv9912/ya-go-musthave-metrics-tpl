@@ -47,28 +47,28 @@ func (n *Notifier) StartNotifier(ctx context.Context) {
 		return
 	}
 	go func() {
-		//todo переделать под timer.after
+		ticker := time.NewTicker(n.TimerSend)
 		for {
 			select {
 			case <-ctx.Done():
 				// Обработка завершения программы
 				return
-			default:
+			case <-ticker.C:
+				gauge := n.gauge.GetAllGauge()
+				counter := n.counter.GetAllCounter()
 
-			}
-
-			gauge := n.gauge.GetAllGauge()
-			counter := n.counter.GetAllCounter()
-
-			err := n.WriteEvent(&fileutils.Event{
-				Gauge:   gauge,
-				Counter: counter,
-			})
-			if err != nil {
-				log.Println(err)
+				err := n.WriteEvent(&fileutils.Event{
+					Gauge:   gauge,
+					Counter: counter,
+				})
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				//time.Sleep(n.TimerSend)
 				return
+			default:
 			}
-			time.Sleep(n.TimerSend)
 		}
 
 	}()

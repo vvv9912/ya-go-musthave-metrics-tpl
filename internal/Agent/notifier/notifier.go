@@ -128,44 +128,40 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 	var couter uint64
 	var err error
 	go func() {
+		ticker := time.NewTicker(n.TimerUpdate)
 		for {
 			select {
 			case <-ctx.Done():
 				// Обработка завершения программы
 				return
+			case <-ticker.C:
+				gauge, couter, err = n.NotifyPending()
+				if err != nil {
+					//log.Println(err)
+					return
+				}
 			default:
-
 			}
-
-			gauge, couter, err = n.NotifyPending()
-
-			if err != nil {
-				//log.Println(err)
-				return
-			}
-			time.Sleep(n.TimerUpdate)
-
 		}
 	}()
 
 	go func() {
+		ticker := time.NewTicker(n.TimerSend)
 		for {
-			time.Sleep(n.TimerSend)
 			select {
 			case <-ctx.Done():
 				// Обработка завершения программы
 				return
+			case <-ticker.C:
+				if gauge != nil {
+					err = n.SendNotification(ctx, gauge, couter)
+				}
+				if err != nil {
+					//fmt.Println(err)
+					return
+				}
 			default:
 			}
-			if gauge != nil {
-				err = n.SendNotification(ctx, gauge, couter)
-			}
-			if err != nil {
-				//fmt.Println(err)
-				return
-			}
-			//time.Sleep(n.TimerSend)
-
 		}
 	}()
 	return nil
