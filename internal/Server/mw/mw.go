@@ -69,36 +69,26 @@ func (m *Mw) MwLogger(next http.Handler) http.Handler {
 
 // проверяем, что клиент умеет получать от сервера сжатые данные в определенном формате
 func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) bool {
-	var (
-		supportContent = false
-	)
-
 	if acceptTypeReq == "*/*" {
-		supportContent = true
+		return true
 	} else {
 		for key := range acceptType {
 			if strings.Contains(acceptTypeReq, key) {
-				supportContent = true
+				return true
 			}
 		}
 	}
-
-	return supportContent
+	return false
 }
 
 // проверяем, что клиент поддерживает соответствующий content-type
 func supportEncodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
-	var (
-		supportEncoding = false
-	)
-
 	for key := range accpetEncoding {
 		if strings.Contains(acceptEncodingReq, key) {
-			supportEncoding = true
+			return true
 		}
 	}
-
-	return supportEncoding
+	return false
 }
 func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

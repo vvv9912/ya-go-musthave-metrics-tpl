@@ -47,6 +47,7 @@ func (n *Notifier) StartNotifier(ctx context.Context) {
 		return
 	}
 	go func() {
+		//todo переделать под timer.after
 		for {
 			select {
 			case <-ctx.Done():
@@ -58,10 +59,7 @@ func (n *Notifier) StartNotifier(ctx context.Context) {
 
 			gauge := n.gauge.GetAllGauge()
 			counter := n.counter.GetAllCounter()
-			//n.producer.WriteEvent(&fileutils.Event{
-			//	Gauge:   gauge,
-			//	Counter: counter,
-			//})
+
 			err := n.WriteEvent(&fileutils.Event{
 				Gauge:   gauge,
 				Counter: counter,

@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"log"
 )
 
 type PostRequester interface {
@@ -38,7 +39,7 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 	zb := gzip.NewWriter(buf)
 	_, err := zb.Write(data)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 	zb.Close()
@@ -48,7 +49,7 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 	}).SetBody(buf).Post(url)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 

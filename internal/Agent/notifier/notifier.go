@@ -49,12 +49,13 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		wg.Add(1)
 		go func(key string, values string) {
 			defer wg.Done()
-
+			//todo параллельная отправка
 			url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
 
 			err := n.PostReq(ctx, url)
 			if err != nil {
 				log.Println(err)
+				return
 			}
 
 			val, err := strconv.ParseFloat(values, 64)
@@ -87,7 +88,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
+		//todo параллельная отправка
 		coun := strconv.FormatUint(counter, 10)
 
 		url := "http://" + n.URL + "/update/" + "counter" + "/" + "PollCount" + "/" + coun
@@ -95,6 +96,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		err := n.PostReq(ctx, url)
 		if err != nil {
 			log.Println(err)
+			return
 		}
 
 		counterInt64 := int64(counter)
@@ -114,6 +116,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		err = n.PostReqJSON(ctx, url2, data)
 		if err != nil {
 			log.Println(err)
+			return
 		}
 	}()
 	wg.Wait()
