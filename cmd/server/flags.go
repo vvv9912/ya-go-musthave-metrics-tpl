@@ -17,7 +17,7 @@ type NetAddress struct {
 
 var (
 	flagLogLevel string
-	DATABASE_DSN string
+	DatabaseDsn  string
 )
 
 func (o *NetAddress) String() string {
@@ -55,7 +55,7 @@ func parseFlags() {
 	flag.StringVar(&FileStoragePath, "f", "/tmp/metrics-db.json", "file storage path")
 	flag.IntVar(&timerSend, "i", 300, "send timer")
 	flag.BoolVar(&RESTORE, "r", true, "restore")
-	flag.StringVar(&DATABASE_DSN, "d", "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable", "DATABASE_DSN")
+	flag.StringVar(&DatabaseDsn, "d", "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable", "DATABASE_DSN")
 
 	flag.Parse()
 	URLserver = addr.String()
@@ -85,6 +85,6 @@ func parseFlags() {
 	}
 
 	if envDATABASE := os.Getenv("DATABASE_DSN"); envDATABASE != "" {
-		DATABASE_DSN = envDATABASE
+		DatabaseDsn = envDATABASE
 	}
 }

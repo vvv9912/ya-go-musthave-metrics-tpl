@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "github.com/jackc/pgx"
 	"github.com/jackc/pgx/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
@@ -40,7 +41,7 @@ func run() error {
 	logger.Log.Info("FileStoragePath=" + FileStoragePath)
 	logger.Log.Info("Restore=", zap.Bool("RESTORE", RESTORE))
 
-	conn, err := pgx.Connect(context.Background(), DATABASE_DSN)
+	conn, err := pgx.Connect(context.Background(), DatabaseDsn)
 	if err != nil {
 		logger.Log.Panic("error open db", zap.Error(err))
 		return err
