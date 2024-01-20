@@ -30,11 +30,11 @@ func (s *Server) StartServer(
 	ctx context.Context,
 	addr string,
 	gaugeStorage storage.GaugeStorager,
-	counterStorage storage.CounterStorager, timeSend time.Duration, writer notifier.Writer) error {
+	counterStorage storage.CounterStorager, timeSend time.Duration, writer notifier.Writer, store service.Store) error {
 
 	var (
 		e       = notifier.NewNotifier(gaugeStorage, counterStorage, timeSend, writer)
-		Service = service.NewService(counterStorage, gaugeStorage, e)
+		Service = service.NewService(counterStorage, gaugeStorage, e, store)
 		h       = handler.NewHandler(Service)
 		m       = mw.NewMw(Service)
 	)
@@ -51,6 +51,7 @@ func (s *Server) StartServer(
 	s.s.With(m.MiddlwareCheckJSON).Post("/value/", h.HandlerGetJSON)
 
 	s.s.Get("/", handler.HandlerGetMetrics(gaugeStorage, counterStorage))
+	s.s.Get("/ping", h.HandlerPingDatabase)
 
 	server := http.Server{
 		Addr:    addr,

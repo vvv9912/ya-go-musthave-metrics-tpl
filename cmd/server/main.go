@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"github.com/jackc/pgx/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
 	"log"
@@ -38,6 +40,14 @@ func run() error {
 	logger.Log.Info("FileStoragePath=" + FileStoragePath)
 	logger.Log.Info("Restore=", zap.Bool("RESTORE", RESTORE))
 
+	conn, err := pgx.Connect(context.Background(), DATABASE_DSN)
+	if err != nil {
+		logger.Log.Panic("error open db", zap.Error(err))
+		return err
+	}
+	defer conn.Close(context.Background())
+
+	database := store.NewDatabase(conn)
 	counter := storage.NewCounterStorage()
 	gauge := storage.NewGaugeStorage()
 
@@ -84,7 +94,7 @@ func run() error {
 	}
 	defer produce.Close()
 
-	err = s.StartServer(ctx, URLserver, gauge, counter, time.Duration(timerSend)*time.Second, produce)
+	err = s.StartServer(ctx, URLserver, gauge, counter, time.Duration(timerSend)*time.Second, produce, database)
 	if err != nil {
 		log.Println(err)
 		return err

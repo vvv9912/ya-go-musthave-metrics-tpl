@@ -1,6 +1,9 @@
 package service
 
-import "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
+import (
+	"context"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
+)
 
 //go:generate mockgen -source=service.go -destination=mock/service_mock.go -package=service_mock
 
@@ -28,18 +31,25 @@ type Metrics interface {
 	PutCounter(key string, val uint64) error
 	SendMetricstoFile() error
 }
+
+type Store interface {
+	Ping(ctx context.Context) error
+}
+
 type Service struct {
 	Metrics         Metrics
 	CounterStorager CounterStorager
 	GaugeStorager   GaugeStorager
 	Notifier        NotifierSend
+	Store           Store
 }
 
-func NewService(counter CounterStorager, gauge GaugeStorager, notify NotifierSend) *Service {
+func NewService(counter CounterStorager, gauge GaugeStorager, notify NotifierSend, store Store) *Service {
 	return &Service{
 		CounterStorager: counter,
 		GaugeStorager:   gauge,
 		Notifier:        notify,
-		Metrics:         NewMeticsService(counter, gauge, notify)}
+		Metrics:         NewMeticsService(counter, gauge, notify),
+		Store:           store}
 
 }

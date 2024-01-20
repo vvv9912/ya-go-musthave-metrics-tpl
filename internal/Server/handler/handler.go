@@ -173,3 +173,13 @@ func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusOK)
 	res.Write(response)
 }
+func (h *Handler) HandlerPingDatabase(res http.ResponseWriter, req *http.Request) {
+	err := h.Service.Store.Ping(req.Context())
+	if err != nil {
+		logger.Log.Info("Failed to ping database", zap.Error(err))
+		http.Error(res, "Failed to ping database", http.StatusInternalServerError)
+	}
+
+	res.WriteHeader(http.StatusOK)
+
+}
