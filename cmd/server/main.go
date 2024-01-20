@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"github.com/jackc/pgx/v5"
-	_ "github.com/jackc/pgx/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
@@ -47,6 +46,7 @@ func run() error {
 		return err
 	}
 	defer conn.Close(context.Background())
+
 	database := store.NewDatabase(conn)
 	counter := storage.NewCounterStorage()
 	gauge := storage.NewGaugeStorage()
