@@ -15,7 +15,6 @@ import (
 )
 
 var URLserver string
-
 var timerSend int
 var FileStoragePath string
 var RESTORE bool
