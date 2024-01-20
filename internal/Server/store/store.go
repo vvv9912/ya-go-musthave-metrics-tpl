@@ -2,7 +2,8 @@ package store
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 //go:generate mockgen -source=store.go -destination=mock/store_mock.go
