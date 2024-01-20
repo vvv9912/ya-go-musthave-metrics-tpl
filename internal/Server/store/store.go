@@ -5,6 +5,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+//go:generate mockgen -source=store.go -destination=mock/store_mock.go
 type Database struct {
 	pgx *pgx.Conn
 }
