@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"flag"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
+	"go.uber.org/zap"
 	"os"
 	"strconv"
 	"strings"
@@ -12,6 +14,10 @@ type NetAddress struct {
 	Host string
 	Port int
 }
+
+var (
+	flagLogLevel string
+)
 
 func (o *NetAddress) String() string {
 	return o.Host + ":" + strconv.Itoa(o.Port)
@@ -42,11 +48,38 @@ func parseFlags() {
 	// если интерфейс не реализован,
 	// здесь будет ошибка компиляции
 	var _ = flag.Value(addr)
-
+	//var restore string
 	flag.Var(addr, "a", "Net address host:port")
+	flag.StringVar(&flagLogLevel, "l", "info", "log level")
+	flag.StringVar(&FileStoragePath, "f", "/tmp/metrics-db.json", "file storage path")
+	flag.IntVar(&timerSend, "i", 300, "send timer")
+	flag.BoolVar(&RESTORE, "r", true, "restore")
+
 	flag.Parse()
 	URLserver = addr.String()
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		URLserver = envRunAddr
 	}
+	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
+		flagLogLevel = envLogLevel
+	}
+	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
+		FileStoragePath = envFileStoragePath
+	}
+	if envTimerSend := os.Getenv("STORE_INTERVAL"); envTimerSend != "" {
+		num, err := strconv.Atoi(envTimerSend)
+		if err != nil {
+			logger.Log.Panic("timerSend must be int", zap.Error(err))
+		}
+		timerSend = num
+	}
+
+	if envRESTORE := os.Getenv("RESTORE"); envRESTORE != "" {
+		boolValue, err := strconv.ParseBool(envRESTORE)
+		if err != nil {
+			logger.Log.Panic("RESTORE must be bool", zap.Error(err))
+		}
+		RESTORE = boolValue
+	}
+
 }

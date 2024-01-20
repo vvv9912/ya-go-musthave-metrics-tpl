@@ -1,13 +1,17 @@
 package server
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"log"
 )
 
 type PostRequester interface {
 	PostReq(ctx context.Context, url string) error
+	PostReqJSON(ctx context.Context, url string, data []byte) error
 }
 type PostRequest struct {
 	PostRequester
@@ -26,6 +30,29 @@ func (p *PostRequest) PostReq(ctx context.Context, url string) error {
 		fmt.Println(err)
 		return err
 	}
+	return nil
+}
+func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) error {
+	client := resty.New()
+
+	buf := bytes.NewBuffer(nil)
+	zb := gzip.NewWriter(buf)
+	_, err := zb.Write(data)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	zb.Close()
+
+	_, err = client.R().SetHeaders(map[string]string{
+		"Content-Type": "application/json", "Content-Encoding": "gzip",
+	}).SetBody(buf).Post(url)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
 	return nil
 }
 
