@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	_ "github.com/jackc/pgx"
 	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
