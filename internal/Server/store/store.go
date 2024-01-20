@@ -2,19 +2,18 @@ package store
 
 import (
 	"context"
-	"github.com/jackc/pgx"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"database/sql"
 )
 
 //go:generate mockgen -source=store.go -destination=mock/store_mock.go
 type Database struct {
-	pgx *pgx.Conn
+	pgx *sql.DB
 }
 
-func NewDatabase(db *pgx.Conn) *Database {
+func NewDatabase(db *sql.DB) *Database {
 	return &Database{pgx: db}
 }
 
 func (db *Database) Ping(ctx context.Context) error {
-	return db.pgx.Ping(ctx)
+	return db.pgx.PingContext(ctx)
 }
