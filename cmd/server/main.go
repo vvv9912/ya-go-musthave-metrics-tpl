@@ -46,7 +46,6 @@ func run() error {
 		return err
 	}
 	defer conn.Close(context.Background())
-
 	database := store.NewDatabase(conn)
 	counter := storage.NewCounterStorage()
 	gauge := storage.NewGaugeStorage()
