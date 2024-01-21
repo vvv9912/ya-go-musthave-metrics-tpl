@@ -55,8 +55,8 @@ func parseFlags() {
 	flag.StringVar(&FileStoragePath, "f", "/tmp/metrics-db.json", "file storage path")
 	flag.IntVar(&timerSend, "i", 300, "send timer")
 	flag.BoolVar(&RESTORE, "r", true, "restore")
-	flag.StringVar(&DatabaseDsn, "d", "postgres://postgres:postgres@localhost:5432/postgres", "DATABASE_DSN")
-
+	flag.StringVar(&DatabaseDsn, "d", "", "DATABASE_DSN")
+	//postgres://postgres:postgres@localhost:5432/postgres
 	flag.Parse()
 	URLserver = addr.String()
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
