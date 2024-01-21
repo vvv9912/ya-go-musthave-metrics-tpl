@@ -8,28 +8,28 @@ import (
 //go:generate mockgen -source=service.go -destination=mock/service_mock.go -package=service_mock
 
 type GaugeStorager interface {
-	UpdateGauge(key string, val float64) error
-	GetGauge(key string) (float64, error)
-	GetAllGauge() map[string]float64
+	UpdateGauge(ctx context.Context, key string, val float64) error
+	GetGauge(ctx context.Context, key string) (float64, error)
+	GetAllGauge(ctx context.Context) (map[string]float64, error)
 }
 
 type CounterStorager interface {
-	UpdateCounter(key string, val uint64) error
-	GetCounter(key string) (uint64, error)
-	GetAllCounter() map[string]uint64
+	UpdateCounter(ctx context.Context, key string, val uint64) error
+	GetCounter(ctx context.Context, key string) (uint64, error)
+	GetAllCounter(ctx context.Context) (map[string]uint64, error)
 }
 
 type NotifierSend interface {
-	NotifierPending() error
+	NotifierPending(ctx context.Context) error
 }
 type Metrics interface {
-	GetMetrics(metrics model.Metrics) (model.Metrics, error)
-	PutMetrics(metrics model.Metrics) error
-	GetCounter(key string) (uint64, error)
-	GetGauge(key string) (float64, error)
-	PutGauge(key string, val float64) error
-	PutCounter(key string, val uint64) error
-	SendMetricstoFile() error
+	GetMetrics(ctx context.Context, metrics model.Metrics) (model.Metrics, error)
+	PutMetrics(ctx context.Context, metrics model.Metrics) error
+	GetCounter(ctx context.Context, key string) (uint64, error)
+	GetGauge(ctx context.Context, key string) (float64, error)
+	PutGauge(ctx context.Context, key string, val float64) error
+	PutCounter(ctx context.Context, key string, val uint64) error
+	SendMetricstoFile(ctx context.Context) error
 }
 
 type Store interface {

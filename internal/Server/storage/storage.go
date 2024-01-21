@@ -1,21 +1,22 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"sync"
 )
 
 // TODO переделать под общий интерфейс get, update
 type GaugeStorager interface {
-	UpdateGauge(key string, val float64) error
-	GetGauge(key string) (float64, error)
-	GetAllGauge() map[string]float64
+	UpdateGauge(ctx context.Context, key string, val float64) error
+	GetGauge(ctx context.Context, key string) (float64, error)
+	GetAllGauge(ctx context.Context) (map[string]float64, error)
 }
 
 type CounterStorager interface {
-	UpdateCounter(key string, val uint64) error
-	GetCounter(key string) (uint64, error)
-	GetAllCounter() map[string]uint64
+	UpdateCounter(ctx context.Context, key string, val uint64) error
+	GetCounter(ctx context.Context, key string) (uint64, error)
+	GetAllCounter(ctx context.Context) (map[string]uint64, error)
 }
 type MemStorage struct {
 	gaugeStorage   map[string]float64 //todo переделать под map[string]string, в соотв. с agent
@@ -38,13 +39,13 @@ func NewCounterStorage() CounterStorager {
 Тип counter, int64 — новое значение должно добавляться к предыдущему,
 если какое-то значение уже было известно серверу.
 */
-func (S *MemStorage) UpdateGauge(key string, val float64) error {
+func (S *MemStorage) UpdateGauge(ctx context.Context, key string, val float64) error {
 	S.gaugeMutex.Lock()
 	defer S.gaugeMutex.Unlock()
 	S.gaugeStorage[key] = val
 	return nil
 }
-func (S *MemStorage) GetGauge(key string) (float64, error) {
+func (S *MemStorage) GetGauge(ctx context.Context, key string) (float64, error) {
 	S.gaugeMutex.Lock()
 	defer S.gaugeMutex.Unlock()
 	val, found := S.gaugeStorage[key]
@@ -53,10 +54,10 @@ func (S *MemStorage) GetGauge(key string) (float64, error) {
 	}
 	return val, nil
 }
-func (S *MemStorage) GetAllGauge() map[string]float64 {
-	return S.gaugeStorage
+func (S *MemStorage) GetAllGauge(ctx context.Context) (map[string]float64, error) {
+	return S.gaugeStorage, nil
 }
-func (S *MemStorage) UpdateCounter(key string, val uint64) error {
+func (S *MemStorage) UpdateCounter(ctx context.Context, key string, val uint64) error {
 	S.counterMutex.Lock()
 	defer S.counterMutex.Unlock()
 	//fmt.Println("value counter get to map:", val)
@@ -68,7 +69,7 @@ func (S *MemStorage) UpdateCounter(key string, val uint64) error {
 	}
 	return nil
 }
-func (S *MemStorage) GetCounter(key string) (uint64, error) {
+func (S *MemStorage) GetCounter(ctx context.Context, key string) (uint64, error) {
 	S.counterMutex.Lock()
 	defer S.counterMutex.Unlock()
 	val, found := S.counterStorage[key]
@@ -77,8 +78,8 @@ func (S *MemStorage) GetCounter(key string) (uint64, error) {
 	}
 	return val, nil
 }
-func (S *MemStorage) GetAllCounter() map[string]uint64 {
-	return S.counterStorage
+func (S *MemStorage) GetAllCounter(ctx context.Context) (map[string]uint64, error) {
+	return S.counterStorage, nil
 }
 
 //func (S *storage) AddGauge(key string, val float64) error {

@@ -6,6 +6,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
@@ -40,18 +41,34 @@ func run() error {
 	logger.Log.Info("FileStoragePath=" + FileStoragePath)
 	logger.Log.Info("Restore=", zap.Bool("RESTORE", RESTORE))
 
-	db, err := sql.Open("pgx", DatabaseDsn)
-	//conn, err := pgx.Connect(context.Background(), DatabaseDsn)
-	if err != nil {
-		logger.Log.Panic("error open db", zap.Error(err))
-		return err
+	var counter service.CounterStorager
+	var gauge service.GaugeStorager
+	var database *store.Database
+	if DatabaseDsn != "" {
+		db, err := sql.Open("pgx", DatabaseDsn)
+		if err != nil {
+			logger.Log.Panic("error open db", zap.Error(err))
+			return err
+		}
+		defer db.Close()
+		//миграции
+		if err := upGauge(context.Background(), db); err != nil {
+			logger.Log.Panic("error up gauge", zap.Error(err))
+			return err
+		}
+		if err := upCounter(context.Background(), db); err != nil {
+			logger.Log.Panic("error up counter", zap.Error(err))
+			return err
+		}
+		database = store.NewDatabase(db)
+		counter = database
+		gauge = database
+	} else {
+		counter = storage.NewCounterStorage()
+		gauge = storage.NewGaugeStorage()
 	}
-	defer db.Close()
 
-	database := store.NewDatabase(db)
-	counter := storage.NewCounterStorage()
-	gauge := storage.NewGaugeStorage()
-
+	//Если включено восстановление данных
 	if RESTORE {
 
 		consumer, err := fileutils.NewConsumer(FileStoragePath)
@@ -68,13 +85,13 @@ func run() error {
 
 		if event != nil {
 			for key, val := range event.Counter {
-				err = counter.UpdateCounter(key, val)
+				err = counter.UpdateCounter(context.Background(), key, val)
 				if err != nil {
 					logger.Log.Info("error update counter", zap.Error(err))
 				}
 			}
 			for key, val := range event.Gauge {
-				err = gauge.UpdateGauge(key, val)
+				err = gauge.UpdateGauge(context.Background(), key, val)
 				if err != nil {
 					logger.Log.Info("error update gauge", zap.Error(err))
 				}
@@ -102,5 +119,22 @@ func run() error {
 	}
 
 	<-ctx.Done()
+	return nil
+}
+
+func upGauge(ctx context.Context, db *sql.DB) error {
+	query := "CREATE TABLE IF NOT EXISTS GaugeMetrics (    key text unique not null primary key,    val double precision);"
+	_, err := db.ExecContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func upCounter(ctx context.Context, db *sql.DB) error {
+	query := "CREATE TABLE IF NOT EXISTS CounterMetrics (    key text unique not null primary key,   val integer);"
+	_, err := db.ExecContext(ctx, query)
+	if err != nil {
+		return err
+	}
 	return nil
 }

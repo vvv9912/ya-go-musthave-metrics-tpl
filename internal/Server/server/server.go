@@ -8,7 +8,6 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
 	"log"
@@ -29,8 +28,11 @@ func NewServer() *Server {
 func (s *Server) StartServer(
 	ctx context.Context,
 	addr string,
-	gaugeStorage storage.GaugeStorager,
-	counterStorage storage.CounterStorager, timeSend time.Duration, writer notifier.Writer, store service.Store) error {
+	gaugeStorage service.GaugeStorager,
+	counterStorage service.CounterStorager,
+	timeSend time.Duration,
+	writer notifier.Writer,
+	store service.Store) error {
 
 	var (
 		e       = notifier.NewNotifier(gaugeStorage, counterStorage, timeSend, writer)
