@@ -3,7 +3,9 @@ package store
 import (
 	"context"
 	"database/sql"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
+	"go.uber.org/zap"
 )
 
 func (db *Database) updateMetricsBatch(ctx context.Context, tx *sql.Tx, metrics []model.Metrics) error {
@@ -26,12 +28,12 @@ func (db *Database) updateMetricsBatch(ctx context.Context, tx *sql.Tx, metrics 
 		if v.MType == "gauge" {
 			_, err = stmt1.ExecContext(ctx, v.ID, v.Value)
 			if err != nil {
-				return err
+				logger.Log.Info("Failed to update gauge", zap.Error(err))
 			}
 		} else if v.MType == "counter" {
 			_, err = stmt2.ExecContext(ctx, v.ID, v.Delta)
 			if err != nil {
-				return err
+				logger.Log.Info("Failed to update gauge", zap.Error(err))
 			}
 		}
 	}

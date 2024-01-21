@@ -239,11 +239,11 @@ func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request)
 		}
 	}
 	log.Println(vivod)
+
 	if err != nil {
 		logger.Log.Info("Failed to send metrics to file", zap.Error(err))
 		http.Error(res, "Failed to send metrics to file", http.StatusInternalServerError)
 		return
 	}
-
 	res.WriteHeader(http.StatusOK)
 }
