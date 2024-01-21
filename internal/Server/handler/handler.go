@@ -12,6 +12,7 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"go.uber.org/zap"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -140,7 +141,7 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Failed to get metrics", http.StatusNotFound)
 		return
 	}
-
+	log.Println(metrics)
 	response, err := json.Marshal(metrics)
 	if err != nil {
 		logger.Log.Info("Failed to unmarshal metrics", zap.Error(err))
@@ -211,8 +212,9 @@ func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request)
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
-
+	log.Println(metrics)
 	err = h.Service.Store.UpdateMetricsBatch(req.Context(), metrics)
+	log.Println("okay, записалось в бд")
 	if err != nil {
 		logger.Log.Info("Failed to send metrics to file", zap.Error(err))
 		http.Error(res, "Failed to send metrics to file", http.StatusInternalServerError)
