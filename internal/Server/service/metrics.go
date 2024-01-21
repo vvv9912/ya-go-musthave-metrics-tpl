@@ -43,13 +43,13 @@ func (p *MeticsService) GetMetrics(ctx context.Context, metrics model.Metrics) (
 func (p *MeticsService) PutMetrics(ctx context.Context, metrics model.Metrics) error {
 	switch metrics.MType {
 	case "counter":
-		return p.PutCounter(ctx, metrics.ID, uint64(*metrics.Delta))
+		return p.PutCounter(ctx, metrics.ID, *metrics.Delta)
 	case "gauge":
 		return p.PutGauge(ctx, metrics.ID, *metrics.Value)
 	}
 	return nil
 }
-func (p *MeticsService) GetCounter(ctx context.Context, key string) (uint64, error) {
+func (p *MeticsService) GetCounter(ctx context.Context, key string) (int64, error) {
 	return p.counter.GetCounter(ctx, key)
 }
 func (p *MeticsService) GetGauge(ctx context.Context, key string) (float64, error) {
@@ -59,7 +59,7 @@ func (p *MeticsService) PutGauge(ctx context.Context, key string, val float64) e
 	return p.gauge.UpdateGauge(ctx, key, val)
 }
 
-func (p *MeticsService) PutCounter(ctx context.Context, key string, val uint64) error {
+func (p *MeticsService) PutCounter(ctx context.Context, key string, val int64) error {
 
 	return p.counter.UpdateCounter(ctx, key, val)
 }

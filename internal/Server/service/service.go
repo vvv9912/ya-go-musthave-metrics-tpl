@@ -14,9 +14,9 @@ type GaugeStorager interface {
 }
 
 type CounterStorager interface {
-	UpdateCounter(ctx context.Context, key string, val uint64) error
-	GetCounter(ctx context.Context, key string) (uint64, error)
-	GetAllCounter(ctx context.Context) (map[string]uint64, error)
+	UpdateCounter(ctx context.Context, key string, val int64) error
+	GetCounter(ctx context.Context, key string) (int64, error)
+	GetAllCounter(ctx context.Context) (map[string]int64, error)
 }
 
 type NotifierSend interface {
@@ -25,10 +25,10 @@ type NotifierSend interface {
 type Metrics interface {
 	GetMetrics(ctx context.Context, metrics model.Metrics) (model.Metrics, error)
 	PutMetrics(ctx context.Context, metrics model.Metrics) error
-	GetCounter(ctx context.Context, key string) (uint64, error)
+	GetCounter(ctx context.Context, key string) (int64, error)
 	GetGauge(ctx context.Context, key string) (float64, error)
 	PutGauge(ctx context.Context, key string, val float64) error
-	PutCounter(ctx context.Context, key string, val uint64) error
+	PutCounter(ctx context.Context, key string, val int64) error
 	SendMetricstoFile(ctx context.Context) error
 	//SendBatchedMetrcs(ctx context.Context, data []model.Metrics) error
 }

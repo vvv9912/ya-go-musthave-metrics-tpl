@@ -14,13 +14,13 @@ type GaugeStorager interface {
 }
 
 type CounterStorager interface {
-	UpdateCounter(ctx context.Context, key string, val uint64) error
-	GetCounter(ctx context.Context, key string) (uint64, error)
-	GetAllCounter(ctx context.Context) (map[string]uint64, error)
+	UpdateCounter(ctx context.Context, key string, val int64) error
+	GetCounter(ctx context.Context, key string) (int64, error)
+	GetAllCounter(ctx context.Context) (map[string]int64, error)
 }
 type MemStorage struct {
 	gaugeStorage   map[string]float64 //todo переделать под map[string]string, в соотв. с agent
-	counterStorage map[string]uint64
+	counterStorage map[string]int64
 	gaugeMutex     sync.Mutex
 	counterMutex   sync.Mutex
 }
@@ -30,7 +30,7 @@ func NewGaugeStorage() GaugeStorager {
 	return &MemStorage{gaugeStorage: gaugeStorage}
 }
 func NewCounterStorage() CounterStorager {
-	counterStorage := make(map[string]uint64)
+	counterStorage := make(map[string]int64)
 	return &MemStorage{counterStorage: counterStorage}
 }
 
@@ -57,7 +57,7 @@ func (S *MemStorage) GetGauge(ctx context.Context, key string) (float64, error) 
 func (S *MemStorage) GetAllGauge(ctx context.Context) (map[string]float64, error) {
 	return S.gaugeStorage, nil
 }
-func (S *MemStorage) UpdateCounter(ctx context.Context, key string, val uint64) error {
+func (S *MemStorage) UpdateCounter(ctx context.Context, key string, val int64) error {
 	S.counterMutex.Lock()
 	defer S.counterMutex.Unlock()
 	//fmt.Println("value counter get to map:", val)
@@ -69,7 +69,7 @@ func (S *MemStorage) UpdateCounter(ctx context.Context, key string, val uint64) 
 	}
 	return nil
 }
-func (S *MemStorage) GetCounter(ctx context.Context, key string) (uint64, error) {
+func (S *MemStorage) GetCounter(ctx context.Context, key string) (int64, error) {
 	S.counterMutex.Lock()
 	defer S.counterMutex.Unlock()
 	val, found := S.counterStorage[key]
@@ -78,7 +78,7 @@ func (S *MemStorage) GetCounter(ctx context.Context, key string) (uint64, error)
 	}
 	return val, nil
 }
-func (S *MemStorage) GetAllCounter(ctx context.Context) (map[string]uint64, error) {
+func (S *MemStorage) GetAllCounter(ctx context.Context) (map[string]int64, error) {
 	return S.counterStorage, nil
 }
 

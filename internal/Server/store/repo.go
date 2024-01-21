@@ -91,7 +91,7 @@ func (db *Database) getAllGauge(ctx context.Context) (map[string]float64, error)
 	return metrics, nil
 }
 
-func (db *Database) updateCounter(ctx context.Context, tx *sql.Tx, key string, val uint64) error {
+func (db *Database) updateCounter(ctx context.Context, tx *sql.Tx, key string, val int64) error {
 	//_, err := db.pgx.ExecContext(ctx, "UPDATE CounterMetrics SET val=$1 WHERE key=$2", val, key)
 	_, err := tx.ExecContext(ctx, "INSERT INTO CounterMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = $2;", key, val)
 	if err != nil {
@@ -100,7 +100,7 @@ func (db *Database) updateCounter(ctx context.Context, tx *sql.Tx, key string, v
 	}
 	return nil
 }
-func (db *Database) getCounter(ctx context.Context, key string) (uint64, error) {
+func (db *Database) getCounter(ctx context.Context, key string) (int64, error) {
 	rows, err := db.pgx.QueryContext(ctx, "SELECT val FROM CounterMetrics where key=$1", key)
 	if err != nil {
 		return 0, err
@@ -110,7 +110,7 @@ func (db *Database) getCounter(ctx context.Context, key string) (uint64, error) 
 		return 0, rows.Err()
 	}
 
-	var val int
+	var val int64
 	for rows.Next() {
 		err = rows.Scan(&val)
 		if err != nil {
@@ -118,10 +118,10 @@ func (db *Database) getCounter(ctx context.Context, key string) (uint64, error) 
 		}
 	}
 
-	return uint64(val), nil
+	return val, nil
 
 }
-func (db *Database) getAllCounter(ctx context.Context) (map[string]uint64, error) {
+func (db *Database) getAllCounter(ctx context.Context) (map[string]int64, error) {
 	rows, err := db.pgx.QueryContext(ctx, "SELECT * FROM CounterMetrics")
 	if err != nil {
 		return nil, err
@@ -131,16 +131,16 @@ func (db *Database) getAllCounter(ctx context.Context) (map[string]uint64, error
 		return nil, rows.Err()
 	}
 
-	metrics := make(map[string]uint64)
+	metrics := make(map[string]int64)
 
 	for rows.Next() {
 		var key string
-		var val int
+		var val int64
 		err = rows.Scan(&key, &val)
 		if err != nil {
 			return nil, err
 		}
-		metrics[key] = uint64(val)
+		metrics[key] = val
 	}
 
 	return metrics, nil

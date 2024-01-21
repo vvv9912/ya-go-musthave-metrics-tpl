@@ -24,9 +24,9 @@ type GaugeStorager interface {
 }
 
 type CounterStorager interface {
-	UpdateCounter(ctx context.Context, key string, val uint64) error
-	GetCounter(ctx context.Context, key string) (uint64, error)
-	GetAllCounter(ctx context.Context) (map[string]uint64, error)
+	UpdateCounter(ctx context.Context, key string, val int64) error
+	GetCounter(ctx context.Context, key string) (int64, error)
+	GetAllCounter(ctx context.Context) (map[string]int64, error)
 }
 
 func (db *Database) Ping(ctx context.Context) error {
@@ -79,7 +79,7 @@ func (db *Database) GetAllGauge(ctx context.Context) (map[string]float64, error)
 	return db.getAllGauge(ctx)
 }
 
-func (db *Database) UpdateCounter(ctx context.Context, key string, val uint64) error {
+func (db *Database) UpdateCounter(ctx context.Context, key string, val int64) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	tx, err := db.pgx.Begin()
@@ -97,13 +97,13 @@ func (db *Database) UpdateCounter(ctx context.Context, key string, val uint64) e
 	return db.updateCounter(ctx, tx, key, val)
 }
 
-func (db *Database) GetCounter(ctx context.Context, key string) (uint64, error) {
+func (db *Database) GetCounter(ctx context.Context, key string) (int64, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	return db.getCounter(ctx, key)
 }
 
-func (db *Database) GetAllCounter(ctx context.Context) (map[string]uint64, error) {
+func (db *Database) GetAllCounter(ctx context.Context) (map[string]int64, error) {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 	return db.getAllCounter(ctx)

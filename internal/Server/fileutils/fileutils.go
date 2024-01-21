@@ -9,7 +9,7 @@ import (
 
 type Event struct {
 	Gauge   map[string]float64 `json:"gauge,omitempty"`
-	Counter map[string]uint64  `json:"counter,omitempty"`
+	Counter map[string]int64   `json:"counter,omitempty"`
 }
 
 type Producer struct {
@@ -67,7 +67,7 @@ func NewConsumer(fileName string) (*Consumer, error) {
 func (c *Consumer) ReadEvent() (*Event, error) {
 	event := &Event{
 		Gauge:   make(map[string]float64),
-		Counter: make(map[string]uint64),
+		Counter: make(map[string]int64),
 	}
 	if err := c.decoder.Decode(&event); err != nil {
 		return nil, err

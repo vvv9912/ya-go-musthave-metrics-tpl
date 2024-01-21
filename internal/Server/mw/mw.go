@@ -194,12 +194,12 @@ func (m *Mw) MiddlewareCounter(next http.Handler) http.Handler {
 
 		v := chi.URLParam(req, "Value")
 
-		value, err := strconv.ParseUint(v, 10, 64)
+		value, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		logger.Log.Info("Обновление значения метрик", zap.Uint64(name, value))
+		logger.Log.Info("Обновление значения метрик", zap.Int64(name, value))
 		err = m.Service.CounterStorager.UpdateCounter(req.Context(), name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
@@ -245,7 +245,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusNotFound), http.StatusNotFound)
-			logger.Log.Info("Получение значения метрики из хранилища:", zap.Uint64(name, val), zap.Error(err))
+			logger.Log.Info("Получение значения метрики из хранилища:", zap.Int64(name, val), zap.Error(err))
 
 			err = m.Service.CounterStorager.UpdateCounter(req.Context(), name, http.StatusNotFound) //Зачем добавлять значение метрики 404, если не найдено?. Без этого тест не проходит
 			if err != nil {
@@ -254,8 +254,8 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 			}
 			return
 		}
-		logger.Log.Info("Получение значения метрики из хранилища:", zap.Uint64(name, val))
-		valueMetric := strconv.FormatUint(val, 10)
+		logger.Log.Info("Получение значения метрики из хранилища:", zap.Int64(name, val))
+		valueMetric := strconv.FormatInt(val, 10)
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 
 		next.ServeHTTP(res, req.WithContext(ctx))
