@@ -141,9 +141,17 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Failed to get metrics", http.StatusNotFound)
 		return
 	}
-	log.Println(metrics)
-	log.Println(&metrics)
-	log.Println(*(metrics).Delta)
+	var vivod string
+	vivod := "\n---------------Получение данных-------------\n"
+	if metrics.MType == "counter" {
+		vivod += fmt.Sprintf("%s: %v\n", metrics.ID, *(metrics).Delta)
+	} else {
+		vivod += fmt.Sprintf("%s: %f\n", metrics.ID, *(metrics).Value)
+	}
+	log.Println(vivod)
+	//log.Println(metrics)
+	//log.Println(&metrics)
+	//log.Println(*(metrics).Delta)
 	response, err := json.Marshal(metrics)
 	if err != nil {
 		logger.Log.Info("Failed to unmarshal metrics", zap.Error(err))
@@ -214,9 +222,19 @@ func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request)
 		http.Error(res, "Failed to read request body", http.StatusNotFound)
 		return
 	}
-	log.Println(metrics)
+
 	err = h.Service.Store.UpdateMetricsBatch(req.Context(), metrics)
-	log.Println("okay, записалось в бд")
+	var vivod string
+	vivod = "\n---------------Запись данных---------------\n"
+	for i := range metrics {
+		if metrics[i].MType == "counter" {
+			vivod += fmt.Sprintf("%s: %d\n", metrics[i].ID, *(metrics[i].Delta))
+		}
+		if metrics[i].MType == "gauge" {
+			vivod += fmt.Sprintf("%s: %f\n", metrics[i].ID, *(metrics[i].Value))
+		}
+	}
+	log.Println(vivod)
 	if err != nil {
 		logger.Log.Info("Failed to send metrics to file", zap.Error(err))
 		http.Error(res, "Failed to send metrics to file", http.StatusInternalServerError)
