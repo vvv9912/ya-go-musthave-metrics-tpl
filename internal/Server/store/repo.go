@@ -10,6 +10,7 @@ func (db *Database) updateGauge(ctx context.Context, key string, val float64) er
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 func (db *Database) getGauge(ctx context.Context, key string) (float64, error) {
@@ -18,6 +19,10 @@ func (db *Database) getGauge(ctx context.Context, key string) (float64, error) {
 		return 0, err
 	}
 	defer rows.Close()
+
+	if rows.Err() != nil {
+		return 0, rows.Err()
+	}
 
 	var val float64
 	for rows.Next() {
@@ -34,6 +39,9 @@ func (db *Database) getAllGauge(ctx context.Context) (map[string]float64, error)
 		return nil, err
 	}
 	defer rows.Close()
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
 
 	metrics := make(map[string]float64)
 	for rows.Next() {
@@ -64,6 +72,9 @@ func (db *Database) getCounter(ctx context.Context, key string) (uint64, error) 
 		return 0, err
 	}
 	defer rows.Close()
+	if rows.Err() != nil {
+		return 0, rows.Err()
+	}
 
 	var val int
 	for rows.Next() {
@@ -82,6 +93,9 @@ func (db *Database) getAllCounter(ctx context.Context) (map[string]uint64, error
 		return nil, err
 	}
 	defer rows.Close()
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
 
 	metrics := make(map[string]uint64)
 
