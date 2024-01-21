@@ -43,12 +43,12 @@ const PollCount = "PollCount"
 
 type Metricer interface {
 	UpdateMetricsGauge() *map[string]string
-	UpdateMetricsCounter() (int64, error)
+	UpdateMetricsCounter() (uint64, error)
 }
 
 type Metrics struct {
 	MetricsGauge   map[string]string
-	MetricsCounter map[string]int64
+	MetricsCounter map[string]uint64
 }
 
 func NewMetriсs() Metricer {
@@ -83,7 +83,7 @@ func NewMetriсs() Metricer {
 		//
 		RandomValue: "",
 	}
-	var metricsCounter = map[string]int64{
+	var metricsCounter = map[string]uint64{
 		PollCount: 0,
 	}
 	return &Metrics{MetricsGauge: meticsGauge, MetricsCounter: metricsCounter}
@@ -124,7 +124,7 @@ func (m *Metrics) UpdateMetricsGauge() *map[string]string {
 	m.MetricsGauge[RandomValue] = strconv.FormatFloat(rand.Float64(), 'f', -1, 64)
 	return &m.MetricsGauge
 }
-func (m *Metrics) UpdateMetricsCounter() (int64, error) {
+func (m *Metrics) UpdateMetricsCounter() (uint64, error) {
 	value, ok := m.MetricsCounter[PollCount]
 	if !ok {
 		return 0, errors.New("")
