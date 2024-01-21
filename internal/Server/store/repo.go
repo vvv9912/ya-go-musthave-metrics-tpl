@@ -26,14 +26,16 @@ func (db *Database) updateMetricsBatch(ctx context.Context, tx *sql.Tx, metrics 
 
 	for _, v := range metrics {
 		if v.MType == "gauge" {
-			_, err = stmt1.ExecContext(ctx, v.ID, v.Value)
+			_, err = stmt1.ExecContext(ctx, v.ID, *v.Value)
 			if err != nil {
 				logger.Log.Info("Failed to update gauge", zap.Error(err))
+				return err
 			}
 		} else if v.MType == "counter" {
 			_, err = stmt2.ExecContext(ctx, v.ID, v.Delta)
 			if err != nil {
-				logger.Log.Info("Failed to update gauge", zap.Error(err))
+				logger.Log.Info("Failed to update counter", zap.Error(err))
+				return err
 			}
 		}
 	}
