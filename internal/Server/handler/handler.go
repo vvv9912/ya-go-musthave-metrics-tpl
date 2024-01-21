@@ -201,3 +201,23 @@ func (h *Handler) HandlerPingDatabase(res http.ResponseWriter, req *http.Request
 	res.WriteHeader(http.StatusOK)
 
 }
+
+func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request) {
+	var metrics []model.Metrics
+
+	err := json.NewDecoder(req.Body).Decode(&metrics)
+	if err != nil {
+		logger.Log.Info("Failed to read request body", zap.Error(err))
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		return
+	}
+
+	err = h.Service.Metrics.SendBatchedMetrcs(req.Context(), metrics)
+	if err != nil {
+		logger.Log.Info("Failed to send metrics to file", zap.Error(err))
+		http.Error(res, "Failed to send metrics to file", http.StatusInternalServerError)
+		return
+	}
+
+	res.WriteHeader(http.StatusOK)
+}

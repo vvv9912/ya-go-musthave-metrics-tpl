@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"log"
 )
 
@@ -53,6 +54,15 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		return err
 	}
 
+	return nil
+}
+func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []model.Metrics) error {
+	client := resty.New()
+	_, err := client.R().SetBody(data).Post(url)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	return nil
 }
 

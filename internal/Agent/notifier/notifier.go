@@ -17,6 +17,7 @@ type EventsMetric interface {
 type PostRequester interface {
 	PostReq(ctx context.Context, url string) error
 	PostReqJSON(ctx context.Context, url string, data []byte) error
+	PostReqBatched(ctx context.Context, url string, data []model.Metrics) error
 }
 type Notifier struct {
 	EventsMetric
@@ -119,7 +120,41 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 			return
 		}
 	}()
+
+	//отправляем множество метрик
+	go func() {
+		url := "http://" + n.URL + "/updates/"
+		m := make([]model.Metrics, 0, len(*gauge))
+		for key, values := range *gauge {
+			val, err := strconv.ParseFloat(values, 64)
+			if err != nil {
+				log.Println(err)
+			}
+
+			m = append(m, model.Metrics{
+				ID:    key,
+				MType: "gauge",
+				Delta: nil,
+				Value: &val,
+			})
+
+		}
+		counterInt64 := int64(counter)
+		m = append(m, model.Metrics{
+			ID:    "PollCount",
+			MType: "counter",
+			Delta: &counterInt64,
+			Value: nil,
+		})
+
+		err := n.PostReqBatched(ctx, url, m)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}()
 	wg.Wait()
+
 	return nil
 }
 

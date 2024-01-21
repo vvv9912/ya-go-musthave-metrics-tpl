@@ -54,6 +54,7 @@ func (s *Server) StartServer(
 
 	s.s.Get("/", handler.HandlerGetMetrics(gaugeStorage, counterStorage))
 	s.s.Get("/ping", h.HandlerPingDatabase)
+	s.s.Post("/updates/", h.HandlerPostBatched)
 
 	server := http.Server{
 		Addr:    addr,

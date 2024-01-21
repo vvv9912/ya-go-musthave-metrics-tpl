@@ -66,3 +66,13 @@ func (p *MeticsService) PutCounter(ctx context.Context, key string, val uint64) 
 func (p *MeticsService) SendMetricstoFile(ctx context.Context) error {
 	return p.notify.NotifierPending(ctx)
 }
+
+func (p *MeticsService) SendBatchedMetrcs(ctx context.Context, data []model.Metrics) error {
+	for i := range data {
+		err := p.PutMetrics(ctx, data[i])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
