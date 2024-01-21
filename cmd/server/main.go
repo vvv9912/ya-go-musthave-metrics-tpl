@@ -131,7 +131,7 @@ func upGauge(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 func upCounter(ctx context.Context, db *sql.DB) error {
-	query := "CREATE TABLE IF NOT EXISTS CounterMetrics (    key text unique not null primary key,   val integer);"
+	query := "CREATE TABLE IF NOT EXISTS CounterMetrics (    key text unique not null primary key, val bigint);"
 	_, err := db.ExecContext(ctx, query)
 	if err != nil {
 		return err
