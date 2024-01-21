@@ -141,6 +141,8 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Failed to get metrics", http.StatusNotFound)
 		return
 	}
+	log.Println(metrics)
+	log.Println(&metrics)
 	log.Println(*(metrics).Delta)
 	response, err := json.Marshal(metrics)
 	if err != nil {
