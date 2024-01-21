@@ -343,3 +343,17 @@ func (mr *MockStoreMockRecorder) Ping(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockStore)(nil).Ping), ctx)
 }
+
+// UpdateMetricsBatch mocks base method.
+func (m *MockStore) UpdateMetricsBatch(ctx context.Context, metrics []model.Metrics) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMetricsBatch", ctx, metrics)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMetricsBatch indicates an expected call of UpdateMetricsBatch.
+func (mr *MockStoreMockRecorder) UpdateMetricsBatch(ctx, metrics interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricsBatch", reflect.TypeOf((*MockStore)(nil).UpdateMetricsBatch), ctx, metrics)
+}
