@@ -3,10 +3,43 @@ package store
 import (
 	"context"
 	"database/sql"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
-func (db *Database) updateGauge(ctx context.Context, tx *sql.Tx, key string, val float64) error {
+func (db *Database) updateMetricsBatch(ctx context.Context, tx *sql.Tx, metrics []model.Metrics) error {
 	//_, err := db.pgx.ExecContext(ctx, "UPDATE GaugeMetrics SET val=$1 WHERE key=$2", val, key)
+
+	stmt1, err := tx.PrepareContext(ctx, "INSERT INTO GaugeMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = $2;")
+	defer stmt1.Close()
+	if err != nil {
+		return err
+	}
+
+	stmt2, err := tx.PrepareContext(ctx, "INSERT INTO CounterMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = $2;")
+	defer stmt2.Close()
+	if err != nil {
+		return err
+	}
+
+	for _, v := range metrics {
+		if v.MType == "gauge" {
+			_, err = stmt1.ExecContext(ctx, v.ID, v.Value)
+			if err != nil {
+				return err
+			}
+		}
+		if v.MType == "counter" {
+			_, err = stmt2.ExecContext(ctx, v.ID, v.Delta)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (db *Database) updateGauge(ctx context.Context, tx *sql.Tx, key string, val float64) error {
+
 	_, err := tx.ExecContext(ctx, "INSERT INTO GaugeMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = $2;", key, val)
 	if err != nil {
 		return err

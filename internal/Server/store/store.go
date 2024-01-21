@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
 //go:generate mockgen -source=store.go -destination=mock/store_mock.go
@@ -30,7 +31,21 @@ func (db *Database) Ping(ctx context.Context) error {
 	return db.pgx.PingContext(ctx)
 }
 
-// todo  tx sql.Tx,
+func (db *Database) UpdateMetricsBatch(ctx context.Context, metrics []model.Metrics) error {
+	tx, err := db.pgx.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+	return db.updateMetricsBatch(ctx, tx, metrics)
+}
+
 func (db *Database) UpdateGauge(ctx context.Context, key string, val float64) error {
 	tx, err := db.pgx.Begin()
 	if err != nil {

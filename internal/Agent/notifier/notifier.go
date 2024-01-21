@@ -120,9 +120,11 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 			return
 		}
 	}()
-
+	wg.Add(1)
 	//отправляем множество метрик
 	go func() {
+		defer wg.Done()
+
 		url := "http://" + n.URL + "/updates/"
 		m := make([]model.Metrics, 0, len(*gauge))
 		for key, values := range *gauge {

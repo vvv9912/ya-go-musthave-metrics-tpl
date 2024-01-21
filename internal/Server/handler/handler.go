@@ -212,7 +212,7 @@ func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	err = h.Service.Metrics.SendBatchedMetrcs(req.Context(), metrics)
+	err = h.Service.Store.UpdateMetricsBatch(req.Context(), metrics)
 	if err != nil {
 		logger.Log.Info("Failed to send metrics to file", zap.Error(err))
 		http.Error(res, "Failed to send metrics to file", http.StatusInternalServerError)
