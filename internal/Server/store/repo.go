@@ -9,13 +9,13 @@ import (
 func (db *Database) updateMetricsBatch(ctx context.Context, tx *sql.Tx, metrics []model.Metrics) error {
 	//_, err := db.pgx.ExecContext(ctx, "UPDATE GaugeMetrics SET val=$1 WHERE key=$2", val, key)
 
-	stmt1, err := tx.PrepareContext(ctx, "INSERT INTO GaugeMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = $2;")
+	stmt1, err := db.pgx.PrepareContext(ctx, "INSERT INTO GaugeMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = $2;")
 	defer stmt1.Close()
 	if err != nil {
 		return err
 	}
 
-	stmt2, err := tx.PrepareContext(ctx, "INSERT INTO CounterMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = CounterMetrics.val + $2;")
+	stmt2, err := db.pgx.PrepareContext(ctx, "INSERT INTO CounterMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = CounterMetrics.val + $2;")
 
 	defer stmt2.Close()
 	if err != nil {
@@ -28,8 +28,7 @@ func (db *Database) updateMetricsBatch(ctx context.Context, tx *sql.Tx, metrics 
 			if err != nil {
 				return err
 			}
-		}
-		if v.MType == "counter" {
+		} else if v.MType == "counter" {
 			_, err = stmt2.ExecContext(ctx, v.ID, v.Delta)
 			if err != nil {
 				return err

@@ -144,9 +144,9 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 	var vivod string
 	vivod = "\n---------------Получение данных-------------\n"
 	if metrics.MType == "counter" {
-		vivod += fmt.Sprintf("%s: %v\n", metrics.ID, *(metrics).Delta)
+		vivod += fmt.Sprintf("type: %s: %s: %v\n", metrics.MType, metrics.ID, *(metrics).Delta)
 	} else {
-		vivod += fmt.Sprintf("%s: %f\n", metrics.ID, *(metrics).Value)
+		vivod += fmt.Sprintf("type: %s: %s: %f\n", metrics.MType, metrics.ID, *(metrics).Value)
 	}
 	log.Println(vivod)
 
@@ -213,6 +213,12 @@ func (h *Handler) HandlerPingDatabase(res http.ResponseWriter, req *http.Request
 
 func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request) {
 	var metrics []model.Metrics
+	store2 := h.Service.Store
+	if (store2) == (*store.Database)(nil) {
+		logger.Log.Info("Failed to ping database")
+		http.Error(res, "Failed to ping database", http.StatusInternalServerError)
+		return
+	}
 
 	err := json.NewDecoder(req.Body).Decode(&metrics)
 	if err != nil {
@@ -226,10 +232,10 @@ func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request)
 	vivod = "\n---------------Запись данных---------------\n"
 	for i := range metrics {
 		if metrics[i].MType == "counter" {
-			vivod += fmt.Sprintf("%s: %d\n", metrics[i].ID, *(metrics[i].Delta))
+			vivod += fmt.Sprintf("type: %s: %s: %d\n", metrics[i].MType, metrics[i].ID, *(metrics[i].Delta))
 		}
 		if metrics[i].MType == "gauge" {
-			vivod += fmt.Sprintf("%s: %f\n", metrics[i].ID, *(metrics[i].Value))
+			vivod += fmt.Sprintf("type: %s: %s: %f\n", metrics[i].MType, metrics[i].ID, *(metrics[i].Value))
 		}
 	}
 	log.Println(vivod)
