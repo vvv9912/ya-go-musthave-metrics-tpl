@@ -142,16 +142,14 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	var vivod string
-	vivod := "\n---------------Получение данных-------------\n"
+	vivod = "\n---------------Получение данных-------------\n"
 	if metrics.MType == "counter" {
 		vivod += fmt.Sprintf("%s: %v\n", metrics.ID, *(metrics).Delta)
 	} else {
 		vivod += fmt.Sprintf("%s: %f\n", metrics.ID, *(metrics).Value)
 	}
 	log.Println(vivod)
-	//log.Println(metrics)
-	//log.Println(&metrics)
-	//log.Println(*(metrics).Delta)
+
 	response, err := json.Marshal(metrics)
 	if err != nil {
 		logger.Log.Info("Failed to unmarshal metrics", zap.Error(err))
