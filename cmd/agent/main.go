@@ -5,6 +5,7 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/metrics"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/notifier"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/server"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"log"
 	"os"
 	"os/signal"
@@ -24,6 +25,9 @@ func run() error {
 	log.Println("pollInterval=", pollInterval)
 	log.Println("reportInterval=", reportInterval)
 	log.Println("URLserver=", URLserver)
+	if err := logger.Initialize("info"); err != nil {
+		return err
+	}
 
 	metrics := metrics.NewMetriсs()
 	postreq := server.NewPostRequest()

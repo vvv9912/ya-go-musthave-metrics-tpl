@@ -44,19 +44,22 @@ func (n *Notifier) NotifyPending() (*map[string]string, uint64, error) {
 }
 func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]string, counter uint64) error {
 	var wg sync.WaitGroup
-
+	wg.Add(1)
 	//Передаем gauge
-	for key, values := range *gauge {
-		wg.Add(1)
-		go func(key string, values string) {
-			defer wg.Done()
+	go func() {
+		defer wg.Done()
+
+		for key, values := range *gauge {
+			//
+			//go func(key string, values string) {
+			//
 			//todo параллельная отправка
 			url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
 
 			err := n.PostReq(ctx, url)
 			if err != nil {
 				log.Println(err)
-				return
+				//	return err
 			}
 
 			val, err := strconv.ParseFloat(values, 64)
@@ -83,10 +86,11 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 			if err != nil {
 				log.Println(err)
 			}
-		}(key, values)
-	}
+
+		}
+	}()
 	//Передаем counter
-	wg.Add(1)
+	//wg.Add(1)
 	go func() {
 		defer wg.Done()
 		//todo параллельная отправка
