@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
@@ -12,8 +13,8 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"go.uber.org/zap"
 	"io"
-	"log"
 	"net/http"
+	"time"
 )
 
 type Handler struct {
@@ -68,11 +69,39 @@ func HandlerGetMetrics(gauger storage.GaugeStorager, counter storage.CounterStor
 			body += fmt.Sprintf("%s: %f\n", key, value)
 		}
 		count, err := counter.GetAllCounter(req.Context())
+		if errors.Is(err, store.ErrConnectionException) {
+			logger.Log.Info("Failed to get metrics, error connection with bd", zap.Error(err))
+			http.Error(res, "Failed to get metrics, error connection with bd", http.StatusInternalServerError)
+			for i := range store.RetriableTime {
+				time.Sleep(time.Duration(store.RetriableTime[i]) * time.Second)
+				count, err = counter.GetAllCounter(req.Context())
+				if err != nil {
+
+					if errors.Is(err, store.ErrConnectionException) {
+						logger.Log.Info("Failed to get metrics, error connection with bd", zap.String("retriable time: ", fmt.Sprint(store.RetriableTime[i])), zap.Error(err))
+						http.Error(res, "Failed to get metrics, error connection with bd", http.StatusInternalServerError)
+
+					} else {
+
+						logger.Log.Info("Failed to get metrics", zap.String("retriable time: ", fmt.Sprint(store.RetriableTime[i])), zap.Error(err))
+						http.Error(res, "Failed to get metrics", http.StatusInternalServerError)
+						return
+
+					}
+
+				} else {
+
+					break
+
+				}
+			}
+		}
 		if err != nil {
-			logger.Log.Info("Failed to get counter", zap.Error(err))
-			http.Error(res, "Failed to get counter", http.StatusInternalServerError)
+			logger.Log.Info("Failed to send metrics to batch", zap.Error(err))
+			http.Error(res, "Failed to send metrics to batch", http.StatusInternalServerError)
 			return
 		}
+
 		for key, value := range count {
 			body += fmt.Sprintf("%s: %v\n", key, value)
 		}
@@ -100,18 +129,50 @@ func (h *Handler) HandlerPostJSON(res http.ResponseWriter, req *http.Request) {
 
 	err = h.Service.Metrics.PutMetrics(req.Context(), metrics)
 	if err != nil {
+		if errors.Is(err, store.ErrConnectionException) {
+			logger.Log.Info("Failed to get metrics, error connection with bd", zap.Error(err))
+			http.Error(res, "Failed to get metrics, error connection with bd", http.StatusInternalServerError)
+			return
+		}
+
 		logger.Log.Info("Failed to put metrics", zap.Error(err))
 		http.Error(res, "Failed to put metrics", http.StatusNotFound)
 		return
 	}
 
 	err = h.Service.Metrics.SendMetricstoFile(req.Context())
+	if errors.Is(err, store.ErrConnectionException) {
+		logger.Log.Info("Failed to get metrics, error connection with bd", zap.Error(err))
+		http.Error(res, "Failed to get metrics, error connection with bd", http.StatusInternalServerError)
+		for i := range store.RetriableTime {
+			time.Sleep(time.Duration(store.RetriableTime[i]) * time.Second)
+			err = h.Service.Metrics.SendMetricstoFile(req.Context())
+			if err != nil {
+
+				if errors.Is(err, store.ErrConnectionException) {
+					logger.Log.Info("Failed to get metrics, error connection with bd", zap.String("retriable time: ", fmt.Sprint(store.RetriableTime[i])), zap.Error(err))
+					http.Error(res, "Failed to get metrics, error connection with bd", http.StatusInternalServerError)
+
+				} else {
+
+					logger.Log.Info("Failed to get metrics", zap.String("retriable time: ", fmt.Sprint(store.RetriableTime[i])), zap.Error(err))
+					http.Error(res, "Failed to get metrics", http.StatusInternalServerError)
+					return
+
+				}
+
+			} else {
+
+				break
+
+			}
+		}
+	}
 	if err != nil {
-		logger.Log.Error("Failed to send metrics to file", zap.Error(err))
-		http.Error(res, "Failed to send metrics to file", http.StatusInternalServerError)
+		logger.Log.Info("Failed to send metrics to batch", zap.Error(err))
+		http.Error(res, "Failed to send metrics to batch", http.StatusInternalServerError)
 		return
 	}
-
 	response := body
 
 	res.Header().Set("Content-Type", "application/json")
@@ -131,24 +192,43 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 	err = json.Unmarshal(body, &metrics)
 	if err != nil {
 		logger.Log.Info("Failed to retrieve metrics", zap.Error(err))
-		http.Error(res, "Failed to retrieve metrics", http.StatusInternalServerError)
+		http.Error(res, "Failed to retrieve metrics", http.StatusBadRequest)
 		return
 	}
 
 	metrics, err = h.Service.Metrics.GetMetrics(req.Context(), metrics)
+	if errors.Is(err, store.ErrConnectionException) {
+		logger.Log.Info("Failed to get metrics, error connection with bd", zap.Error(err))
+		http.Error(res, "Failed to get metrics, error connection with bd", http.StatusInternalServerError)
+		for i := range store.RetriableTime {
+			time.Sleep(time.Duration(store.RetriableTime[i]) * time.Second)
+			metrics, err = h.Service.Metrics.GetMetrics(req.Context(), metrics)
+			if err != nil {
+
+				if errors.Is(err, store.ErrConnectionException) {
+					logger.Log.Info("Failed to get metrics, error connection with bd", zap.String("retriable time: ", fmt.Sprint(store.RetriableTime[i])), zap.Error(err))
+					http.Error(res, "Failed to get metrics, error connection with bd", http.StatusInternalServerError)
+
+				} else {
+
+					logger.Log.Info("Failed to get metrics", zap.String("retriable time: ", fmt.Sprint(store.RetriableTime[i])), zap.Error(err))
+					http.Error(res, "Failed to get metrics", http.StatusInternalServerError)
+					return
+
+				}
+
+			} else {
+
+				break
+
+			}
+		}
+	}
 	if err != nil {
-		logger.Log.Info("Failed to get metrics", zap.Error(err))
-		http.Error(res, "Failed to get metrics", http.StatusNotFound)
+		logger.Log.Info("Failed to send metrics to batch", zap.Error(err))
+		http.Error(res, "Failed to send metrics to batch", http.StatusInternalServerError)
 		return
 	}
-	var vivod string
-	vivod = "\n---------------Получение данных-------------\n"
-	if metrics.MType == "counter" {
-		vivod += fmt.Sprintf("type: %s: %s: %v\n", metrics.MType, metrics.ID, *(metrics).Delta)
-	} else {
-		vivod += fmt.Sprintf("type: %s: %s: %f\n", metrics.MType, metrics.ID, *(metrics).Value)
-	}
-	log.Println(vivod)
 
 	response, err := json.Marshal(metrics)
 	if err != nil {
@@ -172,14 +252,41 @@ func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 	err = json.Unmarshal(body, &metrics)
 	if err != nil {
 		logger.Log.Info("Failed to retrieve metrics", zap.Error(err))
-		http.Error(res, "Failed to retrieve metrics", http.StatusInternalServerError)
+		http.Error(res, "Failed to retrieve metrics", http.StatusBadRequest)
 		return
 	}
 
 	metrics, err = h.Service.Metrics.GetMetrics(req.Context(), metrics)
+	if errors.Is(err, store.ErrConnectionException) {
+		logger.Log.Info("Failed to get metrics, error connection with bd", zap.Error(err))
+		http.Error(res, "Failed to get metrics, error connection with bd", http.StatusInternalServerError)
+		for i := range store.RetriableTime {
+			time.Sleep(time.Duration(store.RetriableTime[i]) * time.Second)
+			metrics, err = h.Service.Metrics.GetMetrics(req.Context(), metrics)
+			if err != nil {
+
+				if errors.Is(err, store.ErrConnectionException) {
+					logger.Log.Info("Failed to get metrics, error connection with bd", zap.String("retriable time: ", fmt.Sprint(store.RetriableTime[i])), zap.Error(err))
+					http.Error(res, "Failed to get metrics, error connection with bd", http.StatusInternalServerError)
+
+				} else {
+
+					logger.Log.Info("Failed to get metrics", zap.String("retriable time: ", fmt.Sprint(store.RetriableTime[i])), zap.Error(err))
+					http.Error(res, "Failed to get metrics", http.StatusInternalServerError)
+					return
+
+				}
+
+			} else {
+
+				break
+
+			}
+		}
+	}
 	if err != nil {
-		logger.Log.Info("Failed to get metrics", zap.Error(err))
-		http.Error(res, "Failed to get Metrics", http.StatusNotFound)
+		logger.Log.Info("Failed to send metrics to batch", zap.Error(err))
+		http.Error(res, "Failed to send metrics to batch", http.StatusInternalServerError)
 		return
 	}
 
@@ -223,23 +330,38 @@ func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request)
 	err := json.NewDecoder(req.Body).Decode(&metrics)
 	if err != nil {
 		logger.Log.Info("Failed to read request body", zap.Error(err))
-		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		http.Error(res, "Failed to read request body", http.StatusBadRequest)
 		return
 	}
 
 	err = h.Service.Store.UpdateMetricsBatch(req.Context(), metrics)
-	var vivod string
-	vivod = "\n---------------Запись данных---------------\n"
-	for i := range metrics {
-		if metrics[i].MType == "counter" {
-			vivod += fmt.Sprintf("type: %s: %s: %d\n", metrics[i].MType, metrics[i].ID, *(metrics[i].Delta))
-		}
-		if metrics[i].MType == "gauge" {
-			vivod += fmt.Sprintf("type: %s: %s: %f\n", metrics[i].MType, metrics[i].ID, *(metrics[i].Value))
+	if errors.Is(err, store.ErrConnectionException) {
+		logger.Log.Info("Failed to get metrics, error connection with bd", zap.Error(err))
+		http.Error(res, "Failed to get metrics, error connection with bd", http.StatusInternalServerError)
+		for i := range store.RetriableTime {
+			time.Sleep(time.Duration(store.RetriableTime[i]) * time.Second)
+			err = h.Service.Store.UpdateMetricsBatch(req.Context(), metrics)
+			if err != nil {
+
+				if errors.Is(err, store.ErrConnectionException) {
+					logger.Log.Info("Failed to get metrics, error connection with bd", zap.String("retriable time: ", fmt.Sprint(store.RetriableTime[i])), zap.Error(err))
+					http.Error(res, "Failed to get metrics, error connection with bd", http.StatusInternalServerError)
+
+				} else {
+
+					logger.Log.Info("Failed to get metrics", zap.String("retriable time: ", fmt.Sprint(store.RetriableTime[i])), zap.Error(err))
+					http.Error(res, "Failed to get metrics", http.StatusInternalServerError)
+					return
+
+				}
+
+			} else {
+
+				break
+
+			}
 		}
 	}
-	log.Println(vivod)
-
 	if err != nil {
 		logger.Log.Info("Failed to send metrics to batch", zap.Error(err))
 		http.Error(res, "Failed to send metrics to batch", http.StatusInternalServerError)

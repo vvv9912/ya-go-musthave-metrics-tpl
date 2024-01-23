@@ -2,10 +2,15 @@ package store
 
 import (
 	"context"
+	"errors"
+	"github.com/jackc/pgerrcode"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
 //go:generate mockgen -source=store.go -destination=mock/store_mock.go
+
+var ErrConnectionException = errors.New(pgerrcode.ConnectionException)
+var RetriableTime = []int{1, 3, 5}
 
 type GaugeStorager interface {
 	UpdateGauge(ctx context.Context, key string, val float64) error
