@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE CounterMetrics (
     key text unique not null primary key,
-    val integer
+    val bigint
 );
 -- +goose StatementEnd
 
