@@ -8,6 +8,7 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
 	"log"
@@ -28,15 +29,14 @@ func NewServer() *Server {
 func (s *Server) StartServer(
 	ctx context.Context,
 	addr string,
-	gaugeStorage service.GaugeStorager,
-	counterStorage service.CounterStorager,
+	Storage store.Storager,
 	timeSend time.Duration,
 	writer notifier.Writer,
-	store service.Store) error {
+	store store.DB) error {
 
 	var (
-		e       = notifier.NewNotifier(gaugeStorage, counterStorage, timeSend, writer)
-		Service = service.NewService(counterStorage, gaugeStorage, e, store)
+		e       = notifier.NewNotifier(Storage, timeSend, writer)
+		Service = service.NewService(Storage, e, store)
 		h       = handler.NewHandler(Service)
 		m       = mw.NewMw(Service)
 	)
@@ -52,7 +52,7 @@ func (s *Server) StartServer(
 	s.s.With(m.MiddlwareCheckJSON).Post("/update/", h.HandlerPostJSON)
 	s.s.With(m.MiddlwareCheckJSON).Post("/value/", h.HandlerGetJSON)
 
-	s.s.Get("/", handler.HandlerGetMetrics(gaugeStorage, counterStorage))
+	s.s.Get("/", handler.HandlerGetMetrics(Storage))
 	s.s.Get("/ping", h.HandlerPingDatabase)
 	s.s.Post("/updates/", h.HandlerPostBatched)
 

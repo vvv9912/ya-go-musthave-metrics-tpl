@@ -1,0 +1,28 @@
+package store
+
+import (
+	"context"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
+)
+
+type Storager interface {
+	UpdateGauge(ctx context.Context, key string, val float64) error
+	GetGauge(ctx context.Context, key string) (float64, error)
+	GetAllGauge(ctx context.Context) (map[string]float64, error)
+	//counter
+	UpdateCounter(ctx context.Context, key string, val int64) error
+	GetCounter(ctx context.Context, key string) (int64, error)
+	GetAllCounter(ctx context.Context) (map[string]int64, error)
+	UpdateMetricsBatch(ctx context.Context, metrics []model.Metrics) error
+}
+type DB interface {
+	Ping(ctx context.Context) error
+}
+type Repository struct {
+	Storager
+	DB
+}
+
+func NewRepository(db DB, storager Storager) *Repository {
+	return &Repository{DB: db, Storager: storager}
+}

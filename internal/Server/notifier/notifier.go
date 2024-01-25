@@ -3,7 +3,7 @@ package notifier
 import (
 	"context"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"log"
 	"time"
 )
@@ -15,14 +15,13 @@ type NotifierSend interface {
 	NotifierPending(ctx context.Context) error
 }
 type Notifier struct {
-	gauge   service.GaugeStorager
-	counter service.CounterStorager
+	store store.Storager
 	Writer
 	TimerSend time.Duration
 }
 
-func NewNotifier(gauge service.GaugeStorager, counter service.CounterStorager, timerSend time.Duration, writer Writer) *Notifier {
-	return &Notifier{gauge: gauge, counter: counter, TimerSend: timerSend, Writer: writer}
+func NewNotifier(Storage store.Storager, timerSend time.Duration, writer Writer) *Notifier {
+	return &Notifier{store: Storage, TimerSend: timerSend, Writer: writer}
 }
 
 // Отправка при таймере =0
@@ -30,11 +29,11 @@ func (n *Notifier) NotifierPending(ctx context.Context) error {
 	if n.TimerSend != 0 {
 		return nil
 	}
-	gauge, err := n.gauge.GetAllGauge(ctx)
+	gauge, err := n.store.GetAllGauge(ctx)
 	if err != nil {
 		return err
 	}
-	counter, err := n.counter.GetAllCounter(ctx)
+	counter, err := n.store.GetAllCounter(ctx)
 	if err != nil {
 		return err
 	}
@@ -60,12 +59,12 @@ func (n *Notifier) StartNotifier(ctx context.Context) {
 				// Обработка завершения программы
 				return
 			case <-ticker.C:
-				gauge, err := n.gauge.GetAllGauge(ctx)
+				gauge, err := n.store.GetAllGauge(ctx)
 				if err != nil {
 					log.Println(err)
 					return
 				}
-				counter, err := n.counter.GetAllCounter(ctx)
+				counter, err := n.store.GetAllCounter(ctx)
 				if err != nil {
 					log.Println(err)
 					return

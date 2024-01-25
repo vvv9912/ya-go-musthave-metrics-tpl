@@ -2,17 +2,17 @@ package service
 
 import (
 	"context"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
 type MeticsService struct {
-	counter CounterStorager
-	gauge   GaugeStorager
+	storage store.Storager
 	notify  NotifierSend //н
 }
 
-func NewMeticsService(counter CounterStorager, gauge GaugeStorager, notify NotifierSend) *MeticsService {
-	return &MeticsService{counter: counter, gauge: gauge, notify: notify}
+func NewMeticsService(storage store.Storager, notify NotifierSend) *MeticsService {
+	return &MeticsService{storage: storage, notify: notify}
 }
 func (p *MeticsService) GetMetrics(ctx context.Context, metrics model.Metrics) (model.Metrics, error) {
 	switch metrics.MType {
@@ -50,18 +50,18 @@ func (p *MeticsService) PutMetrics(ctx context.Context, metrics model.Metrics) e
 	return nil
 }
 func (p *MeticsService) GetCounter(ctx context.Context, key string) (int64, error) {
-	return p.counter.GetCounter(ctx, key)
+	return p.storage.GetCounter(ctx, key)
 }
 func (p *MeticsService) GetGauge(ctx context.Context, key string) (float64, error) {
-	return p.gauge.GetGauge(ctx, key)
+	return p.storage.GetGauge(ctx, key)
 }
 func (p *MeticsService) PutGauge(ctx context.Context, key string, val float64) error {
-	return p.gauge.UpdateGauge(ctx, key, val)
+	return p.storage.UpdateGauge(ctx, key, val)
 }
 
 func (p *MeticsService) PutCounter(ctx context.Context, key string, val int64) error {
 
-	return p.counter.UpdateCounter(ctx, key, val)
+	return p.storage.UpdateCounter(ctx, key, val)
 }
 
 func (p *MeticsService) SendMetricstoFile(ctx context.Context) error {

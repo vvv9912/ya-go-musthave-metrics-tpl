@@ -6,9 +6,9 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/postgresql"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
 	"log"
@@ -41,9 +41,11 @@ func run() error {
 	logger.Log.Info("FileStoragePath=" + FileStoragePath)
 	logger.Log.Info("Restore=", zap.Bool("RESTORE", RESTORE))
 
-	var counter service.CounterStorager
-	var gauge service.GaugeStorager
-	var database *store.Database
+	//var counter service.CounterStorager
+	//var gauge service.GaugeStorager
+	//var database *postgresql.Database
+	var Repo *store.Repository
+	//store.NewRepository(database, store.NewStorager())
 	if DatabaseDsn != "" {
 		db, err := sql.Open("pgx", DatabaseDsn)
 		if err != nil {
@@ -60,12 +62,12 @@ func run() error {
 			logger.Log.Panic("error up counter", zap.Error(err))
 			return err
 		}
-		database = store.NewDatabase(db)
-		counter = database
-		gauge = database
+		database := postgresql.NewDatabase(db)
+		Repo = store.NewRepository(database, database)
+
 	} else {
-		counter = storage.NewCounterStorage()
-		gauge = storage.NewGaugeStorage()
+		stor := storage.NewStorage()
+		Repo = store.NewRepository(nil, stor)
 	}
 
 	//Если включено восстановление данных
@@ -85,13 +87,13 @@ func run() error {
 
 		if event != nil {
 			for key, val := range event.Counter {
-				err = counter.UpdateCounter(context.Background(), key, val)
+				err = Repo.UpdateCounter(context.Background(), key, val)
 				if err != nil {
 					logger.Log.Info("error update counter", zap.Error(err))
 				}
 			}
 			for key, val := range event.Gauge {
-				err = gauge.UpdateGauge(context.Background(), key, val)
+				err = Repo.UpdateGauge(context.Background(), key, val)
 				if err != nil {
 					logger.Log.Info("error update gauge", zap.Error(err))
 				}
@@ -112,7 +114,7 @@ func run() error {
 	}
 	defer produce.Close()
 
-	err = s.StartServer(ctx, URLserver, gauge, counter, time.Duration(timerSend)*time.Second, produce, database)
+	err = s.StartServer(ctx, URLserver, Repo, time.Duration(timerSend)*time.Second, produce, Repo)
 	if err != nil {
 		log.Println(err)
 		return err

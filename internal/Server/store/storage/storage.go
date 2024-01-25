@@ -3,21 +3,24 @@ package storage
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"sync"
 )
 
-// TODO переделать под общий интерфейс get, update
-type GaugeStorager interface {
-	UpdateGauge(ctx context.Context, key string, val float64) error
-	GetGauge(ctx context.Context, key string) (float64, error)
-	GetAllGauge(ctx context.Context) (map[string]float64, error)
-}
-
-type CounterStorager interface {
-	UpdateCounter(ctx context.Context, key string, val int64) error
-	GetCounter(ctx context.Context, key string) (int64, error)
-	GetAllCounter(ctx context.Context) (map[string]int64, error)
-}
+// // TODO переделать под общий интерфейс get, update
+//
+//	type GaugeStorager interface {
+//		UpdateGauge(ctx context.Context, key string, val float64) error
+//		GetGauge(ctx context.Context, key string) (float64, error)
+//		GetAllGauge(ctx context.Context) (map[string]float64, error)
+//	}
+//
+//	type CounterStorager interface {
+//		UpdateCounter(ctx context.Context, key string, val int64) error
+//		GetCounter(ctx context.Context, key string) (int64, error)
+//		GetAllCounter(ctx context.Context) (map[string]int64, error)
+//	}
 type MemStorage struct {
 	gaugeStorage   map[string]float64 //todo переделать под map[string]string, в соотв. с agent
 	counterStorage map[string]int64
@@ -25,14 +28,21 @@ type MemStorage struct {
 	counterMutex   sync.Mutex
 }
 
-func NewGaugeStorage() GaugeStorager {
-	gaugeStorage := make(map[string]float64)
-	return &MemStorage{gaugeStorage: gaugeStorage}
+func NewStorage() *MemStorage {
+	return &MemStorage{
+		gaugeStorage:   make(map[string]float64),
+		counterStorage: make(map[string]int64),
+	}
 }
-func NewCounterStorage() CounterStorager {
-	counterStorage := make(map[string]int64)
-	return &MemStorage{counterStorage: counterStorage}
-}
+
+//func NewGaugeStorage() GaugeStorager {
+//	gaugeStorage := make(map[string]float64)
+//	return &MemStorage{gaugeStorage: gaugeStorage}
+//}
+//func NewCounterStorage() CounterStorager {
+//	counterStorage := make(map[string]int64)
+//	return &MemStorage{counterStorage: counterStorage}
+//}
 
 /*
 Тип gauge, float64 — новое значение должно замещать предыдущее.
@@ -80,6 +90,10 @@ func (S *MemStorage) GetCounter(ctx context.Context, key string) (int64, error) 
 }
 func (S *MemStorage) GetAllCounter(ctx context.Context) (map[string]int64, error) {
 	return S.counterStorage, nil
+}
+
+func (S *MemStorage) UpdateMetricsBatch(ctx context.Context, metrics []model.Metrics) error {
+	return fmt.Errorf("method updateMetricsBatch for metrics are not implemented")
 }
 
 //func (S *storage) AddGauge(key string, val float64) error {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/postgresql"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
@@ -54,10 +54,10 @@ func HandlerGetGauge(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(body))
 }
 
-func HandlerGetMetrics(gauger storage.GaugeStorager, counter storage.CounterStorager) func(res http.ResponseWriter, req *http.Request) {
+func HandlerGetMetrics(storage store.Storager) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Set("Content-Type", "text/html")
-		gauge, err := gauger.GetAllGauge(req.Context())
+		gauge, err := storage.GetAllGauge(req.Context())
 		if err != nil {
 			logger.Log.Info("Failed to get gauge", zap.Error(err))
 			http.Error(res, "Failed to get gauge", http.StatusInternalServerError)
@@ -67,7 +67,7 @@ func HandlerGetMetrics(gauger storage.GaugeStorager, counter storage.CounterStor
 		for key, value := range gauge {
 			body += fmt.Sprintf("%s: %f\n", key, value)
 		}
-		count, err := counter.GetAllCounter(req.Context())
+		count, err := storage.GetAllCounter(req.Context())
 		if err != nil {
 			logger.Log.Info("Failed to get counter", zap.Error(err))
 			http.Error(res, "Failed to get counter", http.StatusInternalServerError)
@@ -194,8 +194,8 @@ func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 	res.Write(response)
 }
 func (h *Handler) HandlerPingDatabase(res http.ResponseWriter, req *http.Request) {
-	store2 := h.Service.Store
-	if (store2) == (*store.Database)(nil) {
+	store2 := h.Service.Db
+	if (store2) == (*postgresql.Database)(nil) {
 		logger.Log.Info("Failed to ping database")
 		http.Error(res, "Failed to ping database", http.StatusInternalServerError)
 		return
@@ -213,8 +213,8 @@ func (h *Handler) HandlerPingDatabase(res http.ResponseWriter, req *http.Request
 
 func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request) {
 	var metrics []model.Metrics
-	store2 := h.Service.Store
-	if (store2) == (*store.Database)(nil) {
+	store2 := h.Service.Storage
+	if (store2) == (*postgresql.Database)(nil) {
 		logger.Log.Info("Failed to ping database")
 		http.Error(res, "Failed to ping database", http.StatusInternalServerError)
 		return
@@ -227,7 +227,7 @@ func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	err = h.Service.Store.UpdateMetricsBatch(req.Context(), metrics)
+	err = h.Service.Storage.UpdateMetricsBatch(req.Context(), metrics)
 	var vivod string
 	vivod = "\n---------------Запись данных---------------\n"
 	for i := range metrics {

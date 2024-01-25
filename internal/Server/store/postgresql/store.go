@@ -1,4 +1,4 @@
-package store
+package postgresql
 
 import (
 	"context"
@@ -6,18 +6,6 @@ import (
 )
 
 //go:generate mockgen -source=store.go -destination=mock/store_mock.go
-
-type GaugeStorager interface {
-	UpdateGauge(ctx context.Context, key string, val float64) error
-	GetGauge(ctx context.Context, key string) (float64, error)
-	GetAllGauge(ctx context.Context) (map[string]float64, error)
-}
-
-type CounterStorager interface {
-	UpdateCounter(ctx context.Context, key string, val int64) error
-	GetCounter(ctx context.Context, key string) (int64, error)
-	GetAllCounter(ctx context.Context) (map[string]int64, error)
-}
 
 func (db *Database) Ping(ctx context.Context) error {
 	return db.pgx.PingContext(ctx)
