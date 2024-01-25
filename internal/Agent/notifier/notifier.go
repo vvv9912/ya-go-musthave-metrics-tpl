@@ -45,46 +45,54 @@ func (n *Notifier) NotifyPending() (*map[string]string, uint64, error) {
 func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]string, counter uint64) error {
 	var wg sync.WaitGroup
 
+	// пул горутин
+	PCh := make(chan struct{}, 10)
 	//Передаем gauge
-	for key, values := range *gauge {
-		wg.Add(1)
-		go func(key string, values string) {
-			defer wg.Done()
-			//todo параллельная отправка
-			url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
+	go func() {
+		for key, values := range *gauge {
+			wg.Add(1)
+			PCh <- struct{}{}
+			go func(key string, values string) {
+				defer wg.Done()
+				defer func() {
+					//освоблождаем горутину
+					<-PCh
+				}()
+				url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
 
-			err := n.PostReq(ctx, url)
-			if err != nil {
-				log.Println(err)
-				return
-			}
+				err := n.PostReq(ctx, url)
+				if err != nil {
+					log.Println(err)
+					return
+				}
 
-			val, err := strconv.ParseFloat(values, 64)
-			if err != nil {
-				log.Println(err)
-			}
+				val, err := strconv.ParseFloat(values, 64)
+				if err != nil {
+					log.Println(err)
+				}
 
-			m := model.Metrics{
-				ID:    key,
-				MType: "gauge",
-				Delta: nil,
-				Value: &val,
-			}
+				m := model.Metrics{
+					ID:    key,
+					MType: "gauge",
+					Delta: nil,
+					Value: &val,
+				}
 
-			data, err := json.Marshal(m)
+				data, err := json.Marshal(m)
 
-			if err != nil {
-				log.Println(err)
-			}
+				if err != nil {
+					log.Println(err)
+				}
 
-			url2 := "http://" + n.URL + "/update/"
+				url2 := "http://" + n.URL + "/update/"
 
-			err = n.PostReqJSON(ctx, url2, data)
-			if err != nil {
-				log.Println(err)
-			}
-		}(key, values)
-	}
+				err = n.PostReqJSON(ctx, url2, data)
+				if err != nil {
+					log.Println(err)
+				}
+			}(key, values)
+		}
+	}()
 	//Передаем counter
 	wg.Add(1)
 	go func() {
