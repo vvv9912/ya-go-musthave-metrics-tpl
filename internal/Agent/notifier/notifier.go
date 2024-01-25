@@ -42,6 +42,7 @@ func (n *Notifier) NotifyPending() (*map[string]string, uint64, error) {
 	}
 	return gauge, counter, nil
 }
+
 func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]string, counter uint64) error {
 	var wg sync.WaitGroup
 
