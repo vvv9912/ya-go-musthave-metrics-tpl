@@ -172,7 +172,7 @@ func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {
 			return
 		}
 		logger.Log.Info("Обновление значения метрик", zap.Float64(name, value))
-		err = m.Service.GaugeStorager.UpdateGauge(req.Context(), name, value)
+		err = m.Service.Storage.UpdateGauge(req.Context(), name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
@@ -200,7 +200,7 @@ func (m *Mw) MiddlewareCounter(next http.Handler) http.Handler {
 			return
 		}
 		logger.Log.Info("Обновление значения метрик", zap.Int64(name, value))
-		err = m.Service.CounterStorager.UpdateCounter(req.Context(), name, value)
+		err = m.Service.Storage.UpdateCounter(req.Context(), name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
@@ -247,7 +247,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusNotFound), http.StatusNotFound)
 			logger.Log.Info("Получение значения метрики из хранилища:", zap.Int64(name, val), zap.Error(err))
 
-			err = m.Service.CounterStorager.UpdateCounter(req.Context(), name, http.StatusNotFound) //Зачем добавлять значение метрики 404, если не найдено?. Без этого тест не проходит
+			err = m.Service.Storage.UpdateCounter(req.Context(), name, http.StatusNotFound) //Зачем добавлять значение метрики 404, если не найдено?. Без этого тест не проходит
 			if err != nil {
 				log.Println(err)
 				return
