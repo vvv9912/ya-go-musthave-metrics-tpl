@@ -31,7 +31,7 @@ type Service struct {
 	Metrics  Metrics
 	Storage  store.Storager
 	Notifier NotifierSend
-	Db       store.DB
+	DB       store.DB
 }
 
 func NewService(storage store.Storager, notify NotifierSend, db store.DB) *Service {
@@ -39,6 +39,6 @@ func NewService(storage store.Storager, notify NotifierSend, db store.DB) *Servi
 		Storage:  storage,
 		Notifier: notify,
 		Metrics:  NewMeticsService(storage, notify),
-		Db:       db}
+		DB:       db}
 
 }

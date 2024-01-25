@@ -194,7 +194,7 @@ func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 	res.Write(response)
 }
 func (h *Handler) HandlerPingDatabase(res http.ResponseWriter, req *http.Request) {
-	store2 := h.Service.Db
+	store2 := h.Service.DB
 	if (store2) == (*postgresql.Database)(nil) {
 		logger.Log.Info("Failed to ping database")
 		http.Error(res, "Failed to ping database", http.StatusInternalServerError)
