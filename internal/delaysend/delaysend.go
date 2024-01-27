@@ -24,8 +24,10 @@ func (d *DelaySend) SendDelayedMetrics(f func() (model.Metrics, error)) (model.M
 	if err == nil {
 		return m, nil //success
 	}
-	if err != nil && !errors.Is(err, d.error) {
-		return m, err
+	if err != nil {
+		if !errors.Is(err, d.error) {
+			return m, err
+		}
 	}
 	for _, v := range d.delay {
 		time.Sleep(time.Duration(v) * time.Second)
@@ -34,8 +36,10 @@ func (d *DelaySend) SendDelayedMetrics(f func() (model.Metrics, error)) (model.M
 		if err == nil {
 			return m, nil //sucess
 		}
-		if err != nil && !errors.Is(err, d.error) {
-			return m, err
+		if err != nil {
+			if !errors.Is(err, d.error) {
+				return m, err
+			}
 		}
 	}
 
@@ -48,8 +52,10 @@ func (d *DelaySend) SendDelayed(f func() error) error {
 	if err == nil {
 		return nil //success
 	}
-	if err != nil && !errors.Is(err, d.error) {
-		return err
+	if err != nil {
+		if !errors.Is(err, d.error) {
+			return err
+		}
 	}
 	for _, v := range d.delay {
 		time.Sleep(time.Duration(v) * time.Second)
@@ -58,8 +64,10 @@ func (d *DelaySend) SendDelayed(f func() error) error {
 		if err == nil {
 			return nil //sucess
 		}
-		if err != nil && !errors.Is(err, d.error) {
-			return err
+		if err != nil {
+			if !errors.Is(err, d.error) {
+				return err
+			}
 		}
 	}
 

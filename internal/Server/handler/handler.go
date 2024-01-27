@@ -242,8 +242,7 @@ func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request)
 	err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
 		AddExpectedError(syscall.ECONNREFUSED).
 		SendDelayed(func() error {
-			err = h.Service.Storage.UpdateMetricsBatch(req.Context(), metrics)
-			return err
+			return h.Service.Storage.UpdateMetricsBatch(req.Context(), metrics)
 		})
 
 	if err != nil {
