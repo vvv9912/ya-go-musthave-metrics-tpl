@@ -8,12 +8,13 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/postgresql"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/delaysend"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"go.uber.org/zap"
 	"io"
-	"log"
 	"net/http"
+	"syscall"
 )
 
 type Handler struct {
@@ -73,6 +74,7 @@ func HandlerGetMetrics(storage store.Storager) func(res http.ResponseWriter, req
 			http.Error(res, "Failed to get counter", http.StatusInternalServerError)
 			return
 		}
+
 		for key, value := range count {
 			body += fmt.Sprintf("%s: %v\n", key, value)
 		}
@@ -98,10 +100,14 @@ func (h *Handler) HandlerPostJSON(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = h.Service.Metrics.PutMetrics(req.Context(), metrics)
+	err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+		AddExpectedError(syscall.ECONNREFUSED).
+		SendDelayed(func() error {
+			return h.Service.Metrics.PutMetrics(req.Context(), metrics)
+		})
 	if err != nil {
 		logger.Log.Info("Failed to put metrics", zap.Error(err))
-		http.Error(res, "Failed to put metrics", http.StatusNotFound)
+		http.Error(res, "Failed to put metrics", http.StatusInternalServerError)
 		return
 	}
 
@@ -135,20 +141,21 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	metrics, err = h.Service.Metrics.GetMetrics(req.Context(), metrics)
+	//metrics, err = h.Service.Metrics.GetMetrics(req.Context(), metrics)
+	//if err != nil {
+	//	logger.Log.Info("Failed to get metrics", zap.Error(err))
+	//	http.Error(res, "Failed to get metrics", http.StatusInternalServerError)
+	//	return
+	//}
+	metrics, err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+		AddExpectedError(syscall.ECONNREFUSED).SendDelayedMetrics(func() (model.Metrics, error) {
+		return h.Service.Metrics.GetMetrics(req.Context(), metrics)
+	})
 	if err != nil {
 		logger.Log.Info("Failed to get metrics", zap.Error(err))
-		http.Error(res, "Failed to get metrics", http.StatusNotFound)
+		http.Error(res, "Failed to get metrics", http.StatusInternalServerError)
 		return
 	}
-	var vivod string
-	vivod = "\n---------------Получение данных-------------\n"
-	if metrics.MType == "counter" {
-		vivod += fmt.Sprintf("type: %s: %s: %v\n", metrics.MType, metrics.ID, *(metrics).Delta)
-	} else {
-		vivod += fmt.Sprintf("type: %s: %s: %f\n", metrics.MType, metrics.ID, *(metrics).Value)
-	}
-	log.Println(vivod)
 
 	response, err := json.Marshal(metrics)
 	if err != nil {
@@ -176,10 +183,14 @@ func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	metrics, err = h.Service.Metrics.GetMetrics(req.Context(), metrics)
+	//metrics, err = h.Service.Metrics.GetMetrics(req.Context(), metrics)
+
+	metrics, err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+		AddExpectedError(syscall.ECONNREFUSED).SendDelayedMetrics(func() (model.Metrics, error) {
+		return h.Service.Metrics.GetMetrics(req.Context(), metrics)
+	})
 	if err != nil {
 		logger.Log.Info("Failed to get metrics", zap.Error(err))
-		http.Error(res, "Failed to get Metrics", http.StatusNotFound)
 		return
 	}
 
@@ -227,18 +238,12 @@ func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	err = h.Service.Storage.UpdateMetricsBatch(req.Context(), metrics)
-	var vivod string
-	vivod = "\n---------------Запись данных---------------\n"
-	for i := range metrics {
-		if metrics[i].MType == "counter" {
-			vivod += fmt.Sprintf("type: %s: %s: %d\n", metrics[i].MType, metrics[i].ID, *(metrics[i].Delta))
-		}
-		if metrics[i].MType == "gauge" {
-			vivod += fmt.Sprintf("type: %s: %s: %f\n", metrics[i].MType, metrics[i].ID, *(metrics[i].Value))
-		}
-	}
-	log.Println(vivod)
+	err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+		AddExpectedError(syscall.ECONNREFUSED).
+		SendDelayed(func() error {
+			err = h.Service.Storage.UpdateMetricsBatch(req.Context(), metrics)
+			return err
+		})
 
 	if err != nil {
 		logger.Log.Info("Failed to send metrics to batch", zap.Error(err))

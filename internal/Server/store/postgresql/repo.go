@@ -3,6 +3,8 @@ package postgresql
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"github.com/jackc/pgerrcode"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"go.uber.org/zap"
@@ -11,6 +13,8 @@ import (
 type Database struct {
 	pgx *sql.DB
 }
+
+var ErrConnectionException = errors.New(pgerrcode.ConnectionException)
 
 func NewDatabase(db *sql.DB) *Database {
 	return &Database{pgx: db}

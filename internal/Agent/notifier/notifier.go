@@ -3,10 +3,12 @@ package notifier
 import (
 	"context"
 	"encoding/json"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/delaysend"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"log"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -61,7 +63,13 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 				}()
 				url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
 
-				err := n.PostReq(ctx, url)
+				//err := n.PostReq(ctx, url)
+
+				err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+					AddExpectedError(syscall.ECONNREFUSED).
+					SendDelayed(func() error {
+						return n.PostReq(ctx, url)
+					})
 				if err != nil {
 					log.Println(err)
 					return
@@ -87,7 +95,12 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 
 				url2 := "http://" + n.URL + "/update/"
 
-				err = n.PostReqJSON(ctx, url2, data)
+				//err = n.PostReqJSON(ctx, url2, data)
+				err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+					AddExpectedError(syscall.ECONNREFUSED).
+					SendDelayed(func() error {
+						return n.PostReqJSON(ctx, url2, data)
+					})
 				if err != nil {
 					log.Println(err)
 				}
@@ -103,7 +116,12 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 
 		url := "http://" + n.URL + "/update/" + "counter" + "/" + "PollCount" + "/" + coun
 
-		err := n.PostReq(ctx, url)
+		//err := n.PostReq(ctx, url)
+		err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+			AddExpectedError(syscall.ECONNREFUSED).
+			SendDelayed(func() error {
+				return n.PostReq(ctx, url)
+			})
 		if err != nil {
 			log.Println(err)
 			return
@@ -123,7 +141,12 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		}
 
 		url2 := "http://" + n.URL + "/update/"
-		err = n.PostReqJSON(ctx, url2, data)
+		//err = n.PostReqJSON(ctx, url2, data)
+		err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+			AddExpectedError(syscall.ECONNREFUSED).
+			SendDelayed(func() error {
+				return n.PostReqJSON(ctx, url2, data)
+			})
 		if err != nil {
 			log.Println(err)
 			return
@@ -158,14 +181,19 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 			Value: nil,
 		})
 
-		err := n.PostReqBatched(ctx, url, m)
+		//err := n.PostReqBatched(ctx, url, m)
+		err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+			AddExpectedError(syscall.ECONNREFUSED).
+			SendDelayed(func() error {
+				return n.PostReqBatched(ctx, url, m)
+			})
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	}()
 	wg.Wait()
-
+	close(PCh)
 	return nil
 }
 
