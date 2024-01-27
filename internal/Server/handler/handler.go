@@ -107,7 +107,7 @@ func (h *Handler) HandlerPostJSON(res http.ResponseWriter, req *http.Request) {
 		})
 	if err != nil {
 		logger.Log.Info("Failed to put metrics", zap.Error(err))
-		http.Error(res, "Failed to put metrics", http.StatusInternalServerError)
+		http.Error(res, "Failed to put metrics", http.StatusNotFound)
 		return
 	}
 
@@ -153,7 +153,7 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 	})
 	if err != nil {
 		logger.Log.Info("Failed to get metrics", zap.Error(err))
-		http.Error(res, "Failed to get metrics", http.StatusInternalServerError)
+		http.Error(res, "Failed to get metrics", http.StatusNotFound)
 		return
 	}
 
@@ -191,6 +191,7 @@ func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 	})
 	if err != nil {
 		logger.Log.Info("Failed to get metrics", zap.Error(err))
+		http.Error(res, "Failed to get Metrics", http.StatusNotFound)
 		return
 	}
 
