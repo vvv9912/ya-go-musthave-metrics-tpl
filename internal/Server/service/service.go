@@ -19,13 +19,7 @@ type Metrics interface {
 	PutGauge(ctx context.Context, key string, val float64) error
 	PutCounter(ctx context.Context, key string, val int64) error
 	SendMetricstoFile(ctx context.Context) error
-	//SendBatchedMetrcs(ctx context.Context, data []model.Metrics) error
 }
-
-//type Store interface {
-//	Ping(ctx context.Context) error
-//	UpdateMetricsBatch(ctx context.Context, metrics []model.Metrics) error
-//}
 
 type Service struct {
 	Metrics  Metrics

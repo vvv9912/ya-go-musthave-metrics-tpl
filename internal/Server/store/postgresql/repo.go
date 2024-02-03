@@ -12,8 +12,6 @@ type Database struct {
 	pgx *sql.DB
 }
 
-//var ErrConnectionException = errors.New(pgerrcode.ConnectionException)
-
 func NewDatabase(db *sql.DB) *Database {
 	return &Database{pgx: db}
 }
