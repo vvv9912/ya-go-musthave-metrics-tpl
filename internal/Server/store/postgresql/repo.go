@@ -16,11 +16,6 @@ func NewDatabase(db *sql.DB) *Database {
 	return &Database{pgx: db}
 }
 func (db *Database) updateMetricsBatch(ctx context.Context, tx *sql.Tx, metrics []model.Metrics) error {
-	stmt1, err := tx.PrepareContext(ctx, "INSERT INTO GaugeMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = $2;")
-	if err != nil {
-		return err
-	}
-	defer stmt1.Close()
 
 	stmt2, err := tx.PrepareContext(ctx, "INSERT INTO CounterMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = CounterMetrics.val + $2;")
 	if err != nil {
@@ -30,15 +25,13 @@ func (db *Database) updateMetricsBatch(ctx context.Context, tx *sql.Tx, metrics 
 
 	for _, v := range metrics {
 		if v.MType == "gauge" {
-			_, err = stmt1.ExecContext(ctx, v.ID, *v.Value)
+			err = db.updateGauge(ctx, tx, v.ID, *v.Value)
 			if err != nil {
-				logger.Log.Info("Failed to update gauge", zap.Error(err))
 				return err
 			}
 		} else if v.MType == "counter" {
-			_, err = stmt2.ExecContext(ctx, v.ID, v.Delta)
+			err = db.updateCounter(ctx, tx, v.ID, *v.Delta)
 			if err != nil {
-				logger.Log.Info("Failed to update counter", zap.Error(err))
 				return err
 			}
 		}
@@ -47,9 +40,16 @@ func (db *Database) updateMetricsBatch(ctx context.Context, tx *sql.Tx, metrics 
 	return nil
 }
 func (db *Database) updateGauge(ctx context.Context, tx *sql.Tx, key string, val float64) error {
-
-	_, err := tx.ExecContext(ctx, "INSERT INTO GaugeMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = $2;", key, val)
+	stmt, err := tx.PrepareContext(ctx, "INSERT INTO GaugeMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = $2;")
 	if err != nil {
+		logger.Log.Info("Failed to create statment for update gauge", zap.Error(err))
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, key, val)
+	if err != nil {
+		logger.Log.Info("Failed to update gauge", zap.Error(err))
 		return err
 	}
 
@@ -100,12 +100,18 @@ func (db *Database) getAllGauge(ctx context.Context) (map[string]float64, error)
 }
 
 func (db *Database) updateCounter(ctx context.Context, tx *sql.Tx, key string, val int64) error {
-	//_, err := db.pgx.ExecContext(ctx, "UPDATE CounterMetrics SET val=$1 WHERE key=$2", val, key)
-	_, err := tx.ExecContext(ctx, "INSERT INTO CounterMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = CounterMetrics.val +$2;", key, val)
+	stmt, err := tx.PrepareContext(ctx, "INSERT INTO CounterMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = CounterMetrics.val + $2;")
 	if err != nil {
+		logger.Log.Info("Failed to create statment for update counter", zap.Error(err))
 		return err
-		//todo добавить
 	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx, key, val)
+	if err != nil {
+		logger.Log.Info("Failed to update counter", zap.Error(err))
+		return err
+	}
+
 	return nil
 }
 func (db *Database) getCounter(ctx context.Context, key string) (int64, error) {
