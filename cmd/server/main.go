@@ -41,11 +41,8 @@ func run() error {
 	logger.Log.Info("FileStoragePath=" + FileStoragePath)
 	logger.Log.Info("Restore=", zap.Bool("RESTORE", RESTORE))
 
-	//var counter service.CounterStorager
-	//var gauge service.GaugeStorager
-	//var database *postgresql.Database
 	var Repo *store.Repository
-	//store.NewRepository(database, store.NewStorager())
+
 	if DatabaseDsn != "" {
 		db, err := sql.Open("pgx", DatabaseDsn)
 		if err != nil {
