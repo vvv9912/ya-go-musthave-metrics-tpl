@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/delaysend"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
+	"go.uber.org/zap"
 	"log"
 	"strconv"
 	"sync"
@@ -205,7 +207,7 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 			case <-ticker.C:
 				gauge, couter, err = n.NotifyPending()
 				if err != nil {
-					//log.Println(err)
+					logger.Log.Info("Failed to pending", zap.Error(err))
 					return
 				}
 				continue
@@ -227,7 +229,6 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 					err = n.SendNotification(ctx, gauge, couter)
 				}
 				if err != nil {
-					//fmt.Println(err)
 					return
 				}
 				continue

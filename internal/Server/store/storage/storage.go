@@ -48,7 +48,7 @@ func (S *MemStorage) GetAllGauge(ctx context.Context) (map[string]float64, error
 func (S *MemStorage) UpdateCounter(ctx context.Context, key string, val int64) error {
 	S.counterMutex.Lock()
 	defer S.counterMutex.Unlock()
-	//fmt.Println("value counter get to map:", val)
+
 	_, found := S.counterStorage[key]
 	if found {
 		S.counterStorage[key] += val

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
+	"go.uber.org/zap"
 	"log"
 )
 
@@ -28,7 +29,7 @@ func (p *PostRequest) PostReq(ctx context.Context, url string) error {
 		"Content-Type": "text/plain",
 	}).Post(url)
 	if err != nil {
-		fmt.Println(err)
+		logger.Log.Error("Failed to send metrics", zap.Error(err))
 		return err
 	}
 	return nil
@@ -60,7 +61,7 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 	client := resty.New()
 	_, err := client.R().SetBody(data).Post(url)
 	if err != nil {
-		fmt.Println(err)
+		logger.Log.Error("Failed to send metrics batch", zap.Error(err))
 		return err
 	}
 	return nil
