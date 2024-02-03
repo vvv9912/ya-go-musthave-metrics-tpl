@@ -63,11 +63,11 @@ func run() error {
 			return err
 		}
 		database := postgresql.NewDatabase(db)
-		Repo = store.NewRepository(database, database)
+		Repo = store.NewRepository(database)
 
 	} else {
 		stor := storage.NewStorage()
-		Repo = store.NewRepository(nil, stor)
+		Repo = store.NewRepository(stor)
 	}
 
 	//Если включено восстановление данных
@@ -114,7 +114,7 @@ func run() error {
 	}
 	defer produce.Close()
 
-	err = s.StartServer(ctx, URLserver, Repo, time.Duration(timerSend)*time.Second, produce, Repo)
+	err = s.StartServer(ctx, URLserver, Repo, time.Duration(timerSend)*time.Second, produce)
 	if err != nil {
 		log.Println(err)
 		return err

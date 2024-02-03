@@ -32,11 +32,11 @@ func (s *Server) StartServer(
 	Storage store.Storager,
 	timeSend time.Duration,
 	writer notifier.Writer,
-	store store.DB) error {
+) error {
 
 	var (
 		e       = notifier.NewNotifier(Storage, timeSend, writer)
-		Service = service.NewService(Storage, e, store)
+		Service = service.NewService(Storage, e)
 		h       = handler.NewHandler(Service)
 		m       = mw.NewMw(Service)
 	)

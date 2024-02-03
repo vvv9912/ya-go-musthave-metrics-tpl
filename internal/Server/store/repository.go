@@ -14,15 +14,13 @@ type Storager interface {
 	GetCounter(ctx context.Context, key string) (int64, error)
 	GetAllCounter(ctx context.Context) (map[string]int64, error)
 	UpdateMetricsBatch(ctx context.Context, metrics []model.Metrics) error
-}
-type DB interface {
 	Ping(ctx context.Context) error
 }
+
 type Repository struct {
 	Storager
-	DB
 }
 
-func NewRepository(db DB, storager Storager) *Repository {
-	return &Repository{DB: db, Storager: storager}
+func NewRepository(storager Storager) *Repository {
+	return &Repository{Storager: storager}
 }

@@ -25,14 +25,12 @@ type Service struct {
 	Metrics  Metrics
 	Storage  store.Storager
 	Notifier NotifierSend
-	DB       store.DB
 }
 
-func NewService(storage store.Storager, notify NotifierSend, db store.DB) *Service {
+func NewService(storage store.Storager, notify NotifierSend) *Service {
 	return &Service{
 		Storage:  storage,
 		Notifier: notify,
-		Metrics:  NewMeticsService(storage, notify),
-		DB:       db}
+		Metrics:  NewMeticsService(storage, notify)}
 
 }
