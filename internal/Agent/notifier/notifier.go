@@ -115,7 +115,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		coun := strconv.FormatUint(counter, 10)
 
 		url := "http://" + n.URL + "/update/" + "counter" + "/" + "PollCount" + "/" + coun
-		//
+
 		//err := n.PostReq(ctx, url)
 		err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
 			AddExpectedError(syscall.ECONNREFUSED).

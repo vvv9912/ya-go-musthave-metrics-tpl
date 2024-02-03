@@ -141,12 +141,6 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//metrics, err = h.Service.Metrics.GetMetrics(req.Context(), metrics)
-	//if err != nil {
-	//	logger.Log.Info("Failed to get metrics", zap.Error(err))
-	//	http.Error(res, "Failed to get metrics", http.StatusInternalServerError)
-	//	return
-	//}
 	metrics, err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
 		AddExpectedError(syscall.ECONNREFUSED).SendDelayedMetrics(func() (model.Metrics, error) {
 		return h.Service.Metrics.GetMetrics(req.Context(), metrics)
@@ -182,8 +176,6 @@ func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Failed to retrieve metrics", http.StatusInternalServerError)
 		return
 	}
-
-	//metrics, err = h.Service.Metrics.GetMetrics(req.Context(), metrics)
 
 	metrics, err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
 		AddExpectedError(syscall.ECONNREFUSED).SendDelayedMetrics(func() (model.Metrics, error) {

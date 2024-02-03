@@ -46,7 +46,6 @@ func (d *DelaySend) SendDelayedMetrics(f func() (model.Metrics, error)) (model.M
 	return m, err
 }
 
-// SendDelayed(f func(...interface{}) error)
 func (d *DelaySend) SendDelayed(f func() error) error {
 	err := f()
 	if err == nil {
@@ -59,7 +58,7 @@ func (d *DelaySend) SendDelayed(f func() error) error {
 
 	for _, v := range d.delay {
 		time.Sleep(time.Duration(v) * time.Second)
-		//log.Println("попытка отправить метрику #", v)
+
 		err = f()
 		if err == nil {
 			return nil //sucess
