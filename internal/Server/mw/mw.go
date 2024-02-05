@@ -161,37 +161,42 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 }
 func (m *Mw) MiddlewareHashAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hashSha := r.Header.Get("HashSHA256")
 
-		reader := io.TeeReader(r.Body, os.Stdout) //todo
+		if hashSha != "" {
+			hash, err := hex.DecodeString(hashSha)
+			if err != nil {
+				logger.Log.Error("Error decoding hash", zap.Error(err))
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			reader := io.TeeReader(r.Body, os.Stdout) //todo
 
-		body, err := io.ReadAll(reader)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
+			body, err := io.ReadAll(reader)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 
-		//считаем хеш
-		h := hmac.New(sha256.New, []byte(m.Service.KeyAuth))
-		h.Write(body)
-		dst := h.Sum(nil)
-		hash, err := hex.DecodeString(r.Header.Get("HashSHA256"))
-		if err != nil {
-			logger.Log.Error("Error decoding hash", zap.Error(err))
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		ok := hmac.Equal(dst, hash)
-		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			return
+			//считаем хеш
+			h := hmac.New(sha256.New, []byte(m.Service.KeyAuth))
+			h.Write(body)
+			dst := h.Sum(nil)
+
+			ok := hmac.Equal(dst, hash)
+			if !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
 		}
 		// передаём управление хендлеру
-		rw := &responseWriter{ResponseWriter: w, body: bytes.NewBuffer(body)}
+		rw := &responseWriter{ResponseWriter: w, body: bytes.NewBuffer(nil)}
 		next.ServeHTTP(rw, r)
 
 		hWriter := hmac.New(sha256.New, []byte(m.Service.KeyAuth))
 		hWriter.Write(rw.body.Bytes())
-		hashWriter := h.Sum(nil)
+		hashWriter := hWriter.Sum(nil)
 		w.Header().Set("HashSHA256", string(hashWriter))
 
 	})
