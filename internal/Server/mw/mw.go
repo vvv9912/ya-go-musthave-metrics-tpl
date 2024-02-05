@@ -173,7 +173,11 @@ func (m *Mw) MiddlewareHashAuth(next http.Handler) http.Handler {
 		h.Write(body)
 		dst := h.Sum(nil)
 		hash, err := hex.DecodeString(r.Header.Get("HashSHA256"))
-
+		if err != nil {
+			logger.Log.Error("Error decoding hash", zap.Error(err))
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 		ok := hmac.Equal(dst, hash)
 		if !ok {
 			w.WriteHeader(http.StatusBadRequest)

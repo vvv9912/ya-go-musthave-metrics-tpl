@@ -72,7 +72,7 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 
 	return nil
 }
-func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []model.Metrics) (err error) {
+func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []model.Metrics) error {
 	client := resty.New()
 
 	if p.keyAuth != "" {
@@ -85,13 +85,18 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 		h.Write(jsonData)
 		dst := h.Sum(nil)
 		_, err = client.R().SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst)}).SetBody(data).Post(url)
+		if err != nil {
+			logger.Log.Error("Failed to send metrics batch", zap.Error(err))
+			return err
+		}
 	} else {
-		_, err = client.R().SetBody(data).Post(url)
+		_, err := client.R().SetBody(data).Post(url)
+		if err != nil {
+			logger.Log.Error("Failed to send metrics batch", zap.Error(err))
+			return err
+		}
 	}
-	if err != nil {
-		logger.Log.Error("Failed to send metrics batch", zap.Error(err))
-		return err
-	}
+
 	return nil
 }
 
