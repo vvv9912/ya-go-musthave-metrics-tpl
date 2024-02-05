@@ -63,6 +63,7 @@ func parseFlags() {
 		"a": {},
 		"r": {},
 		"p": {},
+		"k": {},
 	}
 	flag.Visit(func(f *flag.Flag) {
 		_, ok := flagValid[f.Name]
@@ -74,6 +75,7 @@ func parseFlags() {
 
 	URLserver = addr.String()
 	if envKey := os.Getenv("KEY"); envKey != "" {
+		log.Println(envKey)
 		KeyAuth = envKey
 	}
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {

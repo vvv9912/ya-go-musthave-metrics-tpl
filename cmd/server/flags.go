@@ -5,6 +5,7 @@ import (
 	"flag"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -62,6 +63,7 @@ func parseFlags() {
 
 	URLserver = addr.String()
 	if envKey := os.Getenv("KEY"); envKey != "" {
+		log.Println(envKey)
 		KeyAuth = envKey
 	}
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
