@@ -73,6 +73,9 @@ func parseFlags() {
 	})
 
 	URLserver = addr.String()
+	if envKey := os.Getenv("KEY"); envKey != "" {
+		KeyAuth = envKey
+	}
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		URLserver = envRunAddr
 	}
@@ -90,7 +93,5 @@ func parseFlags() {
 		}
 		pollInterval = uint(uintValue)
 	}
-	if envKey := os.Getenv("KEY"); envKey != "" {
-		KeyAuth = envKey
-	}
+
 }

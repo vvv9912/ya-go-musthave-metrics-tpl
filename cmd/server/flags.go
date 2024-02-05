@@ -61,6 +61,9 @@ func parseFlags() {
 	flag.Parse()
 
 	URLserver = addr.String()
+	if envKey := os.Getenv("KEY"); envKey != "" {
+		KeyAuth = envKey
+	}
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		URLserver = envRunAddr
 	}
@@ -89,7 +92,5 @@ func parseFlags() {
 	if envDATABASE := os.Getenv("DATABASE_DSN"); envDATABASE != "" {
 		DatabaseDsn = envDATABASE
 	}
-	if envKey := os.Getenv("KEY"); envKey != "" {
-		KeyAuth = envKey
-	}
+
 }
