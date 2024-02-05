@@ -26,7 +26,11 @@ func run() error {
 	log.Println("URLserver=", URLserver)
 
 	metrics := metrics.NewMetriсs()
-	postreq := server.NewPostRequest()
+	//if KeyAuth == "" {
+	//	KeyAuth = "52fdfc072182654f163f5f0f9a621d72"
+	//}
+	log.Println("KeyAuth=", KeyAuth)
+	postreq := server.NewPostRequest(KeyAuth)
 
 	n := notifier.NewNotifier(metrics, postreq, time.Duration(time.Duration(pollInterval)*time.Second), time.Duration(time.Duration(reportInterval)*time.Second), URLserver)
 

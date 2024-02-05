@@ -57,6 +57,8 @@ func parseFlags() {
 	flag.BoolVar(&RESTORE, "r", true, "restore")
 	flag.StringVar(&DatabaseDsn, "d", "", "DATABASE_DSN")
 	//postgres://postgres:postgres@localhost:5432/postgres"
+	flag.StringVar(&KeyAuth, "k", "", "key for auth (по умолчанию пустая)")
+
 	flag.Parse()
 	URLserver = addr.String()
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
@@ -86,5 +88,8 @@ func parseFlags() {
 
 	if envDATABASE := os.Getenv("DATABASE_DSN"); envDATABASE != "" {
 		DatabaseDsn = envDATABASE
+	}
+	if envKey := os.Getenv("KEY"); envKey != "" {
+		KeyAuth = envKey
 	}
 }

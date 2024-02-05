@@ -17,6 +17,7 @@ type NetAddress struct {
 var URLserver string
 var reportInterval uint
 var pollInterval uint
+var KeyAuth string
 
 func (o *NetAddress) String() string {
 	return o.Host + ":" + strconv.Itoa(o.Port)
@@ -54,6 +55,7 @@ func parseFlags() {
 	flag.Var(addr, "a", "Net address host:port")
 	flag.UintVar(&reportInterval, "r", 10, "частота отправки метрик на сервер (по умолчанию 10 секунд)")
 	flag.UintVar(&pollInterval, "p", 2, "частота опроса метрик из пакета runtime (по умолчанию 2 секунды)")
+	flag.StringVar(&KeyAuth, "k", "", "key for auth (по умолчанию пустая)")
 	flag.Parse()
 
 	flagValid := map[string]struct{}{
@@ -86,5 +88,8 @@ func parseFlags() {
 			log.Panic(err)
 		}
 		pollInterval = uint(uintValue)
+	}
+	if envKey := os.Getenv("KEY"); envKey != "" {
+		KeyAuth = envKey
 	}
 }

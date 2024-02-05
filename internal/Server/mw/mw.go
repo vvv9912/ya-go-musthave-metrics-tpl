@@ -1,7 +1,11 @@
 package mw
 
 import (
+	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/gzipwrapper"
@@ -9,8 +13,10 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -22,6 +28,20 @@ type Mw struct {
 
 func NewMw(s *service.Service) *Mw {
 	return &Mw{Service: s}
+}
+
+type responseWriter struct {
+	http.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (rw *responseWriter) Write(b []byte) (int, error) {
+	n, err := rw.body.Write(b)
+	if err != nil {
+		logger.Log.Error("error write body", zap.Error(err))
+		return n, err
+	}
+	return rw.ResponseWriter.Write(b)
 }
 
 type responseData struct {
@@ -136,6 +156,38 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 
 		// передаём управление хендлеру
 		next.ServeHTTP(ow, r)
+	})
+
+}
+func (m *Mw) MiddlewareHashAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reader := io.TeeReader(r.Body, os.Stdout)
+		body, err := io.ReadAll(reader)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		//считаем хеш
+		h := hmac.New(sha256.New, []byte(m.Service.KeyAuth))
+		h.Write(body)
+		dst := h.Sum(nil)
+		hash, err := hex.DecodeString(r.Header.Get("HashSHA256"))
+
+		ok := hmac.Equal(dst, hash)
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		// передаём управление хендлеру
+		rw := &responseWriter{ResponseWriter: w, body: bytes.NewBuffer(body)}
+		next.ServeHTTP(rw, r)
+
+		hWriter := hmac.New(sha256.New, []byte(m.Service.KeyAuth))
+		hWriter.Write(rw.body.Bytes())
+		hashWriter := h.Sum(nil)
+		w.Header().Set("HashSHA256", string(hashWriter))
+
 	})
 
 }
