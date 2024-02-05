@@ -49,7 +49,6 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 	_, err = client.R().SetHeaders(map[string]string{
 		"Content-Type": "application/json", "Content-Encoding": "gzip",
 	}).SetBody(buf).Post(url)
-
 	if err != nil {
 		log.Println(err)
 		return err
@@ -59,11 +58,13 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 }
 func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []model.Metrics) error {
 	client := resty.New()
+
 	_, err := client.R().SetBody(data).Post(url)
 	if err != nil {
 		logger.Log.Error("Failed to send metrics batch", zap.Error(err))
 		return err
 	}
+
 	return nil
 }
 
