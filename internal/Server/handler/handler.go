@@ -6,7 +6,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/postgresql"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/delaysend"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
@@ -212,12 +211,6 @@ func (h *Handler) HandlerPingDatabase(res http.ResponseWriter, req *http.Request
 
 func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request) {
 	var metrics []model.Metrics
-	store2 := h.Service.Storage
-	if (store2) == (*postgresql.Database)(nil) {
-		logger.Log.Info("Failed to ping database")
-		http.Error(res, "Failed to ping database", http.StatusInternalServerError)
-		return
-	}
 
 	err := json.NewDecoder(req.Body).Decode(&metrics)
 	if err != nil {
