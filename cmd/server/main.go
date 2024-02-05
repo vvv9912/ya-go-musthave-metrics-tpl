@@ -33,6 +33,7 @@ func main() {
 }
 func run() error {
 	log.Println("Start server")
+	log.Println("KeyAuth=", KeyAuth)
 	if err := logger.Initialize(flagLogLevel); err != nil {
 		return err
 	}
@@ -112,6 +113,7 @@ func run() error {
 	}
 	defer produce.Close()
 	//KeyAuth = "52fdfc072182654f163f5f0f9a621d72" //todo
+
 	logger.Log.Info("KeyAuth=" + KeyAuth)
 	err = s.StartServer(ctx, URLserver, Repo, time.Duration(timerSend)*time.Second, produce, KeyAuth)
 	if err != nil {

@@ -161,7 +161,9 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 }
 func (m *Mw) MiddlewareHashAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reader := io.TeeReader(r.Body, os.Stdout)
+
+		reader := io.TeeReader(r.Body, os.Stdout) //todo
+
 		body, err := io.ReadAll(reader)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)

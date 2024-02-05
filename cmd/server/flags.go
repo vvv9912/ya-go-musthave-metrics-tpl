@@ -60,6 +60,7 @@ func parseFlags() {
 	flag.StringVar(&KeyAuth, "k", "", "key for auth (по умолчанию пустая)")
 
 	flag.Parse()
+
 	URLserver = addr.String()
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		URLserver = envRunAddr
