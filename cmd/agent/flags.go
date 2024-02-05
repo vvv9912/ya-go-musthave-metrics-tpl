@@ -52,10 +52,11 @@ func parseFlags() {
 	// здесь будет ошибка компиляции
 	var _ = flag.Value(addr)
 
+	flag.StringVar(&KeyAuth, "k", "", "key for auth (по умолчанию пустая)")
 	flag.Var(addr, "a", "Net address host:port")
 	flag.UintVar(&reportInterval, "r", 10, "частота отправки метрик на сервер (по умолчанию 10 секунд)")
 	flag.UintVar(&pollInterval, "p", 2, "частота опроса метрик из пакета runtime (по умолчанию 2 секунды)")
-	flag.StringVar(&KeyAuth, "k", "", "key for auth (по умолчанию пустая)")
+
 	flag.Parse()
 
 	flagValid := map[string]struct{}{

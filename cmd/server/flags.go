@@ -50,14 +50,13 @@ func parseFlags() {
 	// здесь будет ошибка компиляции
 	var _ = flag.Value(addr)
 	//var restore string
+	flag.StringVar(&KeyAuth, "k", "", "key for auth (по умолчанию пустая)")
 	flag.Var(addr, "a", "Net address host:port")
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")
 	flag.StringVar(&FileStoragePath, "f", "/tmp/metrics-db.json", "file storage path")
 	flag.IntVar(&timerSend, "i", 300, "send timer")
 	flag.BoolVar(&RESTORE, "r", true, "restore")
-	flag.StringVar(&DatabaseDsn, "d", "", "DATABASE_DSN")
-	//postgres://postgres:postgres@localhost:5432/postgres"
-	flag.StringVar(&KeyAuth, "k", "", "key for auth (по умолчанию пустая)")
+	flag.StringVar(&DatabaseDsn, "d", "", "DATABASE_DSN") //	//postgres://postgres:postgres@localhost:5432/postgres"
 
 	flag.Parse()
 
