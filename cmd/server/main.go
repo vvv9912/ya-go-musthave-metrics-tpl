@@ -46,17 +46,17 @@ func run() error {
 	if DatabaseDsn != "" {
 		db, err := sql.Open("pgx", DatabaseDsn)
 		if err != nil {
-			logger.Log.Panic("error open db", zap.Error(err))
+			logger.Log.Error("error open db", zap.Error(err))
 			return err
 		}
 		defer db.Close()
 		//миграции
 		if err := upGauge(context.Background(), db); err != nil {
-			logger.Log.Panic("error up gauge", zap.Error(err))
+			logger.Log.Error("error up gauge", zap.Error(err))
 			return err
 		}
 		if err := upCounter(context.Background(), db); err != nil {
-			logger.Log.Panic("error up counter", zap.Error(err))
+			logger.Log.Error("error up counter", zap.Error(err))
 			return err
 		}
 		database := postgresql.NewDatabase(db)
@@ -72,14 +72,13 @@ func run() error {
 
 		consumer, err := fileutils.NewConsumer(FileStoragePath)
 		if err != nil {
-			logger.Log.Info("error consumer", zap.Error(err))
+			logger.Log.Error("error consumer", zap.Error(err))
 			return err
 		}
 
 		event, err := consumer.ReadLastEvent(FileStoragePath)
 		if err != nil {
 			logger.Log.Info("error read last event", zap.Error(err))
-
 		}
 
 		if event != nil {

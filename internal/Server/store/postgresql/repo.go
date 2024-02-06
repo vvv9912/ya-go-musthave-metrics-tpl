@@ -17,20 +17,14 @@ func NewDatabase(db *sql.DB) *Database {
 }
 func (db *Database) updateMetricsBatch(ctx context.Context, tx *sql.Tx, metrics []model.Metrics) error {
 
-	stmt2, err := tx.PrepareContext(ctx, "INSERT INTO CounterMetrics (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = CounterMetrics.val + $2;")
-	if err != nil {
-		return err
-	}
-	defer stmt2.Close()
-
 	for _, v := range metrics {
 		if v.MType == "gauge" {
-			err = db.updateGauge(ctx, tx, v.ID, *v.Value)
+			err := db.updateGauge(ctx, tx, v.ID, *v.Value)
 			if err != nil {
 				return err
 			}
 		} else if v.MType == "counter" {
-			err = db.updateCounter(ctx, tx, v.ID, *v.Delta)
+			err := db.updateCounter(ctx, tx, v.ID, *v.Delta)
 			if err != nil {
 				return err
 			}
