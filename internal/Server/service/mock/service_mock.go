@@ -12,18 +12,18 @@ import (
 	model "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
-// MockNotifierSend is a mock of NotifierSend interface.
+// MockNotifierSend is a repository_mock of NotifierSend interface.
 type MockNotifierSend struct {
 	ctrl     *gomock.Controller
 	recorder *MockNotifierSendMockRecorder
 }
 
-// MockNotifierSendMockRecorder is the mock recorder for MockNotifierSend.
+// MockNotifierSendMockRecorder is the repository_mock recorder for MockNotifierSend.
 type MockNotifierSendMockRecorder struct {
 	mock *MockNotifierSend
 }
 
-// NewMockNotifierSend creates a new mock instance.
+// NewMockNotifierSend creates a new repository_mock instance.
 func NewMockNotifierSend(ctrl *gomock.Controller) *MockNotifierSend {
 	mock := &MockNotifierSend{ctrl: ctrl}
 	mock.recorder = &MockNotifierSendMockRecorder{mock}
@@ -49,18 +49,18 @@ func (mr *MockNotifierSendMockRecorder) NotifierPending(ctx interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifierPending", reflect.TypeOf((*MockNotifierSend)(nil).NotifierPending), ctx)
 }
 
-// MockMetrics is a mock of Metrics interface.
+// MockMetrics is a repository_mock of Metrics interface.
 type MockMetrics struct {
 	ctrl     *gomock.Controller
 	recorder *MockMetricsMockRecorder
 }
 
-// MockMetricsMockRecorder is the mock recorder for MockMetrics.
+// MockMetricsMockRecorder is the repository_mock recorder for MockMetrics.
 type MockMetricsMockRecorder struct {
 	mock *MockMetrics
 }
 
-// NewMockMetrics creates a new mock instance.
+// NewMockMetrics creates a new repository_mock instance.
 func NewMockMetrics(ctrl *gomock.Controller) *MockMetrics {
 	mock := &MockMetrics{ctrl: ctrl}
 	mock.recorder = &MockMetricsMockRecorder{mock}

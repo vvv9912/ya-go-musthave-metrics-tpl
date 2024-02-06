@@ -107,7 +107,7 @@ func TestHandler_HandlerGetJSON(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			c := gomock.NewController(t)
 			defer c.Finish()
-			// создаем mock проекта
+			// создаем repository_mock проекта
 			metrics := service_mock.NewMockMetrics(c)
 
 			serviceMock := &service.Service{
