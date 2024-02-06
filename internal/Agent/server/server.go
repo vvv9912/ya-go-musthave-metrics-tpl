@@ -8,7 +8,6 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"go.uber.org/zap"
-	"log"
 )
 
 type PostRequester interface {
@@ -41,16 +40,15 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 	zb := gzip.NewWriter(buf)
 	_, err := zb.Write(data)
 	if err != nil {
-		log.Println(err)
+		logger.Log.Error("Failed gzip", zap.Error(err))
 		return err
 	}
 	zb.Close()
-
 	_, err = client.R().SetHeaders(map[string]string{
 		"Content-Type": "application/json", "Content-Encoding": "gzip",
 	}).SetBody(buf).Post(url)
 	if err != nil {
-		log.Println(err)
+		logger.Log.Error("Failed to send metrics", zap.Error(err))
 		return err
 	}
 

@@ -199,7 +199,7 @@ func (m *Mw) MiddlewareCounter(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		logger.Log.Info("Обновление значения метрик", zap.Int64(name, value))
+
 		err = m.Service.Storage.UpdateCounter(req.Context(), name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
@@ -226,7 +226,6 @@ func (m *Mw) MiddlwareGetGauge(next http.Handler) http.Handler {
 			logger.Log.Info("Получение значения метрики из хранилища:", zap.Float64(name, val), zap.Error(err))
 			return
 		}
-		logger.Log.Info("Получение значения метрики из хранилища:", zap.Float64(name, val))
 
 		valueMetric := strconv.FormatFloat(val, 'f', -1, 64)
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
@@ -254,7 +253,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 			}
 			return
 		}
-		logger.Log.Info("Получение значения метрики из хранилища:", zap.Int64(name, val))
+
 		valueMetric := strconv.FormatInt(val, 10)
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 
