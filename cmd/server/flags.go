@@ -42,22 +42,21 @@ func (o *NetAddress) Set(flagValue string) error {
 
 func parseFlags() {
 	// регистрируем переменную flagRunAddr
-	// как аргумент -a со значением :8080 по умолчанию
 	addr := new(NetAddress)
 	addr.Host = "localhost"
 	addr.Port = 8080
 	// если интерфейс не реализован,
 	// здесь будет ошибка компиляции
 	var _ = flag.Value(addr)
-	//var restore string
+
 	flag.Var(addr, "a", "Net address host:port")
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")
 	flag.StringVar(&FileStoragePath, "f", "/tmp/metrics-db.json", "file storage path")
 	flag.IntVar(&timerSend, "i", 300, "send timer")
 	flag.BoolVar(&RESTORE, "r", true, "restore")
 	flag.StringVar(&DatabaseDsn, "d", "", "DATABASE_DSN")
-	//postgres://postgres:postgres@localhost:5432/postgres"
 	flag.Parse()
+
 	URLserver = addr.String()
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		URLserver = envRunAddr
@@ -75,7 +74,6 @@ func parseFlags() {
 		}
 		timerSend = num
 	}
-
 	if envRESTORE := os.Getenv("RESTORE"); envRESTORE != "" {
 		boolValue, err := strconv.ParseBool(envRESTORE)
 		if err != nil {
@@ -83,8 +81,8 @@ func parseFlags() {
 		}
 		RESTORE = boolValue
 	}
-
 	if envDATABASE := os.Getenv("DATABASE_DSN"); envDATABASE != "" {
 		DatabaseDsn = envDATABASE
 	}
+
 }
