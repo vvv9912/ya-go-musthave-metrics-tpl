@@ -1,23 +1,24 @@
 package service
 
 import (
+	"context"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
 type MeticsService struct {
-	counter CounterStorager
-	gauge   GaugeStorager
+	storage store.Storager
 	notify  NotifierSend //н
 }
 
-func NewMeticsService(counter CounterStorager, gauge GaugeStorager, notify NotifierSend) *MeticsService {
-	return &MeticsService{counter: counter, gauge: gauge, notify: notify}
+func NewMeticsService(storage store.Storager, notify NotifierSend) *MeticsService {
+	return &MeticsService{storage: storage, notify: notify}
 }
-func (p *MeticsService) GetMetrics(metrics model.Metrics) (model.Metrics, error) {
+func (p *MeticsService) GetMetrics(ctx context.Context, metrics model.Metrics) (model.Metrics, error) {
 	switch metrics.MType {
 	case "counter":
 
-		val, err := p.GetCounter(metrics.ID)
+		val, err := p.GetCounter(ctx, metrics.ID)
 		if err != nil {
 			return model.Metrics{}, err
 		}
@@ -28,7 +29,7 @@ func (p *MeticsService) GetMetrics(metrics model.Metrics) (model.Metrics, error)
 		return metrics, nil
 
 	case "gauge":
-		val, err := p.GetGauge(metrics.ID)
+		val, err := p.GetGauge(ctx, metrics.ID)
 		if err != nil {
 			return model.Metrics{}, err
 		}
@@ -39,29 +40,30 @@ func (p *MeticsService) GetMetrics(metrics model.Metrics) (model.Metrics, error)
 	}
 	return model.Metrics{}, nil
 }
-func (p *MeticsService) PutMetrics(metrics model.Metrics) error {
+func (p *MeticsService) PutMetrics(ctx context.Context, metrics model.Metrics) error {
 	switch metrics.MType {
 	case "counter":
-		return p.PutCounter(metrics.ID, uint64(*metrics.Delta))
+		return p.PutCounter(ctx, metrics.ID, *metrics.Delta)
 	case "gauge":
-		return p.PutGauge(metrics.ID, *metrics.Value)
+		return p.PutGauge(ctx, metrics.ID, *metrics.Value)
 	}
 	return nil
 }
-func (p *MeticsService) GetCounter(key string) (uint64, error) {
-	return p.counter.GetCounter(key)
+func (p *MeticsService) GetCounter(ctx context.Context, key string) (int64, error) {
+	return p.storage.GetCounter(ctx, key)
 }
-func (p *MeticsService) GetGauge(key string) (float64, error) {
-	return p.gauge.GetGauge(key)
+func (p *MeticsService) GetGauge(ctx context.Context, key string) (float64, error) {
+	return p.storage.GetGauge(ctx, key)
 }
-func (p *MeticsService) PutGauge(key string, val float64) error {
-	return p.gauge.UpdateGauge(key, val)
-}
-
-func (p *MeticsService) PutCounter(key string, val uint64) error {
-	return p.counter.UpdateCounter(key, val)
+func (p *MeticsService) PutGauge(ctx context.Context, key string, val float64) error {
+	return p.storage.UpdateGauge(ctx, key, val)
 }
 
-func (p *MeticsService) SendMetricstoFile() error {
-	return p.notify.NotifierPending()
+func (p *MeticsService) PutCounter(ctx context.Context, key string, val int64) error {
+
+	return p.storage.UpdateCounter(ctx, key, val)
+}
+
+func (p *MeticsService) SendMetricstoFile(ctx context.Context) error {
+	return p.notify.NotifierPending(ctx)
 }

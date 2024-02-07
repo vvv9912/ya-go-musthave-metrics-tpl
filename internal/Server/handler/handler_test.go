@@ -6,13 +6,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	service_mock "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service/mock"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"io"
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"testing"
 )
 
@@ -36,15 +36,6 @@ func TestHandlerGauge(t *testing.T) {
 			},
 			url: "/update/counter/someMetric/527",
 		},
-		//{
-		//	name: "neg test #2",
-		//	want: want{
-		//		code: 400,
-		//		//response:
-		//		contentType: "",
-		//	},
-		//	url: "/update/cs",
-		//},
 	}
 	for _, test := range tests {
 		//t.Run(test.name, func(t *testing.T) {
@@ -69,7 +60,6 @@ func TestHandlerGauge(t *testing.T) {
 		t.Log("----------///\nres body:", string(resBody))
 		assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 
-		//	})
 	}
 }
 func TestHandler_HandlerGetJSON(t *testing.T) {
@@ -83,6 +73,7 @@ func TestHandler_HandlerGetJSON(t *testing.T) {
 		Delta: nil,
 		Value: &val,
 	}
+
 	jsonforTestMetric, err := json.Marshal(forTestMetric)
 	if err != nil {
 		t.Fatal(err)
@@ -100,7 +91,7 @@ func TestHandler_HandlerGetJSON(t *testing.T) {
 			inputBody:   string(jsonforTestMetric),
 			inputMetric: forTestMetric,
 			mockBehavior: func(s *service_mock.MockMetrics, metric model.Metrics) {
-				s.EXPECT().GetMetrics(gomock.Eq(metric)).Return(model.Metrics{
+				s.EXPECT().GetMetrics(gomock.Any(), gomock.Eq(metric)).Return(model.Metrics{
 					ID:    "123",
 					MType: "gauge",
 					Delta: nil,
@@ -116,7 +107,7 @@ func TestHandler_HandlerGetJSON(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			c := gomock.NewController(t)
 			defer c.Finish()
-			// создаем mock проекта
+			// создаем repository_mock проекта
 			metrics := service_mock.NewMockMetrics(c)
 
 			serviceMock := &service.Service{

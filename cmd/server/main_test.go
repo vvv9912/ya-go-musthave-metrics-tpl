@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/storage"
 	"log"
 	"testing"
 	"time"
@@ -18,10 +18,11 @@ import (
 //http://localhost:8080/update/counter/testGauge/123/123
 
 func TestStartServer(t *testing.T) {
-	counter := storage.NewCounterStorage()
-	gauge := storage.NewGaugeStorage()
+
+	store := storage.NewStorage()
 
 	s := server.NewServer()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -35,7 +36,7 @@ func TestStartServer(t *testing.T) {
 	}
 	defer produce.Close()
 
-	err = s.StartServer(ctx, "localhost:8080", gauge, counter, time.Duration(1*time.Second), produce)
+	err = s.StartServer(ctx, "localhost:8080", store, time.Duration(1*time.Second), produce)
 	if err != nil {
 		t.Errorf("Expected no error, but got: %v", err)
 	}

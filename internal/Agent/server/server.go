@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"fmt"
 	"github.com/go-resty/resty/v2"
-	"log"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
+	"go.uber.org/zap"
 )
 
 type PostRequester interface {
@@ -27,7 +28,7 @@ func (p *PostRequest) PostReq(ctx context.Context, url string) error {
 		"Content-Type": "text/plain",
 	}).Post(url)
 	if err != nil {
-		fmt.Println(err)
+		logger.Log.Error("Failed to send metrics", zap.Error(err))
 		return err
 	}
 	return nil
@@ -39,17 +40,26 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 	zb := gzip.NewWriter(buf)
 	_, err := zb.Write(data)
 	if err != nil {
-		log.Println(err)
+		logger.Log.Error("Failed gzip", zap.Error(err))
 		return err
 	}
 	zb.Close()
-
 	_, err = client.R().SetHeaders(map[string]string{
 		"Content-Type": "application/json", "Content-Encoding": "gzip",
 	}).SetBody(buf).Post(url)
-
 	if err != nil {
-		log.Println(err)
+		logger.Log.Error("Failed to send metrics", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []model.Metrics) error {
+	client := resty.New()
+
+	_, err := client.R().SetBody(data).Post(url)
+	if err != nil {
+		logger.Log.Error("Failed to send metrics batch", zap.Error(err))
 		return err
 	}
 

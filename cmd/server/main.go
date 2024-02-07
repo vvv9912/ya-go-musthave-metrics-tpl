@@ -2,9 +2,13 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/postgresql"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
 	"log"
@@ -37,32 +41,55 @@ func run() error {
 	logger.Log.Info("FileStoragePath=" + FileStoragePath)
 	logger.Log.Info("Restore=", zap.Bool("RESTORE", RESTORE))
 
-	counter := storage.NewCounterStorage()
-	gauge := storage.NewGaugeStorage()
+	var Repo *store.Repository
 
+	if DatabaseDsn != "" {
+		db, err := sql.Open("pgx", DatabaseDsn)
+		if err != nil {
+			logger.Log.Error("error open db", zap.Error(err))
+			return err
+		}
+		defer db.Close()
+		//миграции
+		if err := upGauge(context.Background(), db); err != nil {
+			logger.Log.Error("error up gauge", zap.Error(err))
+			return err
+		}
+		if err := upCounter(context.Background(), db); err != nil {
+			logger.Log.Error("error up counter", zap.Error(err))
+			return err
+		}
+		database := postgresql.NewDatabase(db)
+		Repo = store.NewRepository(database)
+
+	} else {
+		stor := storage.NewStorage()
+		Repo = store.NewRepository(stor)
+	}
+
+	//Если включено восстановление данных
 	if RESTORE {
 
 		consumer, err := fileutils.NewConsumer(FileStoragePath)
 		if err != nil {
-			logger.Log.Info("error consumer", zap.Error(err))
+			logger.Log.Error("error consumer", zap.Error(err))
 			return err
 		}
 
 		event, err := consumer.ReadLastEvent(FileStoragePath)
 		if err != nil {
 			logger.Log.Info("error read last event", zap.Error(err))
-
 		}
 
 		if event != nil {
 			for key, val := range event.Counter {
-				err = counter.UpdateCounter(key, val)
+				err = Repo.UpdateCounter(context.Background(), key, val)
 				if err != nil {
 					logger.Log.Info("error update counter", zap.Error(err))
 				}
 			}
 			for key, val := range event.Gauge {
-				err = gauge.UpdateGauge(key, val)
+				err = Repo.UpdateGauge(context.Background(), key, val)
 				if err != nil {
 					logger.Log.Info("error update gauge", zap.Error(err))
 				}
@@ -83,12 +110,29 @@ func run() error {
 	}
 	defer produce.Close()
 
-	err = s.StartServer(ctx, URLserver, gauge, counter, time.Duration(timerSend)*time.Second, produce)
+	err = s.StartServer(ctx, URLserver, Repo, time.Duration(timerSend)*time.Second, produce)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
 	<-ctx.Done()
+	return nil
+}
+
+func upGauge(ctx context.Context, db *sql.DB) error {
+	query := "CREATE TABLE IF NOT EXISTS GaugeMetrics (    key text unique not null primary key,    val double precision);"
+	_, err := db.ExecContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func upCounter(ctx context.Context, db *sql.DB) error {
+	query := "CREATE TABLE IF NOT EXISTS CounterMetrics (    key text unique not null primary key, val bigint);"
+	_, err := db.ExecContext(ctx, query)
+	if err != nil {
+		return err
+	}
 	return nil
 }

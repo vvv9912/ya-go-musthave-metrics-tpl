@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/storage"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/delaysend"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
+	"syscall"
 )
 
 type Handler struct {
@@ -52,15 +54,26 @@ func HandlerGetGauge(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(body))
 }
 
-func HandlerGetMetrics(gauger storage.GaugeStorager, counter storage.CounterStorager) func(res http.ResponseWriter, req *http.Request) {
+func HandlerGetMetrics(storage store.Storager) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Set("Content-Type", "text/html")
-		gauge := gauger.GetAllGauge()
+		gauge, err := storage.GetAllGauge(req.Context())
+		if err != nil {
+			logger.Log.Info("Failed to get gauge", zap.Error(err))
+			http.Error(res, "Failed to get gauge", http.StatusInternalServerError)
+			return
+		}
 		body := ""
 		for key, value := range gauge {
 			body += fmt.Sprintf("%s: %f\n", key, value)
 		}
-		count := counter.GetAllCounter()
+		count, err := storage.GetAllCounter(req.Context())
+		if err != nil {
+			logger.Log.Info("Failed to get counter", zap.Error(err))
+			http.Error(res, "Failed to get counter", http.StatusInternalServerError)
+			return
+		}
+
 		for key, value := range count {
 			body += fmt.Sprintf("%s: %v\n", key, value)
 		}
@@ -86,14 +99,18 @@ func (h *Handler) HandlerPostJSON(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = h.Service.Metrics.PutMetrics(metrics)
+	err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+		AddExpectedError(syscall.ECONNREFUSED).
+		SendDelayed(func() error {
+			return h.Service.Metrics.PutMetrics(req.Context(), metrics)
+		})
 	if err != nil {
 		logger.Log.Info("Failed to put metrics", zap.Error(err))
 		http.Error(res, "Failed to put metrics", http.StatusNotFound)
 		return
 	}
 
-	err = h.Service.Metrics.SendMetricstoFile()
+	err = h.Service.Metrics.SendMetricstoFile(req.Context())
 	if err != nil {
 		logger.Log.Error("Failed to send metrics to file", zap.Error(err))
 		http.Error(res, "Failed to send metrics to file", http.StatusInternalServerError)
@@ -123,7 +140,10 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	metrics, err = h.Service.Metrics.GetMetrics(metrics)
+	metrics, err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+		AddExpectedError(syscall.ECONNREFUSED).SendDelayedMetrics(func() (model.Metrics, error) {
+		return h.Service.Metrics.GetMetrics(req.Context(), metrics)
+	})
 	if err != nil {
 		logger.Log.Info("Failed to get metrics", zap.Error(err))
 		http.Error(res, "Failed to get metrics", http.StatusNotFound)
@@ -156,7 +176,10 @@ func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	metrics, err = h.Service.Metrics.GetMetrics(metrics)
+	metrics, err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+		AddExpectedError(syscall.ECONNREFUSED).SendDelayedMetrics(func() (model.Metrics, error) {
+		return h.Service.Metrics.GetMetrics(req.Context(), metrics)
+	})
 	if err != nil {
 		logger.Log.Info("Failed to get metrics", zap.Error(err))
 		http.Error(res, "Failed to get Metrics", http.StatusNotFound)
@@ -172,4 +195,40 @@ func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 
 	res.WriteHeader(http.StatusOK)
 	res.Write(response)
+}
+func (h *Handler) HandlerPingDatabase(res http.ResponseWriter, req *http.Request) {
+
+	err := h.Service.Storage.Ping(req.Context())
+	if err != nil {
+		logger.Log.Info("Failed to ping database", zap.Error(err))
+		http.Error(res, "Failed to ping database", http.StatusInternalServerError)
+		return
+	}
+
+	res.WriteHeader(http.StatusOK)
+
+}
+
+func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request) {
+	var metrics []model.Metrics
+
+	err := json.NewDecoder(req.Body).Decode(&metrics)
+	if err != nil {
+		logger.Log.Info("Failed to read request body", zap.Error(err))
+		http.Error(res, "Failed to read request body", http.StatusNotFound)
+		return
+	}
+
+	err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+		AddExpectedError(syscall.ECONNREFUSED).
+		SendDelayed(func() error {
+			return h.Service.Storage.UpdateMetricsBatch(req.Context(), metrics)
+		})
+
+	if err != nil {
+		logger.Log.Info("Failed to send metrics to batch", zap.Error(err))
+		http.Error(res, "Failed to send metrics to batch", http.StatusInternalServerError)
+		return
+	}
+	res.WriteHeader(http.StatusOK)
 }

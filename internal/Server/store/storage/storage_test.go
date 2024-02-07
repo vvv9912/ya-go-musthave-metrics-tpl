@@ -1,24 +1,25 @@
 package storage
 
 import (
-	"github.com/stretchr/testify/assert"
+	"context"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestNewCounterStorage(t *testing.T) {
 	tests := []struct {
 		name   string
-		values map[string]uint64
-		want   map[string]uint64
+		values map[string]int64
+		want   map[string]int64
 	}{
 		{
 			name: "test #1",
-			values: map[string]uint64{
+			values: map[string]int64{
 				"1": 0,
 				"2": 3,
 				"4": 12441324,
 			},
-			want: map[string]uint64{
+			want: map[string]int64{
 				"1": 0,
 				"2": 3,
 				"4": 12441324,
@@ -26,12 +27,12 @@ func TestNewCounterStorage(t *testing.T) {
 		},
 		{
 			name: "test #2 ",
-			values: map[string]uint64{
+			values: map[string]int64{
 				"1": 0,
 				"4": 45645687879,
 				"2": 12441324,
 			},
-			want: map[string]uint64{
+			want: map[string]int64{
 				"1": 0,
 				"2": 12441324,
 				"4": 45645687879,
@@ -41,18 +42,18 @@ func TestNewCounterStorage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cout := NewCounterStorage()
+			ctx := context.TODO()
+			cout := NewStorage()
 			for key, value := range tt.values {
-				err := cout.UpdateCounter(key, value)
+				err := cout.UpdateCounter(ctx, key, value)
 				if err != nil {
 					t.Error(err)
 				}
 			}
-			c := cout.GetAllCounter()
-			assert.Equal(t, c, tt.want)
-			//if got := NewCounterStorage(); !reflect.DeepEqual(got, tt.want) {
-			//	t.Errorf("NewCounterStorage() = %v, want %v", got, tt.want)
-			//}
+			c, err := cout.GetAllCounter(ctx)
+			require.NoError(t, err)
+			require.Equal(t, c, tt.want)
+
 		})
 	}
 }
@@ -93,18 +94,18 @@ func TestNewGaugeStorage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cout := NewGaugeStorage()
+			cout := NewStorage()
+			ctx := context.TODO()
 			for key, value := range tt.values {
-				err := cout.UpdateGauge(key, value)
+				err := cout.UpdateGauge(ctx, key, value)
 				if err != nil {
 					t.Error(err)
 				}
 			}
-			c := cout.GetAllGauge()
-			assert.Equal(t, c, tt.want)
-			//if got := NewCounterStorage(); !reflect.DeepEqual(got, tt.want) {
-			//	t.Errorf("NewCounterStorage() = %v, want %v", got, tt.want)
-			//}
+			c, err := cout.GetAllGauge(ctx)
+			require.NoError(t, err)
+			require.Equal(t, c, tt.want)
+
 		})
 	}
 }

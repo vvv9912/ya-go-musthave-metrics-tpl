@@ -1,6 +1,6 @@
 package typeconst
 
-type contextKey uint64
+type contextKey int64
 
 // для передачи контекста внутри mw/handler
 const (
