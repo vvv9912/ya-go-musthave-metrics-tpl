@@ -15,7 +15,7 @@ func TestStartNotifyCron(t *testing.T) {
 	n := notifier.NewNotifier(metrics, postreq, time.Duration(2*time.Second), time.Duration(10*time.Second), "http://localhost:8080")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err := n.StartNotifyCron(ctx)
+	err := n.StartNotifyCron(ctx, 1)
 	if err != nil {
 		t.Error(err)
 	}

@@ -217,7 +217,7 @@ func (n *Notifier) SendNotification(ctx context.Context, ch chan struct{}, gauge
 	wgWorker.Wait()
 }
 
-func (n *Notifier) StartNotifyCron(ctx context.Context) error {
+func (n *Notifier) StartNotifyCron(ctx context.Context, rateLimit uint) error {
 	var gauge *map[string]string
 	var couter uint64
 	var err error
@@ -252,7 +252,7 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 		Передадим в функцию отправки
 		где будет распределение по отправке
 	*/
-	pullCh := make(chan struct{}, 15)
+	pullCh := make(chan struct{}, rateLimit)
 
 	go func() {
 		ticker := time.NewTicker(n.TimerSend)
