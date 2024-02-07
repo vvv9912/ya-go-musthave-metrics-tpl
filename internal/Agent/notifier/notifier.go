@@ -266,7 +266,7 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 		Передадим в функцию отправки
 		где будет распределение по отправке
 	*/
-	pullCh := make(chan struct{}, 10)
+	pullCh := make(chan struct{}, 15)
 
 	go func() {
 		ticker := time.NewTicker(n.TimerSend)
@@ -279,9 +279,6 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 			case <-ticker.C:
 				if gauge != nil {
 					n.SendNotification(ctx, pullCh, gauge, couter)
-				}
-				if err != nil {
-					return
 				}
 				continue
 			default:

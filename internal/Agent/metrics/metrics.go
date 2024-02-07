@@ -122,6 +122,12 @@ func (m *Metrics) UpdateMetricsGauge() *map[string]string {
 	m.MetricsGauge[Sys] = strconv.FormatUint(runtimeMetrics.Sys, 10)
 	m.MetricsGauge[TotalAlloc] = strconv.FormatUint(runtimeMetrics.TotalAlloc, 10)
 	m.MetricsGauge[RandomValue] = strconv.FormatFloat(rand.Float64(), 'f', -1, 64)
+	//memory, _ := mem.VirtualMemory()
+	//fmt.Printf("Total: %v, Free:%v\n", memory.Total, memory.Free)
+	//cpuUsage, _ := cpu.Percent(0, true)
+	//for i, usage := range cpuUsage {
+	//	fmt.Printf("CPU %d Usage: %v%%\n", i, usage)
+	//}
 	return &m.MetricsGauge
 }
 func (m *Metrics) UpdateMetricsCounter() (uint64, error) {
