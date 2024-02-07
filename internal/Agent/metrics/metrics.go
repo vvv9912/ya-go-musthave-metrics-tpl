@@ -2,6 +2,10 @@ package metrics
 
 import (
 	"errors"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
+	"go.uber.org/zap"
 	"math/rand"
 	"runtime"
 	"strconv"
@@ -37,6 +41,10 @@ const (
 	TotalAlloc    = "TotalAlloc"
 	//
 	RandomValue = "RandomValue"
+	// gopsutil
+	TotalMemory     = "TotalMemory"
+	FreeMemory      = "FreeMemory"
+	CPUutilization1 = "CPUutilization1"
 )
 
 const PollCount = "PollCount"
@@ -82,6 +90,10 @@ func NewMetriсs() Metricer {
 		TotalAlloc:    "",
 		//
 		RandomValue: "",
+		// gopsutil
+		TotalMemory:     "",
+		FreeMemory:      "",
+		CPUutilization1: "",
 	}
 	var metricsCounter = map[string]uint64{
 		PollCount: 0,
@@ -122,12 +134,22 @@ func (m *Metrics) UpdateMetricsGauge() *map[string]string {
 	m.MetricsGauge[Sys] = strconv.FormatUint(runtimeMetrics.Sys, 10)
 	m.MetricsGauge[TotalAlloc] = strconv.FormatUint(runtimeMetrics.TotalAlloc, 10)
 	m.MetricsGauge[RandomValue] = strconv.FormatFloat(rand.Float64(), 'f', -1, 64)
-	//memory, _ := mem.VirtualMemory()
-	//fmt.Printf("Total: %v, Free:%v\n", memory.Total, memory.Free)
-	//cpuUsage, _ := cpu.Percent(0, true)
-	//for i, usage := range cpuUsage {
-	//	fmt.Printf("CPU %d Usage: %v%%\n", i, usage)
-	//}
+	// gopsutil
+	memory, err := mem.VirtualMemory()
+	if err != nil {
+		logger.Log.Error("Failed to get memory", zap.Error(err))
+	} else {
+		m.MetricsGauge[TotalMemory] = strconv.FormatUint(memory.Total, 10)
+		m.MetricsGauge[FreeMemory] = strconv.FormatUint(memory.Free, 10)
+	}
+
+	cpuUsage, err := cpu.Percent(0, true)
+	if err != nil {
+		logger.Log.Error("Failed to get CPU", zap.Error(err))
+	} else {
+		m.MetricsGauge[CPUutilization1] = strconv.FormatFloat(cpuUsage[0], 'f', -1, 64)
+	}
+
 	return &m.MetricsGauge
 }
 func (m *Metrics) UpdateMetricsCounter() (uint64, error) {

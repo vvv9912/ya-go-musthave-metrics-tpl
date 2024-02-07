@@ -217,28 +217,12 @@ func (n *Notifier) SendNotification(ctx context.Context, ch chan struct{}, gauge
 	wgWorker.Wait()
 }
 
-//func (n *Notifier) worker(jobs int, pullCh chan struct{}) {
-//	//Создаем воркер, 3 функции => 3 функции
-//	// в каждую по пуллу передаем
-//	for w:=1; w<=jobs; w++ {
-//
-//	}
-//
-//	for {
-//		select {
-//		case <-pullCh:
-//			return
-//		default:
-//			time.Sleep(1 * time.Second)
-//			continue
-//		}
-//	}
-//}
-
 func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 	var gauge *map[string]string
 	var couter uint64
 	var err error
+
+	//синхронная запись и чтение map
 	mu := sync.Mutex{}
 	//Обновление метрик
 	go func() {
