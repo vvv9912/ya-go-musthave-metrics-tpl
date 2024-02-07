@@ -12,7 +12,6 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"go.uber.org/zap"
-	"log"
 )
 
 type PostRequester interface {
