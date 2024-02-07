@@ -77,7 +77,8 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 
 				val, err := strconv.ParseFloat(values, 64)
 				if err != nil {
-					log.Println(err)
+					logger.Log.Error("Failed to parse float", zap.Error(err))
+					return
 				}
 
 				m := model.Metrics{
@@ -88,9 +89,9 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 				}
 
 				data, err := json.Marshal(m)
-
 				if err != nil {
-					log.Println(err)
+					logger.Log.Error("Failed to marshal JSON", zap.Error(err))
+					return
 				}
 
 				url2 := "http://" + n.URL + "/update/"
@@ -101,7 +102,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 						return n.PostReqJSON(ctx, url2, data)
 					})
 				if err != nil {
-					log.Println(err)
+					logger.Log.Error("Failed to send JSON", zap.Error(err))
 				}
 			}(key, values)
 		}
@@ -121,7 +122,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 				return n.PostReq(ctx, url)
 			})
 		if err != nil {
-			log.Println(err)
+			logger.Log.Error("Failed to send counter PostReq", zap.Error(err))
 			return
 		}
 
@@ -135,7 +136,8 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 
 		data, err := json.Marshal(m)
 		if err != nil {
-			log.Println(err)
+			logger.Log.Error("Failed to marshal JSON", zap.Error(err))
+			return
 		}
 
 		url2 := "http://" + n.URL + "/update/"
@@ -145,7 +147,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 				return n.PostReqJSON(ctx, url2, data)
 			})
 		if err != nil {
-			log.Println(err)
+			logger.Log.Error("Failed to send JSON", zap.Error(err))
 			return
 		}
 	}()
@@ -157,9 +159,11 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 		url := "http://" + n.URL + "/updates/"
 		m := make([]model.Metrics, 0, len(*gauge))
 		for key, values := range *gauge {
+
 			val, err := strconv.ParseFloat(values, 64)
 			if err != nil {
-				log.Println(err)
+				logger.Log.Error("Failed to parse float", zap.Error(err))
+				return
 			}
 
 			m = append(m, model.Metrics{
@@ -184,7 +188,7 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 				return n.PostReqBatched(ctx, url, m)
 			})
 		if err != nil {
-			log.Println(err)
+			logger.Log.Error("Failed to send Batched", zap.Error(err))
 			return
 		}
 	}()

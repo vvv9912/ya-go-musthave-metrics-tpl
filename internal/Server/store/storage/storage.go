@@ -9,7 +9,7 @@ import (
 )
 
 type MemStorage struct {
-	gaugeStorage   map[string]float64 //todo переделать под map[string]string, в соотв. с agent
+	gaugeStorage   map[string]float64
 	counterStorage map[string]int64
 	gaugeMutex     sync.Mutex
 	counterMutex   sync.Mutex

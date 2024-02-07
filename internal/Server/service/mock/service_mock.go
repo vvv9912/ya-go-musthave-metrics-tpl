@@ -12,152 +12,18 @@ import (
 	model "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
-// MockGaugeStorager is a mock of GaugeStorager interface.
-type MockGaugeStorager struct {
-	ctrl     *gomock.Controller
-	recorder *MockGaugeStoragerMockRecorder
-}
-
-// MockGaugeStoragerMockRecorder is the mock recorder for MockGaugeStorager.
-type MockGaugeStoragerMockRecorder struct {
-	mock *MockGaugeStorager
-}
-
-// NewMockGaugeStorager creates a new mock instance.
-func NewMockGaugeStorager(ctrl *gomock.Controller) *MockGaugeStorager {
-	mock := &MockGaugeStorager{ctrl: ctrl}
-	mock.recorder = &MockGaugeStoragerMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockGaugeStorager) EXPECT() *MockGaugeStoragerMockRecorder {
-	return m.recorder
-}
-
-// GetAllGauge mocks base method.
-func (m *MockGaugeStorager) GetAllGauge(ctx context.Context) (map[string]float64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllGauge", ctx)
-	ret0, _ := ret[0].(map[string]float64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllGauge indicates an expected call of GetAllGauge.
-func (mr *MockGaugeStoragerMockRecorder) GetAllGauge(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllGauge", reflect.TypeOf((*MockGaugeStorager)(nil).GetAllGauge), ctx)
-}
-
-// GetGauge mocks base method.
-func (m *MockGaugeStorager) GetGauge(ctx context.Context, key string) (float64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGauge", ctx, key)
-	ret0, _ := ret[0].(float64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetGauge indicates an expected call of GetGauge.
-func (mr *MockGaugeStoragerMockRecorder) GetGauge(ctx, key interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGauge", reflect.TypeOf((*MockGaugeStorager)(nil).GetGauge), ctx, key)
-}
-
-// UpdateGauge mocks base method.
-func (m *MockGaugeStorager) UpdateGauge(ctx context.Context, key string, val float64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateGauge", ctx, key, val)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateGauge indicates an expected call of UpdateGauge.
-func (mr *MockGaugeStoragerMockRecorder) UpdateGauge(ctx, key, val interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGauge", reflect.TypeOf((*MockGaugeStorager)(nil).UpdateGauge), ctx, key, val)
-}
-
-// MockCounterStorager is a mock of CounterStorager interface.
-type MockCounterStorager struct {
-	ctrl     *gomock.Controller
-	recorder *MockCounterStoragerMockRecorder
-}
-
-// MockCounterStoragerMockRecorder is the mock recorder for MockCounterStorager.
-type MockCounterStoragerMockRecorder struct {
-	mock *MockCounterStorager
-}
-
-// NewMockCounterStorager creates a new mock instance.
-func NewMockCounterStorager(ctrl *gomock.Controller) *MockCounterStorager {
-	mock := &MockCounterStorager{ctrl: ctrl}
-	mock.recorder = &MockCounterStoragerMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCounterStorager) EXPECT() *MockCounterStoragerMockRecorder {
-	return m.recorder
-}
-
-// GetAllCounter mocks base method.
-func (m *MockCounterStorager) GetAllCounter(ctx context.Context) (map[string]uint64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllCounter", ctx)
-	ret0, _ := ret[0].(map[string]uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllCounter indicates an expected call of GetAllCounter.
-func (mr *MockCounterStoragerMockRecorder) GetAllCounter(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCounter", reflect.TypeOf((*MockCounterStorager)(nil).GetAllCounter), ctx)
-}
-
-// GetCounter mocks base method.
-func (m *MockCounterStorager) GetCounter(ctx context.Context, key string) (uint64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetCounter", ctx, key)
-	ret0, _ := ret[0].(uint64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetCounter indicates an expected call of GetCounter.
-func (mr *MockCounterStoragerMockRecorder) GetCounter(ctx, key interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCounter", reflect.TypeOf((*MockCounterStorager)(nil).GetCounter), ctx, key)
-}
-
-// UpdateCounter mocks base method.
-func (m *MockCounterStorager) UpdateCounter(ctx context.Context, key string, val uint64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateCounter", ctx, key, val)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateCounter indicates an expected call of UpdateCounter.
-func (mr *MockCounterStoragerMockRecorder) UpdateCounter(ctx, key, val interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCounter", reflect.TypeOf((*MockCounterStorager)(nil).UpdateCounter), ctx, key, val)
-}
-
-// MockNotifierSend is a mock of NotifierSend interface.
+// MockNotifierSend is a repository_mock of NotifierSend interface.
 type MockNotifierSend struct {
 	ctrl     *gomock.Controller
 	recorder *MockNotifierSendMockRecorder
 }
 
-// MockNotifierSendMockRecorder is the mock recorder for MockNotifierSend.
+// MockNotifierSendMockRecorder is the repository_mock recorder for MockNotifierSend.
 type MockNotifierSendMockRecorder struct {
 	mock *MockNotifierSend
 }
 
-// NewMockNotifierSend creates a new mock instance.
+// NewMockNotifierSend creates a new repository_mock instance.
 func NewMockNotifierSend(ctrl *gomock.Controller) *MockNotifierSend {
 	mock := &MockNotifierSend{ctrl: ctrl}
 	mock.recorder = &MockNotifierSendMockRecorder{mock}
@@ -183,18 +49,18 @@ func (mr *MockNotifierSendMockRecorder) NotifierPending(ctx interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotifierPending", reflect.TypeOf((*MockNotifierSend)(nil).NotifierPending), ctx)
 }
 
-// MockMetrics is a mock of Metrics interface.
+// MockMetrics is a repository_mock of Metrics interface.
 type MockMetrics struct {
 	ctrl     *gomock.Controller
 	recorder *MockMetricsMockRecorder
 }
 
-// MockMetricsMockRecorder is the mock recorder for MockMetrics.
+// MockMetricsMockRecorder is the repository_mock recorder for MockMetrics.
 type MockMetricsMockRecorder struct {
 	mock *MockMetrics
 }
 
-// NewMockMetrics creates a new mock instance.
+// NewMockMetrics creates a new repository_mock instance.
 func NewMockMetrics(ctrl *gomock.Controller) *MockMetrics {
 	mock := &MockMetrics{ctrl: ctrl}
 	mock.recorder = &MockMetricsMockRecorder{mock}
@@ -207,10 +73,10 @@ func (m *MockMetrics) EXPECT() *MockMetricsMockRecorder {
 }
 
 // GetCounter mocks base method.
-func (m *MockMetrics) GetCounter(ctx context.Context, key string) (uint64, error) {
+func (m *MockMetrics) GetCounter(ctx context.Context, key string) (int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCounter", ctx, key)
-	ret0, _ := ret[0].(uint64)
+	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -252,7 +118,7 @@ func (mr *MockMetricsMockRecorder) GetMetrics(ctx, metrics interface{}) *gomock.
 }
 
 // PutCounter mocks base method.
-func (m *MockMetrics) PutCounter(ctx context.Context, key string, val uint64) error {
+func (m *MockMetrics) PutCounter(ctx context.Context, key string, val int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PutCounter", ctx, key, val)
 	ret0, _ := ret[0].(error)
@@ -305,55 +171,4 @@ func (m *MockMetrics) SendMetricstoFile(ctx context.Context) error {
 func (mr *MockMetricsMockRecorder) SendMetricstoFile(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMetricstoFile", reflect.TypeOf((*MockMetrics)(nil).SendMetricstoFile), ctx)
-}
-
-// MockStore is a mock of Store interface.
-type MockStore struct {
-	ctrl     *gomock.Controller
-	recorder *MockStoreMockRecorder
-}
-
-// MockStoreMockRecorder is the mock recorder for MockStore.
-type MockStoreMockRecorder struct {
-	mock *MockStore
-}
-
-// NewMockStore creates a new mock instance.
-func NewMockStore(ctrl *gomock.Controller) *MockStore {
-	mock := &MockStore{ctrl: ctrl}
-	mock.recorder = &MockStoreMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockStore) EXPECT() *MockStoreMockRecorder {
-	return m.recorder
-}
-
-// Ping mocks base method.
-func (m *MockStore) Ping(ctx context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Ping", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Ping indicates an expected call of Ping.
-func (mr *MockStoreMockRecorder) Ping(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockStore)(nil).Ping), ctx)
-}
-
-// UpdateMetricsBatch mocks base method.
-func (m *MockStore) UpdateMetricsBatch(ctx context.Context, metrics []model.Metrics) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateMetricsBatch", ctx, metrics)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateMetricsBatch indicates an expected call of UpdateMetricsBatch.
-func (mr *MockStoreMockRecorder) UpdateMetricsBatch(ctx, metrics interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricsBatch", reflect.TypeOf((*MockStore)(nil).UpdateMetricsBatch), ctx, metrics)
 }

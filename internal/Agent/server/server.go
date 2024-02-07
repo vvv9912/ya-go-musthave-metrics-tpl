@@ -47,7 +47,7 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 	zb := gzip.NewWriter(buf)
 	_, err := zb.Write(data)
 	if err != nil {
-		log.Println(err)
+		logger.Log.Error("Failed gzip", zap.Error(err))
 		return err
 	}
 	zb.Close()
@@ -96,7 +96,6 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 			return err
 		}
 	}
-
 	return nil
 }
 
