@@ -239,7 +239,7 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 	var gauge *map[string]string
 	var couter uint64
 	var err error
-
+	mu := sync.Mutex{}
 	//Обновление метрик
 	go func() {
 		ticker := time.NewTicker(n.TimerUpdate)
@@ -249,11 +249,13 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 				// Обработка завершения программы
 				return
 			case <-ticker.C:
+				mu.Lock()
 				gauge, couter, err = n.NotifyPending()
 				if err != nil {
 					logger.Log.Info("Failed to pending", zap.Error(err))
 					return
 				}
+				mu.Unlock()
 				continue
 			default:
 				continue
@@ -277,8 +279,11 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 				close(pullCh)
 				return
 			case <-ticker.C:
+
 				if gauge != nil {
+					mu.Lock()
 					n.SendNotification(ctx, pullCh, gauge, couter)
+					mu.Unlock()
 				}
 				continue
 			default:
