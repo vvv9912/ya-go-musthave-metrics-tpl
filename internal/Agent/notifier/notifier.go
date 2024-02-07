@@ -197,10 +197,30 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 	return nil
 }
 
+//func (n *Notifier) worker(jobs int, pullCh chan struct{}) {
+//	//Создаем воркер, 3 функции => 3 функции
+//	// в каждую по пуллу передаем
+//	for w:=1; w<=jobs; w++ {
+//
+//	}
+//
+//	for {
+//		select {
+//		case <-pullCh:
+//			return
+//		default:
+//			time.Sleep(1 * time.Second)
+//			continue
+//		}
+//	}
+//}
+
 func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 	var gauge *map[string]string
 	var couter uint64
 	var err error
+
+	//Обновление метрик
 	go func() {
 		ticker := time.NewTicker(n.TimerUpdate)
 		for {
@@ -220,7 +240,13 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 			}
 		}
 	}()
-
+	// отправка
+	/*
+		Создадим пул горутин
+		Передадим в функцию отправки
+		где будет распределение по отправке
+	*/
+	//pullCh := make(chan struct{}, 10)
 	go func() {
 		ticker := time.NewTicker(n.TimerSend)
 		for {

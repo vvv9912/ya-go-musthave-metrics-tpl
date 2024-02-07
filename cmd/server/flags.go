@@ -48,7 +48,8 @@ func parseFlags() {
 	// если интерфейс не реализован,
 	// здесь будет ошибка компиляции
 	var _ = flag.Value(addr)
-
+	//var restore string
+	flag.StringVar(&KeyAuth, "k", "", "key for auth (по умолчанию пустая)")
 	flag.Var(addr, "a", "Net address host:port")
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")
 	flag.StringVar(&FileStoragePath, "f", "/tmp/metrics-db.json", "file storage path")
@@ -58,6 +59,9 @@ func parseFlags() {
 	flag.Parse()
 
 	URLserver = addr.String()
+	if envKey := os.Getenv("KEY"); envKey != "" {
+		KeyAuth = envKey
+	}
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		URLserver = envRunAddr
 	}
