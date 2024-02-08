@@ -21,9 +21,7 @@ type Server struct {
 }
 
 func NewServer() *Server {
-
-	s := chi.NewRouter()
-	return &Server{s: s}
+	return &Server{s: chi.NewRouter()}
 }
 
 func (s *Server) StartServer(

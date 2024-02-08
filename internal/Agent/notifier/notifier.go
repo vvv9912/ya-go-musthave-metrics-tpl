@@ -219,7 +219,7 @@ func (n *Notifier) SendNotification(ctx context.Context, ch chan struct{}, gauge
 
 func (n *Notifier) StartNotifyCron(ctx context.Context, rateLimit uint) error {
 	var gauge *map[string]string
-	var couter uint64
+	var counter uint64
 	var err error
 
 	//синхронная запись и чтение map
@@ -234,7 +234,7 @@ func (n *Notifier) StartNotifyCron(ctx context.Context, rateLimit uint) error {
 				return
 			case <-ticker.C:
 				mu.Lock()
-				gauge, couter, err = n.NotifyPending()
+				gauge, counter, err = n.NotifyPending()
 				if err != nil {
 					logger.Log.Info("Failed to pending", zap.Error(err))
 					return
@@ -246,12 +246,9 @@ func (n *Notifier) StartNotifyCron(ctx context.Context, rateLimit uint) error {
 			}
 		}
 	}()
-	// отправка
-	/*
-		Создадим пул горутин
-		Передадим в функцию отправки
-		где будет распределение по отправке
-	*/
+
+	// отправка метрик
+	// пул горутин
 	pullCh := make(chan struct{}, rateLimit)
 
 	go func() {
@@ -266,7 +263,7 @@ func (n *Notifier) StartNotifyCron(ctx context.Context, rateLimit uint) error {
 
 				if gauge != nil {
 					mu.Lock()
-					n.SendNotification(ctx, pullCh, gauge, couter)
+					n.SendNotification(ctx, pullCh, gauge, counter)
 					mu.Unlock()
 				}
 				continue

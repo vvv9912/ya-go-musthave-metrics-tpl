@@ -33,6 +33,7 @@ func NewService(storage store.Storager, notify NotifierSend, keyAuth string) *Se
 		Storage:  storage,
 		Notifier: notify,
 		Metrics:  NewMeticsService(storage, notify),
-		KeyAuth:  keyAuth}
+		KeyAuth:  keyAuth,
+	}
 
 }

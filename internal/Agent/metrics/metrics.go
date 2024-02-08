@@ -164,7 +164,3 @@ func (m *Metrics) UpdateMetricsCounter() (uint64, error) {
 
 	return newValue, nil
 }
-
-//func (m *Metrics) GetMetrics() *map[string]string {
-//	return &m.MetricsGauge
-//}
