@@ -220,7 +220,10 @@ func (n *Notifier) SendNotification(ctx context.Context, ch chan struct{}, gauge
 func (n *Notifier) StartNotifyCron(ctx context.Context, rateLimit uint) error {
 	var gauge map[string]string
 	var counter uint64
+
+	// для закрытия горутин в случае ошибки в одной из них
 	ctxCancel, cancel := context.WithCancel(ctx)
+
 	//синхронная запись и чтение map
 	mu := sync.Mutex{}
 	//Обновление метрик
