@@ -15,7 +15,7 @@ import (
 )
 
 type EventsMetric interface {
-	UpdateMetricsGauge() *map[string]string
+	UpdateMetricsGauge() map[string]string
 	UpdateMetricsCounter() (uint64, error)
 }
 type PostRequester interface {
@@ -36,7 +36,7 @@ func NewNotifier(eventsMetric EventsMetric, postReq PostRequester, timeupdate ti
 	return &Notifier{EventsMetric: eventsMetric, PostRequester: postReq, TimerUpdate: timeupdate, TimerSend: timesend, URL: url}
 }
 
-func (n *Notifier) NotifyPending() (*map[string]string, uint64, error) {
+func (n *Notifier) NotifyPending() (map[string]string, uint64, error) {
 	gauge := n.UpdateMetricsGauge()
 	counter, err := n.UpdateMetricsCounter()
 	counter++
@@ -47,12 +47,12 @@ func (n *Notifier) NotifyPending() (*map[string]string, uint64, error) {
 	return gauge, counter, nil
 }
 
-func (n *Notifier) SendGaugeReq(ctx context.Context, gauge *map[string]string, PullGoCh chan struct{}, wgWorker *sync.WaitGroup) {
+func (n *Notifier) SendGaugeReq(ctx context.Context, gauge map[string]string, PullGoCh chan struct{}, wgWorker *sync.WaitGroup) {
 	defer wgWorker.Done()
 
 	wg := sync.WaitGroup{}
 
-	for key, values := range *gauge {
+	for key, values := range gauge {
 		wg.Add(1)
 		PullGoCh <- struct{}{}
 		go func(key string, values string) {
@@ -158,7 +158,7 @@ func (n *Notifier) SendCountReq(ctx context.Context, counter uint64, PullGoCh ch
 
 }
 
-func (n *Notifier) SendReqBatched(ctx context.Context, gauge *map[string]string, counter uint64, PullGoCh chan struct{}, wgWorker *sync.WaitGroup) {
+func (n *Notifier) SendReqBatched(ctx context.Context, gauge map[string]string, counter uint64, PullGoCh chan struct{}, wgWorker *sync.WaitGroup) {
 
 	PullGoCh <- struct{}{}
 	defer func() {
@@ -169,9 +169,9 @@ func (n *Notifier) SendReqBatched(ctx context.Context, gauge *map[string]string,
 
 	url := "http://" + n.URL + "/updates/"
 
-	m := make([]model.Metrics, 0, len(*gauge))
+	m := make([]model.Metrics, 0, len(gauge))
 
-	for key, values := range *gauge {
+	for key, values := range gauge {
 
 		val, err := strconv.ParseFloat(values, 64)
 		if err != nil {
@@ -206,7 +206,7 @@ func (n *Notifier) SendReqBatched(ctx context.Context, gauge *map[string]string,
 	}
 
 }
-func (n *Notifier) SendNotification(ctx context.Context, ch chan struct{}, gauge *map[string]string, counter uint64) {
+func (n *Notifier) SendNotification(ctx context.Context, ch chan struct{}, gauge map[string]string, counter uint64) {
 	wgWorker := &sync.WaitGroup{}
 	wgWorker.Add(3)
 
@@ -218,14 +218,22 @@ func (n *Notifier) SendNotification(ctx context.Context, ch chan struct{}, gauge
 }
 
 func (n *Notifier) StartNotifyCron(ctx context.Context, rateLimit uint) error {
-	var gauge *map[string]string
+	var gauge map[string]string
 	var counter uint64
-	var err error
-
+	ctxCancel, cancel := context.WithCancel(ctx)
 	//синхронная запись и чтение map
 	mu := sync.Mutex{}
 	//Обновление метрик
 	go func() {
+
+		var err error
+		defer func() {
+			if err != nil {
+				mu.Unlock()
+				cancel()
+			}
+		}()
+
 		ticker := time.NewTicker(n.TimerUpdate)
 		for {
 			select {
@@ -241,8 +249,8 @@ func (n *Notifier) StartNotifyCron(ctx context.Context, rateLimit uint) error {
 				}
 				mu.Unlock()
 				continue
-			default:
-				continue
+			case <-ctxCancel.Done():
+				return
 			}
 		}
 	}()
@@ -252,7 +260,9 @@ func (n *Notifier) StartNotifyCron(ctx context.Context, rateLimit uint) error {
 	pullCh := make(chan struct{}, rateLimit)
 
 	go func() {
+
 		ticker := time.NewTicker(n.TimerSend)
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -267,10 +277,11 @@ func (n *Notifier) StartNotifyCron(ctx context.Context, rateLimit uint) error {
 					mu.Unlock()
 				}
 				continue
-			default:
-				continue
+			case <-ctxCancel.Done():
+				return
 			}
 		}
 	}()
+
 	return nil
 }

@@ -50,7 +50,7 @@ const (
 const PollCount = "PollCount"
 
 type Metricer interface {
-	UpdateMetricsGauge() *map[string]string
+	UpdateMetricsGauge() map[string]string
 	UpdateMetricsCounter() (uint64, error)
 }
 
@@ -101,7 +101,7 @@ func NewMetriсs() Metricer {
 	return &Metrics{MetricsGauge: meticsGauge, MetricsCounter: metricsCounter}
 }
 
-func (m *Metrics) UpdateMetricsGauge() *map[string]string {
+func (m *Metrics) UpdateMetricsGauge() map[string]string {
 	var runtimeMetrics runtime.MemStats
 	runtime.ReadMemStats(&runtimeMetrics)
 
@@ -150,7 +150,7 @@ func (m *Metrics) UpdateMetricsGauge() *map[string]string {
 		m.MetricsGauge[CPUutilization1] = strconv.FormatFloat(cpuUsage[0], 'f', -1, 64)
 	}
 
-	return &m.MetricsGauge
+	return m.MetricsGauge
 }
 func (m *Metrics) UpdateMetricsCounter() (uint64, error) {
 	value, ok := m.MetricsCounter[PollCount]
