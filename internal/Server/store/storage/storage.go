@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"sync"
@@ -30,16 +29,20 @@ func NewStorage() *MemStorage {
 func (S *MemStorage) UpdateGauge(ctx context.Context, key string, val float64) error {
 	S.gaugeMutex.Lock()
 	defer S.gaugeMutex.Unlock()
+
 	S.gaugeStorage[key] = val
+
 	return nil
 }
 func (S *MemStorage) GetGauge(ctx context.Context, key string) (float64, error) {
 	S.gaugeMutex.Lock()
 	defer S.gaugeMutex.Unlock()
+
 	val, found := S.gaugeStorage[key]
 	if !found {
-		return 0, errors.New("gauge not found")
+		return 0, fmt.Errorf("gauge not found")
 	}
+
 	return val, nil
 }
 func (S *MemStorage) GetAllGauge(ctx context.Context) (map[string]float64, error) {
@@ -60,10 +63,12 @@ func (S *MemStorage) UpdateCounter(ctx context.Context, key string, val int64) e
 func (S *MemStorage) GetCounter(ctx context.Context, key string) (int64, error) {
 	S.counterMutex.Lock()
 	defer S.counterMutex.Unlock()
+
 	val, found := S.counterStorage[key]
 	if !found {
-		return 0, errors.New("counter not found")
+		return 0, fmt.Errorf("counter not found")
 	}
+
 	return val, nil
 }
 func (S *MemStorage) GetAllCounter(ctx context.Context) (map[string]int64, error) {

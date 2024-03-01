@@ -22,6 +22,7 @@ var URLserver string
 var timerSend int
 var FileStoragePath string
 var RESTORE bool
+var KeyAuth string
 
 func main() {
 	parseFlags()
@@ -32,6 +33,7 @@ func main() {
 }
 func run() error {
 	log.Println("Start server")
+	log.Println("KeyAuth=", KeyAuth)
 	if err := logger.Initialize(flagLogLevel); err != nil {
 		return err
 	}
@@ -110,7 +112,7 @@ func run() error {
 	}
 	defer produce.Close()
 
-	err = s.StartServer(ctx, URLserver, Repo, time.Duration(timerSend)*time.Second, produce)
+	err = s.StartServer(ctx, URLserver, Repo, time.Duration(timerSend)*time.Second, produce, KeyAuth)
 	if err != nil {
 		log.Println(err)
 		return err

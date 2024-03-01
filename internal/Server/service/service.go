@@ -25,12 +25,15 @@ type Service struct {
 	Metrics  Metrics
 	Storage  store.Storager
 	Notifier NotifierSend
+	KeyAuth  string
 }
 
-func NewService(storage store.Storager, notify NotifierSend) *Service {
+func NewService(storage store.Storager, notify NotifierSend, keyAuth string) *Service {
 	return &Service{
 		Storage:  storage,
 		Notifier: notify,
-		Metrics:  NewMeticsService(storage, notify)}
+		Metrics:  NewMeticsService(storage, notify),
+		KeyAuth:  keyAuth,
+	}
 
 }

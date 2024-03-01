@@ -15,7 +15,7 @@ import (
 )
 
 type EventsMetric interface {
-	UpdateMetricsGauge() *map[string]string
+	UpdateMetricsGauge() map[string]string
 	UpdateMetricsCounter() (uint64, error)
 }
 type PostRequester interface {
@@ -36,7 +36,7 @@ func NewNotifier(eventsMetric EventsMetric, postReq PostRequester, timeupdate ti
 	return &Notifier{EventsMetric: eventsMetric, PostRequester: postReq, TimerUpdate: timeupdate, TimerSend: timesend, URL: url}
 }
 
-func (n *Notifier) NotifyPending() (*map[string]string, uint64, error) {
+func (n *Notifier) NotifyPending() (map[string]string, uint64, error) {
 	gauge := n.UpdateMetricsGauge()
 	counter, err := n.UpdateMetricsCounter()
 	counter++
@@ -47,118 +47,31 @@ func (n *Notifier) NotifyPending() (*map[string]string, uint64, error) {
 	return gauge, counter, nil
 }
 
-func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]string, counter uint64) error {
-	var wg sync.WaitGroup
+func (n *Notifier) SendGaugeReq(ctx context.Context, gauge map[string]string, PullGoCh chan struct{}, wgWorker *sync.WaitGroup) {
+	defer wgWorker.Done()
 
-	// пул горутин
-	PCh := make(chan struct{}, 10)
-	//Передаем gauge
-	go func() {
-		for key, values := range *gauge {
-			wg.Add(1)
-			PCh <- struct{}{}
-			go func(key string, values string) {
-				defer wg.Done()
-				defer func() {
-					//освоблождаем горутину
-					<-PCh
-				}()
-				url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
+	wg := sync.WaitGroup{}
 
-				err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
-					AddExpectedError(syscall.ECONNREFUSED).
-					SendDelayed(func() error {
-						return n.PostReq(ctx, url)
-					})
-				if err != nil {
-					log.Println(err)
-					return
-				}
+	for key, values := range gauge {
+		wg.Add(1)
+		PullGoCh <- struct{}{}
+		go func(key string, values string) {
+			defer func() {
+				//освоблождаем горутину
+				<-PullGoCh
+				wg.Done()
+			}()
+			url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
 
-				val, err := strconv.ParseFloat(values, 64)
-				if err != nil {
-					logger.Log.Error("Failed to parse float", zap.Error(err))
-					return
-				}
-
-				m := model.Metrics{
-					ID:    key,
-					MType: "gauge",
-					Delta: nil,
-					Value: &val,
-				}
-
-				data, err := json.Marshal(m)
-				if err != nil {
-					logger.Log.Error("Failed to marshal JSON", zap.Error(err))
-					return
-				}
-
-				url2 := "http://" + n.URL + "/update/"
-
-				err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
-					AddExpectedError(syscall.ECONNREFUSED).
-					SendDelayed(func() error {
-						return n.PostReqJSON(ctx, url2, data)
-					})
-				if err != nil {
-					logger.Log.Error("Failed to send JSON", zap.Error(err))
-				}
-			}(key, values)
-		}
-	}()
-	//Передаем counter
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		//todo параллельная отправка
-		coun := strconv.FormatUint(counter, 10)
-
-		url := "http://" + n.URL + "/update/" + "counter" + "/" + "PollCount" + "/" + coun
-
-		err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
-			AddExpectedError(syscall.ECONNREFUSED).
-			SendDelayed(func() error {
-				return n.PostReq(ctx, url)
-			})
-		if err != nil {
-			logger.Log.Error("Failed to send counter PostReq", zap.Error(err))
-			return
-		}
-
-		counterInt64 := int64(counter)
-		m := model.Metrics{
-			ID:    "PollCount",
-			MType: "counter",
-			Delta: &counterInt64,
-			Value: nil,
-		}
-
-		data, err := json.Marshal(m)
-		if err != nil {
-			logger.Log.Error("Failed to marshal JSON", zap.Error(err))
-			return
-		}
-
-		url2 := "http://" + n.URL + "/update/"
-		err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
-			AddExpectedError(syscall.ECONNREFUSED).
-			SendDelayed(func() error {
-				return n.PostReqJSON(ctx, url2, data)
-			})
-		if err != nil {
-			logger.Log.Error("Failed to send JSON", zap.Error(err))
-			return
-		}
-	}()
-	wg.Add(1)
-	//отправляем множество метрик
-	go func() {
-		defer wg.Done()
-
-		url := "http://" + n.URL + "/updates/"
-		m := make([]model.Metrics, 0, len(*gauge))
-		for key, values := range *gauge {
+			err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+				AddExpectedError(syscall.ECONNREFUSED).
+				SendDelayed(func() error {
+					return n.PostReq(ctx, url)
+				})
+			if err != nil {
+				log.Println(err)
+				return
+			}
 
 			val, err := strconv.ParseFloat(values, 64)
 			if err != nil {
@@ -166,42 +79,164 @@ func (n *Notifier) SendNotification(ctx context.Context, gauge *map[string]strin
 				return
 			}
 
-			m = append(m, model.Metrics{
+			m := model.Metrics{
 				ID:    key,
 				MType: "gauge",
 				Delta: nil,
 				Value: &val,
-			})
+			}
 
-		}
-		counterInt64 := int64(counter)
-		m = append(m, model.Metrics{
-			ID:    "PollCount",
-			MType: "counter",
-			Delta: &counterInt64,
-			Value: nil,
-		})
+			data, err := json.Marshal(m)
+			if err != nil {
+				logger.Log.Error("Failed to marshal JSON", zap.Error(err))
+				return
+			}
 
-		err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
-			AddExpectedError(syscall.ECONNREFUSED).
-			SendDelayed(func() error {
-				return n.PostReqBatched(ctx, url, m)
-			})
-		if err != nil {
-			logger.Log.Error("Failed to send Batched", zap.Error(err))
-			return
-		}
-	}()
+			url2 := "http://" + n.URL + "/update/"
+
+			err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+				AddExpectedError(syscall.ECONNREFUSED).
+				SendDelayed(func() error {
+					return n.PostReqJSON(ctx, url2, data)
+				})
+			if err != nil {
+				logger.Log.Error("Failed to send JSON", zap.Error(err))
+			}
+		}(key, values)
+	}
+
 	wg.Wait()
-	close(PCh)
-	return nil
 }
 
-func (n *Notifier) StartNotifyCron(ctx context.Context) error {
-	var gauge *map[string]string
-	var couter uint64
-	var err error
+func (n *Notifier) SendCountReq(ctx context.Context, counter uint64, PullGoCh chan struct{}, wgWorker *sync.WaitGroup) {
+
+	PullGoCh <- struct{}{}
+	defer func() {
+		//освоблождаем горутину
+		<-PullGoCh
+		wgWorker.Done()
+	}()
+
+	coun := strconv.FormatUint(counter, 10)
+
+	url := "http://" + n.URL + "/update/" + "counter" + "/" + "PollCount" + "/" + coun
+
+	err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+		AddExpectedError(syscall.ECONNREFUSED).
+		SendDelayed(func() error {
+			return n.PostReq(ctx, url)
+		})
+	if err != nil {
+		logger.Log.Error("Failed to send counter PostReq", zap.Error(err))
+		return
+	}
+
+	counterInt64 := int64(counter)
+	m := model.Metrics{
+		ID:    "PollCount",
+		MType: "counter",
+		Delta: &counterInt64,
+		Value: nil,
+	}
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		logger.Log.Error("Failed to marshal JSON", zap.Error(err))
+		return
+	}
+
+	url2 := "http://" + n.URL + "/update/"
+	err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+		AddExpectedError(syscall.ECONNREFUSED).
+		SendDelayed(func() error {
+			return n.PostReqJSON(ctx, url2, data)
+		})
+	if err != nil {
+		logger.Log.Error("Failed to send JSON", zap.Error(err))
+		return
+	}
+
+}
+
+func (n *Notifier) SendReqBatched(ctx context.Context, gauge map[string]string, counter uint64, PullGoCh chan struct{}, wgWorker *sync.WaitGroup) {
+
+	PullGoCh <- struct{}{}
+	defer func() {
+		//освоблождаем горутину
+		<-PullGoCh
+		wgWorker.Done()
+	}()
+
+	url := "http://" + n.URL + "/updates/"
+
+	m := make([]model.Metrics, 0, len(gauge))
+
+	for key, values := range gauge {
+
+		val, err := strconv.ParseFloat(values, 64)
+		if err != nil {
+			logger.Log.Error("Failed to parse float", zap.Error(err))
+			return
+		}
+
+		m = append(m, model.Metrics{
+			ID:    key,
+			MType: "gauge",
+			Delta: nil,
+			Value: &val,
+		})
+
+	}
+	counterInt64 := int64(counter)
+	m = append(m, model.Metrics{
+		ID:    "PollCount",
+		MType: "counter",
+		Delta: &counterInt64,
+		Value: nil,
+	})
+
+	err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+		AddExpectedError(syscall.ECONNREFUSED).
+		SendDelayed(func() error {
+			return n.PostReqBatched(ctx, url, m)
+		})
+	if err != nil {
+		logger.Log.Error("Failed to send Batched", zap.Error(err))
+		return
+	}
+
+}
+func (n *Notifier) SendNotification(ctx context.Context, ch chan struct{}, gauge map[string]string, counter uint64) {
+	wgWorker := &sync.WaitGroup{}
+	wgWorker.Add(3)
+
+	go n.SendGaugeReq(ctx, gauge, ch, wgWorker)
+	go n.SendCountReq(ctx, counter, ch, wgWorker)
+	go n.SendReqBatched(ctx, gauge, counter, ch, wgWorker)
+
+	wgWorker.Wait()
+}
+
+func (n *Notifier) StartNotifyCron(ctx context.Context, rateLimit uint) error {
+	var gauge map[string]string
+	var counter uint64
+
+	// для закрытия горутин в случае ошибки в одной из них
+	ctxCancel, cancel := context.WithCancel(ctx)
+
+	//синхронная запись и чтение map
+	mu := sync.Mutex{}
+	//Обновление метрик
 	go func() {
+
+		var err error
+		defer func() {
+			if err != nil {
+				mu.Unlock()
+				cancel()
+			}
+		}()
+
 		ticker := time.NewTicker(n.TimerUpdate)
 		for {
 			select {
@@ -209,37 +244,47 @@ func (n *Notifier) StartNotifyCron(ctx context.Context) error {
 				// Обработка завершения программы
 				return
 			case <-ticker.C:
-				gauge, couter, err = n.NotifyPending()
+				mu.Lock()
+				gauge, counter, err = n.NotifyPending()
 				if err != nil {
 					logger.Log.Info("Failed to pending", zap.Error(err))
 					return
 				}
+				mu.Unlock()
 				continue
-			default:
-				continue
+			case <-ctxCancel.Done():
+				return
 			}
 		}
 	}()
 
+	// отправка метрик
+	// пул горутин
+	pullCh := make(chan struct{}, rateLimit)
+
 	go func() {
+
 		ticker := time.NewTicker(n.TimerSend)
+
 		for {
 			select {
 			case <-ctx.Done():
 				// Обработка завершения программы
+				close(pullCh)
 				return
 			case <-ticker.C:
+
 				if gauge != nil {
-					err = n.SendNotification(ctx, gauge, couter)
-				}
-				if err != nil {
-					return
+					mu.Lock()
+					n.SendNotification(ctx, pullCh, gauge, counter)
+					mu.Unlock()
 				}
 				continue
-			default:
-				continue
+			case <-ctxCancel.Done():
+				return
 			}
 		}
 	}()
+
 	return nil
 }

@@ -17,6 +17,7 @@ func (db *Database) UpdateMetricsBatch(ctx context.Context, metrics []model.Metr
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		if err != nil {
 			tx.Rollback()
@@ -24,6 +25,7 @@ func (db *Database) UpdateMetricsBatch(ctx context.Context, metrics []model.Metr
 			tx.Commit()
 		}
 	}()
+
 	return db.updateMetricsBatch(ctx, tx, metrics)
 }
 
@@ -33,6 +35,7 @@ func (db *Database) UpdateGauge(ctx context.Context, key string, val float64) er
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		if err != nil {
 			tx.Rollback()
@@ -40,6 +43,7 @@ func (db *Database) UpdateGauge(ctx context.Context, key string, val float64) er
 			tx.Commit()
 		}
 	}()
+
 	return db.updateGauge(ctx, tx, key, val)
 }
 
@@ -55,6 +59,7 @@ func (db *Database) UpdateCounter(ctx context.Context, key string, val int64) er
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		if err != nil {
 			tx.Rollback()

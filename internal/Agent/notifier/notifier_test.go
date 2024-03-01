@@ -36,7 +36,7 @@ func TestNotifier_StartNotifyCron(t *testing.T) {
 				URL:           tt.fields.URL,
 			}
 
-			if err := n.StartNotifyCron(tt.args.ctx); (err != nil) != tt.wantErr {
+			if err := n.StartNotifyCron(tt.args.ctx, 1); (err != nil) != tt.wantErr {
 				t.Errorf("StartNotifyCron() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

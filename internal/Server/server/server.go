@@ -21,9 +21,7 @@ type Server struct {
 }
 
 func NewServer() *Server {
-
-	s := chi.NewRouter()
-	return &Server{s: s}
+	return &Server{s: chi.NewRouter()}
 }
 
 func (s *Server) StartServer(
@@ -32,17 +30,21 @@ func (s *Server) StartServer(
 	Storage store.Storager,
 	timeSend time.Duration,
 	writer notifier.Writer,
+	keyAuth string,
 ) error {
 
 	var (
 		e       = notifier.NewNotifier(Storage, timeSend, writer)
-		Service = service.NewService(Storage, e)
+		Service = service.NewService(Storage, e, keyAuth)
 		h       = handler.NewHandler(Service)
 		m       = mw.NewMw(Service)
 	)
 
 	s.s.Use(m.MwLogger)
 	s.s.Use(m.MiddlewareGzip)
+	if keyAuth != "" {
+		s.s.Use(m.MiddlewareHashAuth)
+	}
 
 	s.s.With(m.MiddlewareType).Post("/update/{type}/{SomeMetric}/{Value}", handler.HandlerSucess)
 
@@ -55,7 +57,7 @@ func (s *Server) StartServer(
 	s.s.Get("/", handler.HandlerGetMetrics(Storage))
 	s.s.Get("/ping", h.HandlerPingDatabase)
 	s.s.Post("/updates/", h.HandlerPostBatched)
-	//
+
 	server := http.Server{
 		Addr:    addr,
 		Handler: s.s,

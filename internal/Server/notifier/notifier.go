@@ -29,14 +29,17 @@ func (n *Notifier) NotifierPending(ctx context.Context) error {
 	if n.TimerSend != 0 {
 		return nil
 	}
+
 	gauge, err := n.store.GetAllGauge(ctx)
 	if err != nil {
 		return err
 	}
+
 	counter, err := n.store.GetAllCounter(ctx)
 	if err != nil {
 		return err
 	}
+
 	err = n.WriteEvent(&fileutils.Event{
 		Gauge:   gauge,
 		Counter: counter,
@@ -45,14 +48,18 @@ func (n *Notifier) NotifierPending(ctx context.Context) error {
 		log.Println(err)
 		return err
 	}
+
 	return nil
 }
 func (n *Notifier) StartNotifier(ctx context.Context) {
 	if n.TimerSend == 0 {
 		return
 	}
+
 	go func() {
+
 		ticker := time.NewTicker(n.TimerSend)
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -64,11 +71,13 @@ func (n *Notifier) StartNotifier(ctx context.Context) {
 					log.Println(err)
 					return
 				}
+
 				counter, err := n.store.GetAllCounter(ctx)
 				if err != nil {
 					log.Println(err)
 					return
 				}
+
 				err = n.WriteEvent(&fileutils.Event{
 					Gauge:   gauge,
 					Counter: counter,
@@ -77,7 +86,9 @@ func (n *Notifier) StartNotifier(ctx context.Context) {
 					log.Println(err)
 					return
 				}
+
 				continue
+
 			default:
 				continue
 			}

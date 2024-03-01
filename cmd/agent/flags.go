@@ -17,6 +17,8 @@ type NetAddress struct {
 var URLserver string
 var reportInterval uint
 var pollInterval uint
+var KeyAuth string
+var RateLimit uint
 
 func (o *NetAddress) String() string {
 	return o.Host + ":" + strconv.Itoa(o.Port)
@@ -51,15 +53,19 @@ func parseFlags() {
 	// здесь будет ошибка компиляции
 	var _ = flag.Value(addr)
 
+	flag.StringVar(&KeyAuth, "k", "", "key for auth (по умолчанию пустая)")
 	flag.Var(addr, "a", "Net address host:port")
 	flag.UintVar(&reportInterval, "r", 10, "частота отправки метрик на сервер (по умолчанию 10 секунд)")
 	flag.UintVar(&pollInterval, "p", 2, "частота опроса метрик из пакета runtime (по умолчанию 2 секунды)")
+	flag.UintVar(&RateLimit, "l", 1, "одновременно исходящих запросов на сервер (по умолчанию 1)")
 	flag.Parse()
 
 	flagValid := map[string]struct{}{
 		"a": {},
 		"r": {},
 		"p": {},
+		"k": {},
+		"l": {},
 	}
 	flag.Visit(func(f *flag.Flag) {
 		_, ok := flagValid[f.Name]
@@ -70,6 +76,9 @@ func parseFlags() {
 	})
 
 	URLserver = addr.String()
+	if envKey := os.Getenv("KEY"); envKey != "" {
+		KeyAuth = envKey
+	}
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
 		URLserver = envRunAddr
 	}
@@ -86,5 +95,12 @@ func parseFlags() {
 			log.Panic(err)
 		}
 		pollInterval = uint(uintValue)
+	}
+	if envRateLimit := os.Getenv("RATE_LIMIT"); envRateLimit != "" {
+		uintValue, err := strconv.ParseUint(envRateLimit, 10, 64)
+		if err != nil {
+			log.Panic(err)
+		}
+		RateLimit = uint(uintValue)
 	}
 }

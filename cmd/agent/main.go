@@ -24,16 +24,17 @@ func run() error {
 	log.Println("pollInterval=", pollInterval)
 	log.Println("reportInterval=", reportInterval)
 	log.Println("URLserver=", URLserver)
+	log.Println("KeyAuth=", KeyAuth)
 
 	metrics := metrics.NewMetriсs()
-	postreq := server.NewPostRequest()
+	postreq := server.NewPostRequest(KeyAuth)
 
 	n := notifier.NewNotifier(metrics, postreq, time.Duration(time.Duration(pollInterval)*time.Second), time.Duration(time.Duration(reportInterval)*time.Second), URLserver)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	err := n.StartNotifyCron(ctx)
+	err := n.StartNotifyCron(ctx, RateLimit)
 	if err != nil {
 		return err
 	}

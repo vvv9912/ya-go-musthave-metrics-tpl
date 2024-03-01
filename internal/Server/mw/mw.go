@@ -1,7 +1,11 @@
 package mw
 
 import (
+	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/gzipwrapper"
@@ -9,8 +13,10 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -22,6 +28,21 @@ type Mw struct {
 
 func NewMw(s *service.Service) *Mw {
 	return &Mw{Service: s}
+}
+
+// для хэша
+type responseWriter struct {
+	http.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (rw *responseWriter) Write(b []byte) (int, error) {
+	n, err := rw.body.Write(b)
+	if err != nil {
+		logger.Log.Error("error write body", zap.Error(err))
+		return n, err
+	}
+	return rw.ResponseWriter.Write(b)
 }
 
 type responseData struct {
@@ -140,19 +161,77 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 
 }
 
+func (m *Mw) MiddlewareHashAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		hashSha := r.Header.Get("HashSHA256")
+
+		if hashSha != "" {
+			hash, err := hex.DecodeString(hashSha)
+			if err != nil {
+				logger.Log.Error("Error decoding hash", zap.Error(err))
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			// копируем тело запроса
+			reader := io.TeeReader(r.Body, os.Stdout) //
+
+			body, err := io.ReadAll(reader)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			//считаем хеш
+			h := hmac.New(sha256.New, []byte(m.Service.KeyAuth))
+			h.Write(body)
+			dst := h.Sum(nil)
+
+			ok := hmac.Equal(dst, hash)
+			if !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+		}
+		// подменяем метод 			//а будет ли работать gzip> todo
+		rw := &responseWriter{ResponseWriter: w, body: bytes.NewBuffer(nil)}
+		next.ServeHTTP(rw, r)
+
+		hWriter := hmac.New(sha256.New, []byte(m.Service.KeyAuth))
+
+		hWriter.Write(rw.body.Bytes())
+
+		hashWriter := hWriter.Sum(nil)
+
+		w.Header().Set("HashSHA256", string(hashWriter))
+
+	})
+
+}
+
 // mw запросов, выбор типа counter/gauge/etc
 func (m *Mw) MiddlewareType(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+
 		typeMetrics := chi.URLParam(req, "type")
+
 		switch typeMetrics {
 		case "counter":
+
 			m.MiddlewareCounter(next).ServeHTTP(res, req)
+
 			return
 		case "gauge":
+
 			m.MiddlewareGauge(next).ServeHTTP(res, req)
+
 			return
 		default:
+
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
+
 			return
 		}
 	})
@@ -166,12 +245,13 @@ func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {
 		name := chi.URLParam(req, "SomeMetric")
 
 		v := chi.URLParam(req, "Value")
+
 		value, err := strconv.ParseFloat(v, 64)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		logger.Log.Info("Обновление значения метрик", zap.Float64(name, value))
+
 		err = m.Service.Storage.UpdateGauge(req.Context(), name, value)
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
@@ -182,6 +262,7 @@ func (m *Mw) MiddlewareGauge(next http.Handler) http.Handler {
 		if err != nil {
 			logger.Log.Error("ошибка отправки метрик в файл", zap.Error(err))
 		}
+
 		next.ServeHTTP(res, req)
 
 	})
@@ -205,10 +286,12 @@ func (m *Mw) MiddlewareCounter(next http.Handler) http.Handler {
 			http.Error(res, fmt.Sprintln(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
+
 		err = m.Service.Metrics.SendMetricstoFile(req.Context())
 		if err != nil {
 			logger.Log.Error("ошибка отправки метрик в файл", zap.Error(err))
 		}
+
 		next.ServeHTTP(res, req)
 
 	})
@@ -220,7 +303,6 @@ func (m *Mw) MiddlwareGetGauge(next http.Handler) http.Handler {
 		name := chi.URLParam(req, "SomeMetric")
 
 		val, err := m.Service.Metrics.GetGauge(req.Context(), name)
-
 		if err != nil {
 			http.Error(res, fmt.Sprintln(http.StatusNotFound), http.StatusNotFound)
 			logger.Log.Info("Получение значения метрики из хранилища:", zap.Float64(name, val), zap.Error(err))
@@ -228,6 +310,7 @@ func (m *Mw) MiddlwareGetGauge(next http.Handler) http.Handler {
 		}
 
 		valueMetric := strconv.FormatFloat(val, 'f', -1, 64)
+
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 
 		next.ServeHTTP(res, req.WithContext(ctx))
@@ -255,6 +338,7 @@ func (m *Mw) MiddlwareGetCounter(next http.Handler) http.Handler {
 		}
 
 		valueMetric := strconv.FormatInt(val, 10)
+
 		ctx := context.WithValue(req.Context(), typeconst.UserIDContextKey, valueMetric)
 
 		next.ServeHTTP(res, req.WithContext(ctx))
