@@ -3,19 +3,21 @@ package server
 import (
 	"context"
 	"errors"
+	"log"
+	"net/http"
+	_ "net/http/pprof"
+	"time"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"go.uber.org/zap"
+
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
-	"go.uber.org/zap"
-	"log"
-	"net/http"
-	_ "net/http/pprof"
-	"time"
 )
 
 type Server struct {

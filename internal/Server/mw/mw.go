@@ -7,12 +7,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/gzipwrapper"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
-	"go.uber.org/zap"
 	"io"
 	"log"
 	"net/http"
@@ -20,6 +14,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/gzipwrapper"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 )
 
 type Mw struct {

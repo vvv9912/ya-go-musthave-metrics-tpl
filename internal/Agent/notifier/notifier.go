@@ -3,15 +3,17 @@ package notifier
 import (
 	"context"
 	"encoding/json"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/delaysend"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
-	"go.uber.org/zap"
 	"log"
 	"strconv"
 	"sync"
 	"syscall"
 	"time"
+
+	"go.uber.org/zap"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/delaysend"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
 type EventsMetric interface {

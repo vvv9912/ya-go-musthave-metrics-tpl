@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/metrics"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/notifier"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/server"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/metrics"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/notifier"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/server"
 )
 
 func main() {

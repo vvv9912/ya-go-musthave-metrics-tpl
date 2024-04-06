@@ -2,8 +2,9 @@ package delaysend
 
 import (
 	"errors"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"time"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
 type DelaySend struct {

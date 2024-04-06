@@ -2,10 +2,11 @@ package notifier
 
 import (
 	"context"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"log"
 	"time"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 )
 
 type Writer interface {
