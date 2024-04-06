@@ -3,11 +3,13 @@ package main
 import (
 	"errors"
 	"flag"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
-	"go.uber.org/zap"
 	"os"
 	"strconv"
 	"strings"
+
+	"go.uber.org/zap"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 )
 
 type NetAddress struct {

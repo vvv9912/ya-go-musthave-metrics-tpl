@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/storage"
 	"log"
 	"testing"
 	"time"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/storage"
 )
 
 //http://localhost:8080/update/gauge/testGauge/123

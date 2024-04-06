@@ -3,19 +3,22 @@ package main
 import (
 	"context"
 	"database/sql"
+	"log"
+	"os"
+	"os/signal"
+
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"go.uber.org/zap"
+
+	"syscall"
+	"time"
+
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/postgresql"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
-	"go.uber.org/zap"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 var URLserver string
