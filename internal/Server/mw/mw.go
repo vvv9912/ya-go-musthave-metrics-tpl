@@ -89,17 +89,22 @@ func (m *Mw) MwLogger(next http.Handler) http.Handler {
 }
 
 // проверяем, что клиент умеет получать от сервера сжатые данные в определенном формате
+//
+//	func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) bool {
+//		if acceptTypeReq == "*/*" {
+//			return true
+//		} else {
+//			for key := range acceptType {
+//				if strings.Contains(acceptTypeReq, key) {
+//					return true
+//				}
+//			}
+//		}
+//		return false
+//	}
 func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) bool {
-	if acceptTypeReq == "*/*" {
-		return true
-	} else {
-		for key := range acceptType {
-			if strings.Contains(acceptTypeReq, key) {
-				return true
-			}
-		}
-	}
-	return false
+	_, ok := acceptType[acceptTypeReq]
+	return ok // возвращает true, если ключ существует в мапе, иначе false
 }
 
 // проверяем, что клиент поддерживает соответствующий content-type
@@ -121,6 +126,7 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 			"application/json": struct{}{},
 			"text/html":        struct{}{},
 			"html/text":        struct{}{}, //
+			"*/*":              struct{}{},
 		}
 
 		supportGzip := map[string]struct{}{
