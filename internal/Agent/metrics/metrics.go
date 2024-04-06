@@ -2,13 +2,15 @@ package metrics
 
 import (
 	"errors"
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/mem"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
-	"go.uber.org/zap"
 	"math/rand"
 	"runtime"
 	"strconv"
+
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
+	"go.uber.org/zap"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 )
 
 const (

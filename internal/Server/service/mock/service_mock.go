@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+
 	model "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 

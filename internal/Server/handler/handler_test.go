@@ -3,15 +3,17 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
-	service_mock "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service/mock"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"io"
 	"net/http"
 	"net/http/httptest"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
+	service_mock "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service/mock"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 
 	"testing"
 )

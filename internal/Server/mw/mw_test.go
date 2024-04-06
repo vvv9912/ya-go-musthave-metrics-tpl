@@ -3,17 +3,19 @@ package mw
 import (
 	"context"
 	"fmt"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
-	service_mock "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service/mock"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/repo_mock"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
+	service_mock "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service/mock"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/repo_mock"
 )
 
 func TestMw_MiddlwareGauge(t *testing.T) {
@@ -373,6 +375,7 @@ func Test_supportContentType(t *testing.T) {
 					"application/json": struct{}{},
 					"text/html":        struct{}{},
 					"html/text":        struct{}{},
+					"*/*":              struct{}{},
 				},
 				acceptTypeReq: "text/html",
 			},
@@ -385,6 +388,7 @@ func Test_supportContentType(t *testing.T) {
 					"application/json": struct{}{},
 					"text/html":        struct{}{},
 					"html/text":        struct{}{},
+					"*/*":              struct{}{},
 				},
 				acceptTypeReq: "*/*",
 			},
@@ -397,6 +401,7 @@ func Test_supportContentType(t *testing.T) {
 					"application/json": struct{}{},
 					"text/html":        struct{}{},
 					"html/text":        struct{}{},
+					"*/*":              struct{}{},
 				},
 				acceptTypeReq: "application/json; charset=utf-8",
 			},
@@ -409,6 +414,7 @@ func Test_supportContentType(t *testing.T) {
 					"application/json": struct{}{},
 					"text/html":        struct{}{},
 					"html/text":        struct{}{},
+					"*/*":              struct{}{},
 				},
 				acceptTypeReq: "text/plain",
 			},
@@ -424,4 +430,25 @@ func Test_supportContentType(t *testing.T) {
 			assert.Equal(t, tt.want, got, "supportType: want: %v, got: %v", tt.want, got)
 		})
 	}
+}
+
+func BenchmarkSupportAcceptType(b *testing.B) {
+	acceptType := map[string]struct{}{
+		"gzip": struct{}{},
+	}
+	need := "gzip"
+	for i := 0; i < b.N; i++ {
+		supportEncodingType(acceptType, need)
+	}
+
+}
+func BenchmarkSupportAcceptTypeOld(b *testing.B) {
+	acceptType := map[string]struct{}{
+		"gzip": struct{}{},
+	}
+	need := "gzip"
+	for i := 0; i < b.N; i++ {
+		supportEncodingTypeOld(acceptType, need)
+	}
+
 }

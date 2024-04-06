@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/metrics"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/notifier"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/server"
-	"testing"
-	"time"
 )
 
 func TestStartNotifyCron(t *testing.T) {

@@ -7,12 +7,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/gzipwrapper"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
-	"go.uber.org/zap"
 	"io"
 	"log"
 	"net/http"
@@ -20,6 +14,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/gzipwrapper"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 )
 
 type Mw struct {
@@ -103,13 +105,18 @@ func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) boo
 }
 
 // проверяем, что клиент поддерживает соответствующий content-type
-func supportEncodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
+func supportEncodingTypeOld(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
 	for key := range accpetEncoding {
 		if strings.Contains(acceptEncodingReq, key) {
 			return true
 		}
 	}
 	return false
+}
+
+func supportEncodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
+	_, ok := accpetEncoding[acceptEncodingReq]
+	return ok
 }
 func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +128,7 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 			"application/json": struct{}{},
 			"text/html":        struct{}{},
 			"html/text":        struct{}{}, //
+			"*/*":              struct{}{},
 		}
 
 		supportGzip := map[string]struct{}{

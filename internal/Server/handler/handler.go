@@ -3,17 +3,19 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"syscall"
+
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
+
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/delaysend"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
-	"go.uber.org/zap"
-	"io"
-	"net/http"
-	"syscall"
 )
 
 type Handler struct {

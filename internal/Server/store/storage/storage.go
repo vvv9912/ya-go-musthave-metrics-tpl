@@ -3,8 +3,9 @@ package storage
 import (
 	"context"
 	"fmt"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"sync"
+
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
 type MemStorage struct {

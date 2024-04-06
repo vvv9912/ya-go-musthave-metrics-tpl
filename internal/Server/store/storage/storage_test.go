@@ -2,8 +2,9 @@ package storage
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewCounterStorage(t *testing.T) {
