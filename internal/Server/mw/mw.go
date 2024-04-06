@@ -89,33 +89,32 @@ func (m *Mw) MwLogger(next http.Handler) http.Handler {
 }
 
 // проверяем, что клиент умеет получать от сервера сжатые данные в определенном формате
-//
-//	func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) bool {
-//		if acceptTypeReq == "*/*" {
-//			return true
-//		} else {
-//			for key := range acceptType {
-//				if strings.Contains(acceptTypeReq, key) {
-//					return true
-//				}
-//			}
-//		}
-//		return false
-//	}
 func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) bool {
-	_, ok := acceptType[acceptTypeReq]
-	return ok // возвращает true, если ключ существует в мапе, иначе false
-	//return false
-} //todo add test(*B)
+	if acceptTypeReq == "*/*" {
+		return true
+	} else {
+		for key := range acceptType {
+			if strings.Contains(acceptTypeReq, key) {
+				return true
+			}
+		}
+	}
+	return false
+}
 
 // проверяем, что клиент поддерживает соответствующий content-type
-func supportEncodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
+func supportEncodingTypeOld(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
 	for key := range accpetEncoding {
 		if strings.Contains(acceptEncodingReq, key) {
 			return true
 		}
 	}
 	return false
+}
+
+func supportEncodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
+	_, ok := accpetEncoding[acceptEncodingReq]
+	return ok
 }
 func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

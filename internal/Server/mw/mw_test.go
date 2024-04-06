@@ -373,6 +373,7 @@ func Test_supportContentType(t *testing.T) {
 					"application/json": struct{}{},
 					"text/html":        struct{}{},
 					"html/text":        struct{}{},
+					"*/*":              struct{}{},
 				},
 				acceptTypeReq: "text/html",
 			},
@@ -385,6 +386,7 @@ func Test_supportContentType(t *testing.T) {
 					"application/json": struct{}{},
 					"text/html":        struct{}{},
 					"html/text":        struct{}{},
+					"*/*":              struct{}{},
 				},
 				acceptTypeReq: "*/*",
 			},
@@ -397,6 +399,7 @@ func Test_supportContentType(t *testing.T) {
 					"application/json": struct{}{},
 					"text/html":        struct{}{},
 					"html/text":        struct{}{},
+					"*/*":              struct{}{},
 				},
 				acceptTypeReq: "application/json; charset=utf-8",
 			},
@@ -409,6 +412,7 @@ func Test_supportContentType(t *testing.T) {
 					"application/json": struct{}{},
 					"text/html":        struct{}{},
 					"html/text":        struct{}{},
+					"*/*":              struct{}{},
 				},
 				acceptTypeReq: "text/plain",
 			},
@@ -424,4 +428,25 @@ func Test_supportContentType(t *testing.T) {
 			assert.Equal(t, tt.want, got, "supportType: want: %v, got: %v", tt.want, got)
 		})
 	}
+}
+
+func BenchmarkSupportAcceptType(b *testing.B) {
+	acceptType := map[string]struct{}{
+		"gzip": struct{}{},
+	}
+	need := "gzip"
+	for i := 0; i < b.N; i++ {
+		supportEncodingType(acceptType, need)
+	}
+
+}
+func BenchmarkSupportAcceptTypeOld(b *testing.B) {
+	acceptType := map[string]struct{}{
+		"gzip": struct{}{},
+	}
+	need := "gzip"
+	for i := 0; i < b.N; i++ {
+		supportEncodingTypeOld(acceptType, need)
+	}
+
 }
