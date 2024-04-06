@@ -89,11 +89,24 @@ func (m *Mw) MwLogger(next http.Handler) http.Handler {
 }
 
 // проверяем, что клиент умеет получать от сервера сжатые данные в определенном формате
+//
+//	func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) bool {
+//		if acceptTypeReq == "*/*" {
+//			return true
+//		} else {
+//			for key := range acceptType {
+//				if strings.Contains(acceptTypeReq, key) {
+//					return true
+//				}
+//			}
+//		}
+//		return false
+//	}
 func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) bool {
 	_, ok := acceptType[acceptTypeReq]
 	return ok // возвращает true, если ключ существует в мапе, иначе false
 	//return false
-}
+} //todo add test(*B)
 
 // проверяем, что клиент поддерживает соответствующий content-type
 func supportEncodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
