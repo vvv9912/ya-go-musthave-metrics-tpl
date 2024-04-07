@@ -1,3 +1,4 @@
+// Модуль delaysend повторяет функцию с высталвенной задержкой между повторами.
 package delaysend
 
 import (
@@ -11,14 +12,19 @@ type DelaySend struct {
 	error error
 }
 
+// Конструктор.
 func NewDelaySend() *DelaySend {
 	return &DelaySend{}
 
 }
+
+// Выставление задежки.
 func (d *DelaySend) SetDelay(t []int) *DelaySend {
 	d.delay = t
 	return d
 }
+
+// Отправка метрики.
 func (d *DelaySend) SendDelayedMetrics(f func() (model.Metrics, error)) (model.Metrics, error) {
 	m, err := f()
 	if err == nil {
@@ -46,6 +52,7 @@ func (d *DelaySend) SendDelayedMetrics(f func() (model.Metrics, error)) (model.M
 	return m, err
 }
 
+// Отправка события с 1 возвращающей ошибкой.
 func (d *DelaySend) SendDelayed(f func() error) error {
 	err := f()
 	if err == nil {
@@ -73,6 +80,7 @@ func (d *DelaySend) SendDelayed(f func() error) error {
 	return err
 }
 
+// Добавление ошибки, которую ожидаем получить для повторной отправки события.
 func (d *DelaySend) AddExpectedError(e error) *DelaySend {
 	d.error = e
 	return d

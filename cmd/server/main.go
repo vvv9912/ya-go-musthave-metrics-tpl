@@ -18,12 +18,16 @@ import (
 	"time"
 )
 
-var URLserver string
-var timerSend int
-var FileStoragePath string
-var RESTORE bool
-var KeyAuth string
+// Переменные сервера, выставляющиеся по флагу или env.
+var (
+	URLserver       string // url сервера
+	timerSend       int    // время отправки события
+	FileStoragePath string // путь временного фрайла
+	RESTORE         bool   // флаг восстановления предыдущих метрик из временного файла
+	KeyAuth         string // ключ аутентификации
+)
 
+// Package main is the entry point for the program.
 func main() {
 	parseFlags()
 
