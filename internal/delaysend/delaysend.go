@@ -1,4 +1,4 @@
-// Package delaysend
+// Package delaysend для повторого отправки
 package delaysend
 
 import (
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Основная структура.
+// DelaySend Основная структура.
 type DelaySend struct {
 	delay []int
 	error error

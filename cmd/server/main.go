@@ -28,12 +28,6 @@ var (
 	KeyAuth         string // Authentication key
 )
 
-// RetA адаёт коэффициент.
-func RetA() bool {
-	return false
-}
-
-// FФункция мэин.
 func main() {
 	parseFlags()
 
