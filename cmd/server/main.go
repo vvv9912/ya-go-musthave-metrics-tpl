@@ -1,3 +1,4 @@
+// Package main is the entry point for the programm.
 package main
 
 import (
@@ -18,16 +19,21 @@ import (
 	"time"
 )
 
-// Переменные сервера, выставляющиеся по флагу или env.
+// Variables for server settings, set by flag or environment variable.
 var (
-	URLserver       string // url сервера
-	timerSend       int    // время отправки события
-	FileStoragePath string // путь временного фрайла
-	RESTORE         bool   // флаг восстановления предыдущих метрик из временного файла
-	KeyAuth         string // ключ аутентификации
+	URLserver       string // URL of the server
+	timerSend       int    // Event sending time
+	FileStoragePath string // Path to the temporary file
+	RESTORE         bool   // Flag for restoring previous metrics from temporary file
+	KeyAuth         string // Authentication key
 )
 
-// Package main is the entry point for the program.
+// RetA адаёт коэффициент.
+func RetA() bool {
+	return false
+}
+
+// FФункция мэин.
 func main() {
 	parseFlags()
 
@@ -35,6 +41,7 @@ func main() {
 		panic(err)
 	}
 }
+
 func run() error {
 	log.Println("Start server")
 	log.Println("KeyAuth=", KeyAuth)
