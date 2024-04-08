@@ -19,6 +19,7 @@ import (
 	"time"
 )
 
+// godoc http://localhost:8080/pkg/github.com/vvv9912/ya-go-musthave-metrics-tpl.git/?m=all
 // Variables for server settings, set by flag or environment variable.
 var (
 	URLserver       string // URL of the server

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	service_mock "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service/mock"
+	storage "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"io"
 	"net/http"
@@ -127,4 +128,88 @@ func TestHandler_HandlerGetJSON(t *testing.T) {
 
 		})
 	}
+}
+
+func TestHandlerSucess(t *testing.T) {
+	type args struct {
+		expectedRequest int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "positive test #1",
+			args: args{expectedRequest: http.StatusOK},
+		},
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("get", "/", bytes.NewBufferString(""))
+			HandlerSucess(w, req)
+			assert.Equal(t, w.Code, tt.args.expectedRequest)
+		})
+	}
+}
+func ExampleHandlerSucess() {
+	http.HandleFunc("/success", HandlerSucess)
+	http.ListenAndServe(":8080", nil)
+}
+
+func ExampleHandlerGetCounter() {
+	http.HandleFunc("/GetCounter", HandlerGetCounter)
+	http.ListenAndServe(":8080", nil)
+}
+
+func ExampleHandlerGetGauge() {
+	http.HandleFunc("/GetGauge", HandlerGetGauge)
+	http.ListenAndServe(":8080", nil)
+}
+
+func ExampleHandlerGetMetrics() {
+	s := storage.NewStorage()
+
+	http.HandleFunc("/GetMetrics", HandlerGetMetrics(s))
+	http.ListenAndServe(":8080", nil)
+}
+
+func ExampleHandlerPostJSON() {
+	s := service.Service{}
+	h := Handler{Service: &s}
+
+	http.HandleFunc("/PostJson", h.HandlerPostJSON)
+	http.ListenAndServe(":8080", nil)
+}
+
+func ExampleHandlerGetJSON() {
+	s := service.Service{}
+	h := Handler{Service: &s}
+
+	http.HandleFunc("/GetJson", h.HandlerGetJSON)
+	http.ListenAndServe(":8080", nil)
+}
+
+func ExampleHandlerGauge() {
+	s := service.Service{}
+	h := Handler{Service: &s}
+
+	http.HandleFunc("/Gauge", h.HandlerGauge)
+	http.ListenAndServe(":8080", nil)
+}
+
+func ExampleHandlerPingDatabase() {
+	s := service.Service{}
+	h := Handler{Service: &s}
+
+	http.HandleFunc("/ping", h.HandlerPingDatabase)
+	http.ListenAndServe(":8080", nil)
+}
+func ExampleHandlerPostBatched() {
+	s := service.Service{}
+	h := Handler{Service: &s}
+
+	http.HandleFunc("/PostBatched", h.HandlerPostBatched)
+	http.ListenAndServe(":8080", nil)
 }
