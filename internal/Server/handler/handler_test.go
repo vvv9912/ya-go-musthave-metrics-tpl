@@ -623,6 +623,7 @@ func ExampleHandler_HandlerGetJSON() {
 
 	fmt.Println(res.StatusCode)
 	fmt.Println(string(resBody))
+
 	// Output:
 	// 200
 	// {"id":"123","type":"gauge","value":0.123}
