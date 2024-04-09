@@ -200,6 +200,71 @@ func TestHandlerGetMetrics(t *testing.T) {
 	}
 }
 
+func TestHandler_HandlerPostJSON(t *testing.T) {
+	type mockBehavior func(s *service_mock.MockMetrics, ctx context.Context, metrics model.Metrics)
+
+	//пример json
+	reqBody := []byte(`{
+  "id": "example_metric",
+  "type": "gauge",
+  "value": 10.5
+}`)
+
+	type args struct {
+		mockBehavior mockBehavior
+	}
+	tests := []struct {
+		name                string
+		args                args
+		want                func(res http.ResponseWriter, req *http.Request)
+		expectedStatusCode  int
+		expectedRequestBody string
+	}{
+		{
+			name: "positive test #1",
+			args: args{func(s *service_mock.MockMetrics, ctx context.Context, metrics model.Metrics) {
+				s.EXPECT().PutMetrics(gomock.Any(), gomock.Any()).Return(nil)
+				s.EXPECT().SendMetricstoFile(gomock.Any()).Return(nil)
+			}},
+			expectedStatusCode:  200,
+			expectedRequestBody: string(reqBody),
+		},
+		// TODO: Add test cases.
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
+
+			stor := service_mock.NewMockMetrics(c)
+
+			var metrics model.Metrics
+
+			err := json.Unmarshal(reqBody, &metrics)
+			require.NoError(t, err)
+
+			testCase.args.mockBehavior(stor, context.Background(), metrics)
+
+			handler := Handler{Service: &service.Service{Metrics: stor}}
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("POST", "/update/", bytes.NewBuffer(reqBody))
+
+			handler.HandlerPostJSON(w, req)
+			assert.Equal(t, w.Code, testCase.expectedStatusCode)
+
+			res := w.Result()
+			defer res.Body.Close()
+
+			fmt.Println(res.StatusCode)
+
+			resBody, _ := io.ReadAll(res.Body)
+
+			require.Equal(t, string(resBody), string(testCase.expectedRequestBody))
+		})
+	}
+}
+
 func TestHandler_HandlerGetJSON(t *testing.T) {
 	type mockBehavior func(s *service_mock.MockMetrics, metric model.Metrics)
 
@@ -320,7 +385,7 @@ func TestHandler_HandlerPingDatabase(t *testing.T) {
 	type args struct {
 		mockBehavior mockBehavior
 	}
-	tests := []struct {
+	var tests = []struct {
 		name               string
 		args               args
 		expectedStatusCode int
@@ -424,15 +489,70 @@ func ExampleHandlerGetMetrics() {
 
 }
 
-func ExampleHandlerPostJSON() {
+// Example_HandlerPostJSON
+func Example_HandlerPostJSON() {
+	type mockBehavior func(s *service_mock.MockMetrics, ctx context.Context, metrics model.Metrics)
+
+	//todo
+	//// мок
+	/* panic: test executed panic(nil) or runtime.Goexit
+
+	goroutine 1 [running]:
+	testing.(*InternalExample).processRunResult(0xc0000318b0, {0x0, 0x0}, 0x2ecdcc2f2, 0x0, {0x0, 0x0})
+	*/
+	//пример json
+	//	reqBody := []byte(`{
+	//  "id": "example_metric",
+	//  "type": "gauge",
+	//  "value": 10.5
+	//}`)
+
+	//mockFunc := func(s *service_mock.MockMetrics, ctx context.Context, metrics model.Metrics) {
+	//	s.EXPECT().PutMetrics(gomock.Any(), gomock.Eq(model.Metrics{})).Return(nil)
+	//	s.EXPECT().SendMetricstoFile(gomock.Any()).Return(nil)
+	//}
+	//t := &testing.T{} //todo (Откуда взять тестинг для мока)
+	//c := gomock.NewController(t)
+	//defer c.Finish()
+	//
+	//stor := service_mock.NewMockMetrics(c)
+	//
+	//var metrics model.Metrics
+	//
+	//err := json.Unmarshal(reqBody, &metrics)
+	//require.NoError(t, err)
+	//ctxx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
+	//defer cancel()
+	//
+	//mockFunc(stor, ctxx, metrics)
+	//// Создаем запрос
+	//
+	//// Создаем фейк хендлер
+	//handler := Handler{Service: &service.Service{Metrics: stor}}
+	//
+	//w := httptest.NewRecorder()
+	//req := httptest.NewRequest("POST", "/update/", bytes.NewBuffer(reqBody))
+	//
+	//handler.HandlerPostJSON(w, req)
+	//
+	//res := w.Result()
+	//defer res.Body.Close()
+	//
+	//fmt.Println(res.Header.Get("Content-Type"))
+	//fmt.Println(res.StatusCode)
+	//resBody, err := io.ReadAll(res.Body)
+	//require.NoError(t, err)
+	//fmt.Println(string(resBody))
+
 	s := service.Service{}
 	h := Handler{Service: &s}
 
-	http.HandleFunc("/PostJson", h.HandlerPostJSON)
+	http.HandleFunc("/update", h.HandlerPostJSON)
 	http.ListenAndServe(":8080", nil)
+
 }
 
-func ExampleHandlerGetJSON() {
+func ExampleHandler_HandlerGetJSON() {
 	s := service.Service{}
 	h := Handler{Service: &s}
 
