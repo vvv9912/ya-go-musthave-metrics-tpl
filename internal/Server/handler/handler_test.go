@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	service_mock "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service/mock"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/repo_mock"
 	storage "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
@@ -142,52 +143,63 @@ func TestHandlerGetGauge(t *testing.T) {
 		require.Equal(t, test.want.val, resBody)
 	}
 }
-func TestHandlerGauge(t *testing.T) {
-	type want struct {
-		code int
-		//	response string
-		contentType string
+
+func TestHandlerGetMetrics(t *testing.T) {
+	type mockBehavior func(s *repo_mock.MockStorager, ctx context.Context)
+
+	type args struct {
+		mockBehavior mockBehavior
 	}
 	tests := []struct {
-		name string
-		want want
-		url  string
+		name                string
+		args                args
+		want                func(res http.ResponseWriter, req *http.Request)
+		expectedStatusCode  int
+		expectedRequestBody string
 	}{
 		{
 			name: "positive test #1",
-			want: want{
-				code: 200,
-				//response:
-				contentType: "text/plain; charset=utf-8",
-			},
-			url: "/update/counter/someMetric/527",
+			args: args{mockBehavior: func(s *repo_mock.MockStorager, ctx context.Context) {
+				s.EXPECT().GetAllCounter(gomock.Any()).Return(map[string]int64{
+					"someCounter": 1,
+				}, nil)
+				s.EXPECT().GetAllGauge(gomock.Any()).Return(map[string]float64{
+					"someGauge": 1.1,
+				}, nil)
+			}},
+			expectedStatusCode:  200,
+			expectedRequestBody: "someGauge: 1.100000\nsomeCounter: 1\n",
 		},
+		// TODO: Add test cases.
 	}
-	for _, test := range tests {
-		//t.Run(test.name, func(t *testing.T) {
-		t.Log(test.name)
-		t.Log(test.url)
-		t.Log(test)
-		request := httptest.NewRequest(http.MethodPost, test.url, nil)
-		w := httptest.NewRecorder()
-		HandlerSucess(w, request)
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
 
-		res := w.Result()
-		assert.Equal(t, test.want.code, res.StatusCode)
+			stor := repo_mock.NewMockStorager(c)
 
-		defer res.Body.Close()
-		resBody, err := io.ReadAll(res.Body)
-		require.NoError(t, err)
-		t.Log("----------///\nAll content type:")
-		for _, n := range res.Header {
-			t.Log(n, "\n")
-		}
-		t.Log("----------///\nContent type:", res.Header.Get("Content-Type"))
-		t.Log("----------///\nres body:", string(resBody))
-		assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
+			testCase.args.mockBehavior(stor, context.Background())
 
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("get", "/", nil)
+
+			h := HandlerGetMetrics(stor)
+			h(w, req)
+			assert.Equal(t, w.Code, testCase.expectedStatusCode)
+
+			res := w.Result()
+			defer res.Body.Close()
+
+			fmt.Println(res.StatusCode)
+
+			resBody, _ := io.ReadAll(res.Body)
+
+			require.Equal(t, string(resBody), string(testCase.expectedRequestBody))
+		})
 	}
 }
+
 func TestHandler_HandlerGetJSON(t *testing.T) {
 	type mockBehavior func(s *service_mock.MockMetrics, metric model.Metrics)
 
@@ -255,6 +267,97 @@ func TestHandler_HandlerGetJSON(t *testing.T) {
 	}
 }
 
+func TestHandlerGauge(t *testing.T) {
+	type want struct {
+		code int
+		//	response string
+		contentType string
+	}
+	tests := []struct {
+		name string
+		want want
+		url  string
+	}{
+		{
+			name: "positive test #1",
+			want: want{
+				code: 200,
+				//response:
+				contentType: "text/plain; charset=utf-8",
+			},
+			url: "/update/counter/someMetric/527",
+		},
+	}
+	for _, test := range tests {
+		//t.Run(test.name, func(t *testing.T) {
+		t.Log(test.name)
+		t.Log(test.url)
+		t.Log(test)
+		request := httptest.NewRequest(http.MethodPost, test.url, nil)
+		w := httptest.NewRecorder()
+		HandlerSucess(w, request)
+
+		res := w.Result()
+		assert.Equal(t, test.want.code, res.StatusCode)
+
+		defer res.Body.Close()
+		resBody, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		t.Log("----------///\nAll content type:")
+		for _, n := range res.Header {
+			t.Log(n, "\n")
+		}
+		t.Log("----------///\nContent type:", res.Header.Get("Content-Type"))
+		t.Log("----------///\nres body:", string(resBody))
+		assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
+
+	}
+}
+
+func TestHandler_HandlerPingDatabase(t *testing.T) {
+	type mockBehavior func(s *repo_mock.MockStorager, ctx context.Context)
+
+	type args struct {
+		mockBehavior mockBehavior
+	}
+	tests := []struct {
+		name               string
+		args               args
+		expectedStatusCode int
+	}{
+		{
+			name: "positive test #1",
+			args: args{mockBehavior: func(s *repo_mock.MockStorager, ctx context.Context) {
+				s.EXPECT().Ping(gomock.Any()).Return(nil)
+			},
+			},
+			expectedStatusCode: 200,
+		},
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := gomock.NewController(t)
+			defer c.Finish()
+
+			stor := repo_mock.NewMockStorager(c)
+
+			h := &Handler{
+				&service.Service{Storage: stor},
+			}
+
+			tt.args.mockBehavior(stor, context.Background())
+
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("get", "/", nil)
+
+			h.HandlerPingDatabase(w, req)
+
+			assert.Equal(t, w.Code, tt.expectedStatusCode)
+		})
+	}
+}
+
 func ExampleHandlerSucess() {
 
 	http.HandleFunc("/success", HandlerSucess)
@@ -318,6 +421,7 @@ func ExampleHandlerGetMetrics() {
 
 	http.HandleFunc("/GetMetrics", HandlerGetMetrics(s))
 	http.ListenAndServe(":8080", nil)
+
 }
 
 func ExampleHandlerPostJSON() {
