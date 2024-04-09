@@ -2,20 +2,73 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	service_mock "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service/mock"
 	storage "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/storage"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"io"
 	"net/http"
 	"net/http/httptest"
-
 	"testing"
 )
+
+func TestHandlerGetCounter(t *testing.T) {
+	type want struct {
+		code        int
+		contentType string
+		val         []byte
+	}
+	tests := []struct {
+		name string
+		want want
+		url  string
+		val  string
+	}{
+		{
+			name: "positive test #1",
+			want: want{
+				code:        200,
+				contentType: "text/plain; charset=utf-8",
+				val:         []byte("527"),
+			},
+			url: "/update/counter/someMetric/527",
+			val: "527",
+		},
+	}
+	for _, test := range tests {
+		t.Log(test.name)
+		t.Log(test.url)
+		t.Log(test)
+		request := httptest.NewRequest(http.MethodGet, test.url, nil)
+		w := httptest.NewRecorder()
+
+		ctx := context.WithValue(request.Context(), typeconst.UserIDContextKey, test.val)
+		HandlerGetCounter(w, request.WithContext(ctx))
+
+		res := w.Result()
+		assert.Equal(t, test.want.code, res.StatusCode)
+
+		defer res.Body.Close()
+
+		resBody, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		t.Log("----------///\nAll content type:")
+		for _, n := range res.Header {
+			t.Log(n, "\n")
+		}
+		t.Log("----------///\nContent type:", res.Header.Get("Content-Type"))
+		t.Log("----------///\nres body:", string(resBody))
+		require.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
+		require.Equal(t, test.want.val, resBody)
+	}
+}
 
 func TestHandlerGauge(t *testing.T) {
 	type want struct {
@@ -154,13 +207,30 @@ func TestHandlerSucess(t *testing.T) {
 	}
 }
 func ExampleHandlerSucess() {
+
 	http.HandleFunc("/success", HandlerSucess)
 	http.ListenAndServe(":8080", nil)
 }
 
 func ExampleHandlerGetCounter() {
-	http.HandleFunc("/GetCounter", HandlerGetCounter)
-	http.ListenAndServe(":8080", nil)
+	path := "/update/counter/someMetric/527"
+	val := "527"
+
+	request := httptest.NewRequest(http.MethodGet, path, nil)
+	w := httptest.NewRecorder()
+	ctx := context.WithValue(request.Context(), typeconst.UserIDContextKey, val)
+	HandlerGetCounter(w, request.WithContext(ctx))
+	res := w.Result()
+	fmt.Println(res.StatusCode)
+	fmt.Println(res.Body)
+
+	//http.HandleFunc(path, HandlerGetCounter)
+	//http.ListenAndServe(":8080", nil)
+
+	// Output:
+	// [200
+	// [[527]]]
+
 }
 
 func ExampleHandlerGetGauge() {
