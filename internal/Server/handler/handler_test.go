@@ -19,6 +19,29 @@ import (
 	"testing"
 )
 
+func TestHandlerSucess(t *testing.T) {
+	type args struct {
+		expectedRequest int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "positive test #1",
+			args: args{expectedRequest: http.StatusOK},
+		},
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("get", "/", bytes.NewBufferString(""))
+			HandlerSucess(w, req)
+			assert.Equal(t, w.Code, tt.args.expectedRequest)
+		})
+	}
+}
 func TestHandlerGetCounter(t *testing.T) {
 	type want struct {
 		code        int
@@ -69,7 +92,56 @@ func TestHandlerGetCounter(t *testing.T) {
 		require.Equal(t, test.want.val, resBody)
 	}
 }
+func TestHandlerGetGauge(t *testing.T) {
+	type want struct {
+		code        int
+		contentType string
+		val         []byte
+	}
+	tests := []struct {
+		name string
+		want want
+		url  string
+		val  string
+	}{
+		{
+			name: "positive test #1",
+			want: want{
+				code:        200,
+				contentType: "text/plain; charset=utf-8",
+				val:         []byte("5244"),
+			},
+			url: "/update/gauge/someMetric/5244",
+			val: "5244",
+		},
+	}
+	for _, test := range tests {
+		t.Log(test.name)
+		t.Log(test.url)
+		t.Log(test)
+		request := httptest.NewRequest(http.MethodGet, test.url, nil)
+		w := httptest.NewRecorder()
 
+		ctx := context.WithValue(request.Context(), typeconst.UserIDContextKey, test.val)
+		HandlerGetCounter(w, request.WithContext(ctx))
+
+		res := w.Result()
+		assert.Equal(t, test.want.code, res.StatusCode)
+
+		defer res.Body.Close()
+
+		resBody, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		t.Log("----------///\nAll content type:")
+		for _, n := range res.Header {
+			t.Log(n, "\n")
+		}
+		t.Log("----------///\nContent type:", res.Header.Get("Content-Type"))
+		t.Log("----------///\nres body:", string(resBody))
+		require.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
+		require.Equal(t, test.want.val, resBody)
+	}
+}
 func TestHandlerGauge(t *testing.T) {
 	type want struct {
 		code int
@@ -183,29 +255,6 @@ func TestHandler_HandlerGetJSON(t *testing.T) {
 	}
 }
 
-func TestHandlerSucess(t *testing.T) {
-	type args struct {
-		expectedRequest int
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		{
-			name: "positive test #1",
-			args: args{expectedRequest: http.StatusOK},
-		},
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			w := httptest.NewRecorder()
-			req := httptest.NewRequest("get", "/", bytes.NewBufferString(""))
-			HandlerSucess(w, req)
-			assert.Equal(t, w.Code, tt.args.expectedRequest)
-		})
-	}
-}
 func ExampleHandlerSucess() {
 
 	http.HandleFunc("/success", HandlerSucess)
@@ -219,23 +268,49 @@ func ExampleHandlerGetCounter() {
 	request := httptest.NewRequest(http.MethodGet, path, nil)
 	w := httptest.NewRecorder()
 	ctx := context.WithValue(request.Context(), typeconst.UserIDContextKey, val)
+
 	HandlerGetCounter(w, request.WithContext(ctx))
+
 	res := w.Result()
+	defer res.Body.Close()
+
 	fmt.Println(res.StatusCode)
-	fmt.Println(res.Body)
+
+	resBody, _ := io.ReadAll(res.Body)
+	fmt.Println(string(resBody))
 
 	//http.HandleFunc(path, HandlerGetCounter)
 	//http.ListenAndServe(":8080", nil)
 
 	// Output:
-	// [200
-	// [[527]]]
-
+	// 200
+	// 527
 }
 
 func ExampleHandlerGetGauge() {
-	http.HandleFunc("/GetGauge", HandlerGetGauge)
-	http.ListenAndServe(":8080", nil)
+	path := "/update/gauge/someMetric/5244"
+	val := "5244"
+
+	request := httptest.NewRequest(http.MethodGet, path, nil)
+	w := httptest.NewRecorder()
+	ctx := context.WithValue(request.Context(), typeconst.UserIDContextKey, val)
+
+	HandlerGetCounter(w, request.WithContext(ctx))
+
+	res := w.Result()
+	defer res.Body.Close()
+
+	fmt.Println(res.StatusCode)
+
+	resBody, _ := io.ReadAll(res.Body)
+	fmt.Println(string(resBody))
+
+	//http.HandleFunc("/GetGauge", HandlerGetGauge)
+	//http.ListenAndServe(":8080", nil)
+
+	// Output:
+	// 200
+	// 5244
 }
 
 func ExampleHandlerGetMetrics() {
