@@ -447,9 +447,6 @@ func ExampleHandlerGetCounter() {
 	resBody, _ := io.ReadAll(res.Body)
 	fmt.Println(string(resBody))
 
-	//http.HandleFunc(path, HandlerGetCounter)
-	//http.ListenAndServe(":8080", nil)
-
 	// Output:
 	// 200
 	// 527
@@ -473,9 +470,6 @@ func ExampleHandlerGetGauge() {
 	resBody, _ := io.ReadAll(res.Body)
 	fmt.Println(string(resBody))
 
-	//http.HandleFunc("/GetGauge", HandlerGetGauge)
-	//http.ListenAndServe(":8080", nil)
-
 	// Output:
 	// 200
 	// 5244
@@ -493,8 +487,7 @@ func ExampleHandlerGetMetrics() {
 func ExampleHandler_HandlerPostJSON() {
 	type mockBehavior func(s *service_mock.MockMetrics, ctx context.Context, metrics model.Metrics)
 
-	//todo
-	//// мок
+	//todo пример с моком.
 	/* panic: test executed panic(nil) or runtime.Goexit
 
 	goroutine 1 [running]:
