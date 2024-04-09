@@ -524,12 +524,14 @@ func ExampleHandler_HandlerPostJSON() {
 	var metrics model.Metrics
 
 	err := json.Unmarshal(reqBody, &metrics)
-	_ = err
-	//require.NoError(t, err)
-	ctxx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
 	defer cancel()
 
-	mockFunc(stor, ctxx, metrics)
+	mockFunc(stor, ctx, metrics)
 	// Создаем запрос
 
 	// Создаем фейк хендлер
