@@ -563,11 +563,70 @@ func ExampleHandler_HandlerPostJSON() {
 }
 
 func ExampleHandler_HandlerGetJSON() {
-	s := service.Service{}
-	h := Handler{Service: &s}
+	val := 0.123
 
-	http.HandleFunc("/GetJson", h.HandlerGetJSON)
-	http.ListenAndServe(":8080", nil)
+	forTestMetricReq := model.Metrics{
+		ID:    "123",
+		MType: "gauge",
+		Delta: nil,
+		Value: nil,
+	}
+	forTestMetricRes := model.Metrics{
+		ID:    "123",
+		MType: "gauge",
+		Delta: nil,
+		Value: &val,
+	}
+
+	//jsonforTestMetric, err := json.Marshal(forTestMetric)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+
+	mock := func(s *service_mock.MockMetrics, metric model.Metrics) {
+		s.EXPECT().GetMetrics(gomock.Any(), gomock.Any()).Return(model.Metrics{
+			ID:    "123",
+			MType: "gauge",
+			Delta: nil,
+			Value: &val,
+		}, nil)
+	}
+	r := &Reporter{}
+	c := gomock.NewController(r)
+	defer c.Finish()
+
+	metrics := service_mock.NewMockMetrics(c)
+
+	serviceMock := &service.Service{
+		Metrics: metrics,
+	}
+	handler := Handler{Service: serviceMock}
+	mock(metrics, forTestMetricRes)
+
+	w := httptest.NewRecorder()
+
+	metricsreq, err := json.Marshal(forTestMetricReq)
+	if err != nil {
+		fmt.Println(err)
+	}
+	req := httptest.NewRequest("get", "/", bytes.NewBuffer(metricsreq))
+
+	handler.HandlerGetJSON(w, req)
+
+	res := w.Result()
+	defer res.Body.Close()
+
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(res.StatusCode)
+	fmt.Println(string(resBody))
+	// Output:
+	// 200
+	// {"id":"123","type":"gauge","value":0.123}
+
 }
 
 func ExampleHandler_HandlerGauge() {
