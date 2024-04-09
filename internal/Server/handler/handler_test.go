@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestHandlerSucess(t *testing.T) {
@@ -483,9 +484,18 @@ func ExampleHandlerGetMetrics() {
 
 }
 
-// Example_HandlerPostJSON
+type Reporter struct {
+}
+
+func (r *Reporter) Errorf(format string, args ...interface{}) {
+	fmt.Printf(format, args...)
+}
+func (r *Reporter) Fatalf(format string, args ...interface{}) {
+	fmt.Printf(format, args...)
+}
+
+// Example_HandlerPostJSON ExampleHandler_HandlerPostJSON
 func ExampleHandler_HandlerPostJSON() {
-	type mockBehavior func(s *service_mock.MockMetrics, ctx context.Context, metrics model.Metrics)
 
 	//todo пример с моком.
 	/* panic: test executed panic(nil) or runtime.Goexit
@@ -493,55 +503,60 @@ func ExampleHandler_HandlerPostJSON() {
 	goroutine 1 [running]:
 	testing.(*InternalExample).processRunResult(0xc0000318b0, {0x0, 0x0}, 0x2ecdcc2f2, 0x0, {0x0, 0x0})
 	*/
-	//пример json
-	//	reqBody := []byte(`{
-	//  "id": "example_metric",
-	//  "type": "gauge",
-	//  "value": 10.5
-	//}`)
+	//	пример json
+	reqBody := []byte(`{
+	 "id": "example_metric",
+	 "type": "gauge",
+	 "value": 10.5
+	}`)
 
-	//mockFunc := func(s *service_mock.MockMetrics, ctx context.Context, metrics model.Metrics) {
-	//	s.EXPECT().PutMetrics(gomock.Any(), gomock.Eq(model.Metrics{})).Return(nil)
-	//	s.EXPECT().SendMetricstoFile(gomock.Any()).Return(nil)
-	//}
-	//t := &testing.T{} //todo (Откуда взять тестинг для мока)
-	//c := gomock.NewController(t)
-	//defer c.Finish()
-	//
-	//stor := service_mock.NewMockMetrics(c)
-	//
-	//var metrics model.Metrics
-	//
-	//err := json.Unmarshal(reqBody, &metrics)
+	mockFunc := func(s *service_mock.MockMetrics, ctx context.Context, metrics model.Metrics) {
+		s.EXPECT().PutMetrics(gomock.Any(), gomock.Any()).Return(nil)
+		s.EXPECT().SendMetricstoFile(gomock.Any()).Return(nil)
+	}
+
+	r := &Reporter{}
+	c := gomock.NewController(r)
+	defer c.Finish()
+
+	stor := service_mock.NewMockMetrics(c)
+
+	var metrics model.Metrics
+
+	err := json.Unmarshal(reqBody, &metrics)
+	_ = err
 	//require.NoError(t, err)
-	//ctxx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
-	//defer cancel()
-	//
-	//mockFunc(stor, ctxx, metrics)
-	//// Создаем запрос
-	//
-	//// Создаем фейк хендлер
-	//handler := Handler{Service: &service.Service{Metrics: stor}}
-	//
-	//w := httptest.NewRecorder()
-	//req := httptest.NewRequest("POST", "/update/", bytes.NewBuffer(reqBody))
-	//
-	//handler.HandlerPostJSON(w, req)
-	//
-	//res := w.Result()
-	//defer res.Body.Close()
-	//
-	//fmt.Println(res.Header.Get("Content-Type"))
-	//fmt.Println(res.StatusCode)
-	//resBody, err := io.ReadAll(res.Body)
+	ctxx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
+	defer cancel()
+
+	mockFunc(stor, ctxx, metrics)
+	// Создаем запрос
+
+	// Создаем фейк хендлер
+	handler := Handler{Service: &service.Service{Metrics: stor}}
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/update/", bytes.NewBuffer(reqBody))
+
+	handler.HandlerPostJSON(w, req)
+
+	res := w.Result()
+	defer res.Body.Close()
+
+	fmt.Println(res.Header.Get("Content-Type"))
+	fmt.Println(res.StatusCode)
+	resBody, err := io.ReadAll(res.Body)
 	//require.NoError(t, err)
-	//fmt.Println(string(resBody))
+	fmt.Println(string(resBody))
 
-	s := service.Service{}
-	h := Handler{Service: &s}
-
-	http.HandleFunc("/update", h.HandlerPostJSON)
-	http.ListenAndServe(":8080", nil)
+	// Output:
+	// application/json
+	// 200
+	// {
+	//	 "id": "example_metric",
+	//	 "type": "gauge",
+	//	 "value": 10.5
+	//	}
 
 }
 
