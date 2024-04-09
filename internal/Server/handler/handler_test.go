@@ -490,7 +490,7 @@ func ExampleHandlerGetMetrics() {
 }
 
 // Example_HandlerPostJSON
-func Example_HandlerPostJSON() {
+func ExampleHandler_HandlerPostJSON() {
 	type mockBehavior func(s *service_mock.MockMetrics, ctx context.Context, metrics model.Metrics)
 
 	//todo
@@ -560,7 +560,7 @@ func ExampleHandler_HandlerGetJSON() {
 	http.ListenAndServe(":8080", nil)
 }
 
-func ExampleHandlerGauge() {
+func ExampleHandler_HandlerGauge() {
 	s := service.Service{}
 	h := Handler{Service: &s}
 
@@ -568,14 +568,14 @@ func ExampleHandlerGauge() {
 	http.ListenAndServe(":8080", nil)
 }
 
-func ExampleHandlerPingDatabase() {
+func ExampleHandler_HandlerPingDatabase() {
 	s := service.Service{}
 	h := Handler{Service: &s}
 
 	http.HandleFunc("/ping", h.HandlerPingDatabase)
 	http.ListenAndServe(":8080", nil)
 }
-func ExampleHandlerPostBatched() {
+func ExampleHandler_HandlerPostBatched() {
 	s := service.Service{}
 	h := Handler{Service: &s}
 
