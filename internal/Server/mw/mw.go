@@ -103,13 +103,18 @@ func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) boo
 }
 
 // проверяем, что клиент поддерживает соответствующий content-type
-func supportEncodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
+func supportEncodingTypeOld(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
 	for key := range accpetEncoding {
 		if strings.Contains(acceptEncodingReq, key) {
 			return true
 		}
 	}
 	return false
+}
+
+func supportEncodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
+	_, ok := accpetEncoding[acceptEncodingReq]
+	return ok
 }
 func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +126,7 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 			"application/json": struct{}{},
 			"text/html":        struct{}{},
 			"html/text":        struct{}{}, //
+			"*/*":              struct{}{},
 		}
 
 		supportGzip := map[string]struct{}{

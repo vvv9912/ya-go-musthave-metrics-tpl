@@ -1,3 +1,4 @@
+// Package main is the entry point for the programm.
 package main
 
 import (
@@ -18,11 +19,15 @@ import (
 	"time"
 )
 
-var URLserver string
-var timerSend int
-var FileStoragePath string
-var RESTORE bool
-var KeyAuth string
+// godoc http://localhost:8080/pkg/github.com/vvv9912/ya-go-musthave-metrics-tpl.git/?m=all
+// Variables for server settings, set by flag or environment variable.
+var (
+	URLserver       string // URL of the server
+	timerSend       int    // Event sending time
+	FileStoragePath string // Path to the temporary file
+	RESTORE         bool   // Flag for restoring previous metrics from temporary file
+	KeyAuth         string // Authentication key
+)
 
 func main() {
 	parseFlags()
@@ -31,6 +36,7 @@ func main() {
 		panic(err)
 	}
 }
+
 func run() error {
 	log.Println("Start server")
 	log.Println("KeyAuth=", KeyAuth)

@@ -1,3 +1,4 @@
+// Пакет notifier для отправки событий по таймеру.
 package notifier
 
 import (
@@ -8,23 +9,30 @@ import (
 	"time"
 )
 
+// Writer - определяет метод записи события.
 type Writer interface {
 	WriteEvent(event *fileutils.Event) error
 }
+
+// NotifierSend - определяет метод NotifierPending для отправки уведомлений.
 type NotifierSend interface {
 	NotifierPending(ctx context.Context) error
 }
+
+// Notifier - структура "отправки событий".
 type Notifier struct {
-	store store.Storager
-	Writer
-	TimerSend time.Duration
+	store     store.Storager // хранилище с метриками.
+	Writer                   // объект, реализующую запись в бд/кэш.
+	TimerSend time.Duration  // таймер, для отправки событий с заданным интервалом.
 }
 
+// NewNotifier - конструктор.
 func NewNotifier(Storage store.Storager, timerSend time.Duration, writer Writer) *Notifier {
 	return &Notifier{store: Storage, TimerSend: timerSend, Writer: writer}
 }
 
-// Отправка при таймере =0
+// NotifierPending - отправляет событие.
+// При таймере нулю, отправка не осуществляется.
 func (n *Notifier) NotifierPending(ctx context.Context) error {
 	if n.TimerSend != 0 {
 		return nil
@@ -51,6 +59,8 @@ func (n *Notifier) NotifierPending(ctx context.Context) error {
 
 	return nil
 }
+
+// StartNotifier - запускает проверку и отправку на основе заданного интервала TimerSend.
 func (n *Notifier) StartNotifier(ctx context.Context) {
 	if n.TimerSend == 0 {
 		return
