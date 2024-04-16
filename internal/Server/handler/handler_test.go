@@ -201,7 +201,7 @@ func TestHandlerGetMetrics(t *testing.T) {
 	}
 }
 
-func TestHandler_HandlerPostJSON(t *testing.T) {
+func TestHandler_HandlerPostBatched(t *testing.T) {
 	type mockBehavior func(s *service_mock.MockMetrics, ctx context.Context, metrics model.Metrics)
 
 	//пример json
