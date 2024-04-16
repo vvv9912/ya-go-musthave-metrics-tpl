@@ -104,7 +104,10 @@ func run() error {
 			}
 		}
 
-		consumer.Close()
+		err = consumer.Close()
+		if err != nil {
+			logger.Log.Info("error close", zap.Error(err))
+		}
 	}
 	s := server.NewServer()
 
