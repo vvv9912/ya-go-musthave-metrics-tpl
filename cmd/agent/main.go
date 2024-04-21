@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/metrics"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/notifier"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/server"
@@ -20,6 +21,10 @@ func main() {
 	}
 }
 func run() error {
+	fmt.Println("Build version:", buildVersion)
+	fmt.Println("Build date:", buildDate)
+	fmt.Println("Build commit:", buildCommit)
+
 	log.Println("Start agent")
 	log.Println("pollInterval=", pollInterval)
 	log.Println("reportInterval=", reportInterval)

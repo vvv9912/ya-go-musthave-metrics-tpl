@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
@@ -21,15 +22,9 @@ import (
 
 // godoc http://localhost:8080/pkg/github.com/vvv9912/ya-go-musthave-metrics-tpl.git/?m=all
 // Variables for server settings, set by flag or environment variable.
-var (
-	URLserver       string // URL of the server
-	timerSend       int    // Event sending time
-	FileStoragePath string // Path to the temporary file
-	RESTORE         bool   // Flag for restoring previous metrics from temporary file
-	KeyAuth         string // Authentication key
-)
 
 func main() {
+
 	parseFlags()
 
 	if err := run(); err != nil {
@@ -38,6 +33,10 @@ func main() {
 }
 
 func run() error {
+	fmt.Println("Build version:", buildVersion)
+	fmt.Println("Build date:", buildDate)
+	fmt.Println("Build commit:", buildCommit)
+
 	log.Println("Start server")
 	log.Println("KeyAuth=", KeyAuth)
 	if err := logger.Initialize(flagLogLevel); err != nil {

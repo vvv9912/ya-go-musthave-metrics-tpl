@@ -10,14 +10,25 @@ import (
 	"strings"
 )
 
+var (
+	buildVersion string
+	buildDate    string
+	buildCommit  string
+)
+
 type NetAddress struct {
 	Host string
 	Port int
 }
 
 var (
-	flagLogLevel string
-	DatabaseDsn  string
+	URLserver       string // URL of the server
+	timerSend       int    // Event sending time
+	FileStoragePath string // Path to the temporary file
+	RESTORE         bool   // Flag for restoring previous metrics from temporary file
+	KeyAuth         string // Authentication key
+	flagLogLevel    string
+	DatabaseDsn     string
 )
 
 func (o *NetAddress) String() string {
@@ -87,6 +98,16 @@ func parseFlags() {
 	}
 	if envDATABASE := os.Getenv("DATABASE_DSN"); envDATABASE != "" {
 		DatabaseDsn = envDATABASE
+	}
+
+	if buildVersion == "" {
+		buildVersion = "N/A"
+	}
+	if buildCommit == "" {
+		buildCommit = "N/A"
+	}
+	if buildDate == "" {
+		buildDate = "N/A"
 	}
 
 }

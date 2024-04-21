@@ -9,6 +9,12 @@ import (
 	"strings"
 )
 
+var (
+	buildVersion string
+	buildDate    string
+	buildCommit  string
+)
+
 type NetAddress struct {
 	Host string
 	Port int
@@ -102,5 +108,15 @@ func parseFlags() {
 			log.Panic(err)
 		}
 		RateLimit = uint(uintValue)
+	}
+
+	if buildVersion == "" {
+		buildVersion = "N/A"
+	}
+	if buildCommit == "" {
+		buildCommit = "N/A"
+	}
+	if buildDate == "" {
+		buildDate = "N/A"
 	}
 }
