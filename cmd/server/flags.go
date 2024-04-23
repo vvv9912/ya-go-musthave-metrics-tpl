@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	buildVersion string
-	buildDate    string
-	buildCommit  string
+	buildVersion string = "N/A"
+	buildDate    string = "N/A"
+	buildCommit  string = "N/A"
 )
 
 type NetAddress struct {
@@ -98,16 +98,6 @@ func parseFlags() {
 	}
 	if envDATABASE := os.Getenv("DATABASE_DSN"); envDATABASE != "" {
 		DatabaseDsn = envDATABASE
-	}
-
-	if buildVersion == "" {
-		buildVersion = "N/A"
-	}
-	if buildCommit == "" {
-		buildCommit = "N/A"
-	}
-	if buildDate == "" {
-		buildDate = "N/A"
 	}
 
 }
