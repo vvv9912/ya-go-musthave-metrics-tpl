@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
@@ -13,6 +14,7 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"time"
 )
 
@@ -39,24 +41,27 @@ func (s *Server) StartServer(
 		h       = handler.NewHandler(Service)
 		m       = mw.NewMw(Service)
 	)
+	s.s.Mount("/debug", middleware.Profiler())
+	n := s.s.Route("/", func(r chi.Router) {
 
-	s.s.Use(m.MwLogger)
-	s.s.Use(m.MiddlewareGzip)
+	})
+	n.Use(m.MwLogger)
 	if keyAuth != "" {
-		s.s.Use(m.MiddlewareHashAuth)
+		n.Use(m.MiddlewareHashAuth)
 	}
+	n.Use(m.MiddlewareGzip)
 
-	s.s.With(m.MiddlewareType).Post("/update/{type}/{SomeMetric}/{Value}", handler.HandlerSucess)
+	n.With(m.MiddlewareType).Post("/update/{type}/{SomeMetric}/{Value}", handler.HandlerSucess)
 
-	s.s.With(m.MiddlwareGetCounter).Get("/value/counter/{SomeMetric}", handler.HandlerGetCounter)
-	s.s.With(m.MiddlwareGetGauge).Get("/value/gauge/{SomeMetric}", handler.HandlerGetGauge)
+	n.With(m.MiddlwareGetCounter).Get("/value/counter/{SomeMetric}", handler.HandlerGetCounter)
+	n.With(m.MiddlwareGetGauge).Get("/value/gauge/{SomeMetric}", handler.HandlerGetGauge)
 
-	s.s.With(m.MiddlwareCheckJSON).Post("/update/", h.HandlerPostJSON)
-	s.s.With(m.MiddlwareCheckJSON).Post("/value/", h.HandlerGetJSON)
+	n.With(m.MiddlwareCheckJSON).Post("/update/", h.HandlerPostJSON)
+	n.With(m.MiddlwareCheckJSON).Post("/value/", h.HandlerGetJSON)
 
-	s.s.Get("/", handler.HandlerGetMetrics(Storage))
-	s.s.Get("/ping", h.HandlerPingDatabase)
-	s.s.Post("/updates/", h.HandlerPostBatched)
+	n.Get("/", handler.HandlerGetMetrics(Storage))
+	n.Get("/ping", h.HandlerPingDatabase)
+	n.Post("/updates/", h.HandlerPostBatched)
 
 	server := http.Server{
 		Addr:    addr,

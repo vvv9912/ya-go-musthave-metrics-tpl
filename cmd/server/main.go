@@ -1,8 +1,10 @@
+// Package main is the entry point for the programm.
 package main
 
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
@@ -18,20 +20,23 @@ import (
 	"time"
 )
 
-var URLserver string
-var timerSend int
-var FileStoragePath string
-var RESTORE bool
-var KeyAuth string
+// godoc http://localhost:8080/pkg/github.com/vvv9912/ya-go-musthave-metrics-tpl.git/?m=all
+// Variables for server settings, set by flag or environment variable.
 
 func main() {
+
 	parseFlags()
 
 	if err := run(); err != nil {
 		panic(err)
 	}
 }
+
 func run() error {
+	fmt.Println("Build version:", buildVersion)
+	fmt.Println("Build date:", buildDate)
+	fmt.Println("Build commit:", buildCommit)
+
 	log.Println("Start server")
 	log.Println("KeyAuth=", KeyAuth)
 	if err := logger.Initialize(flagLogLevel); err != nil {
@@ -98,7 +103,10 @@ func run() error {
 			}
 		}
 
-		consumer.Close()
+		err = consumer.Close()
+		if err != nil {
+			logger.Log.Info("error close", zap.Error(err))
+		}
 	}
 	s := server.NewServer()
 

@@ -1,3 +1,4 @@
+// Package handler - обработчик HTTP-запросов.
 package handler
 
 import (
@@ -16,21 +17,29 @@ import (
 	"syscall"
 )
 
+// Handler - Структура с сервисным слоем.
 type Handler struct {
 	Service *service.Service
 }
 
+// NewHandler - Конструктор.
 func NewHandler(s *service.Service) *Handler {
 	return &Handler{Service: s}
 }
 
+// HandlerSucess - обработчик для успешного HTTP-запроса.
 func HandlerSucess(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	body := fmt.Sprintf("%v", http.StatusOK)
-	res.Write([]byte(body))
+	_, err := res.Write([]byte(body))
+	if err != nil {
+		logger.Log.Info("Failed to get gauge", zap.Error(err))
+		return
+	}
 }
 
+// HandlerGetCounter - обработчик для получения значения метрики счетчика.
 func HandlerGetCounter(res http.ResponseWriter, req *http.Request) {
 	valCtx := req.Context().Value(typeconst.UserIDContextKey)
 	value := valCtx.(string)
@@ -40,8 +49,14 @@ func HandlerGetCounter(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set(name, value)
 	res.WriteHeader(http.StatusOK)
 	body := value
-	res.Write([]byte(body))
+	_, err := res.Write([]byte(body))
+	if err != nil {
+		logger.Log.Info("Failed to get gauge", zap.Error(err))
+		return
+	}
 }
+
+// HandlerGetGauge - обработчик для получения значения метрики Gauge.
 func HandlerGetGauge(res http.ResponseWriter, req *http.Request) {
 	valCtx := req.Context().Value(typeconst.UserIDContextKey)
 	value := valCtx.(string)
@@ -51,9 +66,15 @@ func HandlerGetGauge(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set(name, value)
 	res.WriteHeader(http.StatusOK)
 	body := value
-	res.Write([]byte(body))
+	_, err := res.Write([]byte(body))
+	if err != nil {
+		logger.Log.Info("Failed to get gauge", zap.Error(err))
+		return
+	}
 }
 
+// HandlerGetMetrics - функция, которая возвращает обработчик для получения всех метрик.
+// Была создана для проверки конструкции, когда нужно использовать дополнительные перменные.
 func HandlerGetMetrics(storage store.Storager) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Set("Content-Type", "text/html")
@@ -79,9 +100,15 @@ func HandlerGetMetrics(storage store.Storager) func(res http.ResponseWriter, req
 		}
 		res.WriteHeader(http.StatusOK)
 
-		res.Write([]byte(body))
+		_, err = res.Write([]byte(body))
+		if err != nil {
+			logger.Log.Info("Failed to get gauge", zap.Error(err))
+			return
+		}
 	}
 }
+
+// HandlerPostJSON - обработчик JSON запросов с метриками.
 func (h *Handler) HandlerPostJSON(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -121,9 +148,14 @@ func (h *Handler) HandlerPostJSON(res http.ResponseWriter, req *http.Request) {
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
-	res.Write(response)
+	_, err = res.Write(response)
+	if err != nil {
+		logger.Log.Error("Failed to HandlerPostJSON", zap.Error(err))
+		return
+	}
 }
 
+// HandlerGetJSON - возврат метрики в формате JSON.
 func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 
@@ -158,8 +190,14 @@ func (h *Handler) HandlerGetJSON(res http.ResponseWriter, req *http.Request) {
 	}
 
 	res.WriteHeader(http.StatusOK)
-	res.Write(response)
+	_, err = res.Write(response)
+	if err != nil {
+		logger.Log.Error("Failed to write", zap.Error(err))
+		return
+	}
 }
+
+// HandlerGauge - возвращает метрики Gauge.
 func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 
@@ -194,8 +232,14 @@ func (h *Handler) HandlerGauge(res http.ResponseWriter, req *http.Request) {
 	}
 
 	res.WriteHeader(http.StatusOK)
-	res.Write(response)
+	_, err = res.Write(response)
+	if err != nil {
+		logger.Log.Error("Failed to write", zap.Error(err))
+		return
+	}
 }
+
+// HandlerPingDatabase - Ping БД.
 func (h *Handler) HandlerPingDatabase(res http.ResponseWriter, req *http.Request) {
 
 	err := h.Service.Storage.Ping(req.Context())
@@ -209,6 +253,7 @@ func (h *Handler) HandlerPingDatabase(res http.ResponseWriter, req *http.Request
 
 }
 
+// HandlerPostBatched - принимает значения метрик батчами.
 func (h *Handler) HandlerPostBatched(res http.ResponseWriter, req *http.Request) {
 	var metrics []model.Metrics
 
