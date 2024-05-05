@@ -69,24 +69,17 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		}
 		dst := h.Sum(nil)
 
-		_, err = client.R().SetHeaders(map[string]string{
-			"HashSHA256": fmt.Sprintf("%x", dst), "Content-Type": "application/json", "Content-Encoding": "gzip",
-		}).SetBody(buf).Post(url)
+		client.R().SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst)})
 
-		if err != nil {
-			logger.Log.Error("Failed to send metrics", zap.Error(err))
-			return err
-		}
-	} else {
+	}
 
-		_, err = client.R().SetHeaders(map[string]string{
-			"Content-Type": "application/json", "Content-Encoding": "gzip",
-		}).SetBody(buf).Post(url)
+	_, err = client.R().SetHeaders(map[string]string{
+		"Content-Type": "application/json", "Content-Encoding": "gzip",
+	}).SetBody(buf).Post(url)
 
-		if err != nil {
-			logger.Log.Error("Failed to send metrics", zap.Error(err))
-			return err
-		}
+	if err != nil {
+		logger.Log.Error("Failed to send metrics", zap.Error(err))
+		return err
 	}
 
 	return nil
@@ -115,20 +108,15 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 
 		dst := h.Sum(nil)
 
-		_, err = client.R().SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst), "Content-Type": "application/json"}).SetBody(data).Post(url)
-		if err != nil {
-			logger.Log.Error("Failed to send metrics batch", zap.Error(err))
-			return err
-		}
-
-	} else {
-
-		_, err := client.R().SetBody(data).Post(url)
-		if err != nil {
-			logger.Log.Error("Failed to send metrics batch", zap.Error(err))
-			return err
-		}
+		client.R().SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst), "Content-Type": "application/json"})
 
 	}
+
+	_, err := client.R().SetBody(data).Post(url)
+	if err != nil {
+		logger.Log.Error("Failed to send metrics batch", zap.Error(err))
+		return err
+	}
+
 	return nil
 }

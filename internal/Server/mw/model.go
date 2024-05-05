@@ -1,9 +1,8 @@
 package mw
 
 import (
-	"bytes"
-	"crypto/hmac"
-	"crypto/sha256"
+	"crypto/rand"
+	"crypto/rsa"
 	"net/http"
 )
 
@@ -18,12 +17,10 @@ type loggingResponseWriter struct {
 	responseData *responseData
 }
 
-// для хэша
-type responseWriter struct {
+// для шифрования
+type responseWriterEncrypt struct {
 	http.ResponseWriter
-	body       *bytes.Buffer
-	keyAuth    []byte
-	hashWriter []byte
+	pk *rsa.PublicKey
 }
 
 func (r *loggingResponseWriter) Write(b []byte) (int, error) {
@@ -38,20 +35,12 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode
 }
 
-func (rw *responseWriter) Write(b []byte) (int, error) {
-	//Считаем хэш
-	hWriter := hmac.New(sha256.New, rw.keyAuth)
-
-	_, err := hWriter.Write(b)
+func (rw *responseWriterEncrypt) Write(b []byte) (int, error) {
+	//Шифруем
+	ciphertext, err := rsa.EncryptPKCS1v15(rand.Reader, rw.pk, b)
 	if err != nil {
 		return 0, err
 	}
 
-	rw.hashWriter = hWriter.Sum(nil)
-
-	return rw.ResponseWriter.Write(b)
-}
-
-func (rw *responseWriter) GetHash() string {
-	return string(rw.hashWriter)
+	return rw.ResponseWriter.Write(ciphertext)
 }

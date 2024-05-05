@@ -1,7 +1,6 @@
 package mw
 
 import (
-	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -11,6 +10,31 @@ import (
 	"net/http"
 	"os"
 )
+
+// для хэша
+type responseWriterHash struct {
+	http.ResponseWriter
+	keyAuth    []byte
+	hashWriter []byte
+}
+
+func (rw *responseWriterHash) Write(b []byte) (int, error) {
+	//Считаем хэш
+	hWriter := hmac.New(sha256.New, rw.keyAuth)
+
+	_, err := hWriter.Write(b)
+	if err != nil {
+		return 0, err
+	}
+
+	rw.hashWriter = hWriter.Sum(nil)
+
+	return rw.ResponseWriter.Write(b)
+}
+
+func (rw *responseWriterHash) GetHash() string {
+	return string(rw.hashWriter)
+}
 
 func (m *Mw) MiddlewareHashAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +72,7 @@ func (m *Mw) MiddlewareHashAuth(next http.Handler) http.Handler {
 
 		}
 		// подменяем метод
-		rw := &responseWriter{ResponseWriter: w, body: bytes.NewBuffer(nil)}
+		rw := &responseWriterHash{ResponseWriter: w}
 		next.ServeHTTP(rw, r)
 
 		w.Header().Set("HashSHA256", rw.GetHash())

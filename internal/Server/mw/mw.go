@@ -17,8 +17,9 @@ import (
 )
 
 type Mw struct {
-	Service *service.Service
-	pk      *rsa.PrivateKey
+	Service    *service.Service
+	privateKey *rsa.PrivateKey
+	publicKey  *rsa.PublicKey
 }
 
 func NewMw(s *service.Service) *Mw {
