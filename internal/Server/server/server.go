@@ -70,6 +70,7 @@ func (s *Server) StartServer(
 	go func() {
 		logger.Log.Info("server start", zap.String("addr", addr))
 		err := server.ListenAndServe()
+
 		if err != nil {
 			log.Println(err)
 			cancel()
