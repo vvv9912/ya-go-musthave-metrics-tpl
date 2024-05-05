@@ -78,6 +78,7 @@ func parseFlags() {
 		}
 		timerSend = num
 	}
+
 	if envRESTORE := os.Getenv("RESTORE"); envRESTORE != "" {
 		boolValue, err := strconv.ParseBool(envRESTORE)
 		if err != nil {
@@ -85,6 +86,7 @@ func parseFlags() {
 		}
 		RESTORE = boolValue
 	}
+
 	if envDATABASE := os.Getenv("DATABASE_DSN"); envDATABASE != "" {
 		DatabaseDsn = envDATABASE
 	}
