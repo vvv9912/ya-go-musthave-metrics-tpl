@@ -53,3 +53,11 @@ func supportEncodingType(accpetEncoding map[string]struct{}, acceptEncodingReq s
 	}
 	return false
 }
+func supportEncodingTypeOld(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
+	for key := range accpetEncoding {
+		if strings.Contains(acceptEncodingReq, key) {
+			return true
+		}
+	}
+	return false
+}
