@@ -3,6 +3,7 @@ package postgresql
 
 import (
 	"context"
+	"errors"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 )
 
@@ -23,9 +24,15 @@ func (db *Database) UpdateMetricsBatch(ctx context.Context, metrics []model.Metr
 
 	defer func() {
 		if err != nil {
-			tx.Rollback()
+			newErr := tx.Rollback()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
 		} else {
-			tx.Commit()
+			newErr := tx.Commit()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
 		}
 	}()
 
@@ -42,9 +49,15 @@ func (db *Database) UpdateGauge(ctx context.Context, key string, val float64) er
 
 	defer func() {
 		if err != nil {
-			tx.Rollback()
+			newErr := tx.Rollback()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
 		} else {
-			tx.Commit()
+			newErr := tx.Commit()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
 		}
 	}()
 
@@ -70,9 +83,15 @@ func (db *Database) UpdateCounter(ctx context.Context, key string, val int64) er
 
 	defer func() {
 		if err != nil {
-			tx.Rollback()
+			newErr := tx.Rollback()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
 		} else {
-			tx.Commit()
+			newErr := tx.Commit()
+			if newErr != nil {
+				err = errors.Join(err, newErr)
+			}
 		}
 	}()
 

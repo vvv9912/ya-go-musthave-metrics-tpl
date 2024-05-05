@@ -10,14 +10,25 @@ import (
 	"strings"
 )
 
+var (
+	buildVersion string = "N/A"
+	buildDate    string = "N/A"
+	buildCommit  string = "N/A"
+)
+
 type NetAddress struct {
 	Host string
 	Port int
 }
 
 var (
-	flagLogLevel string
-	DatabaseDsn  string
+	URLserver       string // URL of the server
+	timerSend       int    // Event sending time
+	FileStoragePath string // Path to the temporary file
+	RESTORE         bool   // Flag for restoring previous metrics from temporary file
+	KeyAuth         string // Authentication key
+	flagLogLevel    string
+	DatabaseDsn     string
 )
 
 func (o *NetAddress) String() string {

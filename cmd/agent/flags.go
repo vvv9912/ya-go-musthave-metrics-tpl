@@ -9,6 +9,12 @@ import (
 	"strings"
 )
 
+var (
+	buildVersion string = "N/A"
+	buildDate    string = "N/A"
+	buildCommit  string = "N/A"
+)
+
 type NetAddress struct {
 	Host string
 	Port int
@@ -103,4 +109,5 @@ func parseFlags() {
 		}
 		RateLimit = uint(uintValue)
 	}
+
 }

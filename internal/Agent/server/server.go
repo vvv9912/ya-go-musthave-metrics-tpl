@@ -52,15 +52,21 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		logger.Log.Error("Failed gzip", zap.Error(err))
 		return err
 	}
-	zb.Close()
-
+	err = zb.Close()
+	if err != nil {
+		logger.Log.Error("Failed gzip", zap.Error(err))
+		return err
+	}
 	// В случае, если ключ не задан
 	if p.keyAuth != "" {
 
 		h := hmac.New(sha256.New, []byte(p.keyAuth))
 
-		h.Write(data)
-
+		_, err = h.Write(data)
+		if err != nil {
+			logger.Log.Error("Failed write", zap.Error(err))
+			return err
+		}
 		dst := h.Sum(nil)
 
 		_, err = client.R().SetHeaders(map[string]string{
@@ -101,7 +107,11 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 			return err
 		}
 
-		h.Write(jsonData)
+		_, err = h.Write(jsonData)
+		if err != nil {
+			logger.Log.Info("Failed to write", zap.Error(err))
+			return err
+		}
 
 		dst := h.Sum(nil)
 

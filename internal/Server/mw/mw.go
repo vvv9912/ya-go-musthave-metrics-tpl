@@ -191,7 +191,13 @@ func (m *Mw) MiddlewareHashAuth(next http.Handler) http.Handler {
 
 			//считаем хеш
 			h := hmac.New(sha256.New, []byte(m.Service.KeyAuth))
-			h.Write(body)
+
+			_, err = h.Write(body)
+			if err != nil {
+				logger.Log.Error("Failed to write", zap.Error(err))
+				return
+			}
+
 			dst := h.Sum(nil)
 
 			ok := hmac.Equal(dst, hash)
@@ -207,7 +213,11 @@ func (m *Mw) MiddlewareHashAuth(next http.Handler) http.Handler {
 
 		hWriter := hmac.New(sha256.New, []byte(m.Service.KeyAuth))
 
-		hWriter.Write(rw.body.Bytes())
+		_, err := hWriter.Write(rw.body.Bytes())
+		if err != nil {
+			logger.Log.Error("Failed to write", zap.Error(err))
+			return
+		}
 
 		hashWriter := hWriter.Sum(nil)
 
