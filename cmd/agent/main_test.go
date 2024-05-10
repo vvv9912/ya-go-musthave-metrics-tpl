@@ -11,7 +11,7 @@ import (
 
 func TestStartNotifyCron(t *testing.T) {
 	metrics := metrics.NewMetriсs()
-	postreq := server.NewPostRequest("")
+	postreq := server.NewPostRequest("", nil)
 	n := notifier.NewNotifier(metrics, postreq, time.Duration(2*time.Second), time.Duration(10*time.Second), "http://localhost:8080")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
