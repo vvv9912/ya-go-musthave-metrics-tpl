@@ -60,6 +60,8 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		logger.Log.Error("Failed gzip", zap.Error(err))
 		return err
 	}
+	//
+	dataBytes := buf.Bytes()
 	// В случае, если ключ не задан
 	if p.keyAuth != "" {
 
@@ -76,7 +78,7 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 
 	}
 	if p.publicKey != nil {
-		data, err = rsa.EncryptPKCS1v15(rand.Reader, p.publicKey, data)
+		dataBytes, err = rsa.EncryptPKCS1v15(rand.Reader, p.publicKey, buf.Bytes())
 		if err != nil {
 			logger.Log.Error("Failed to encrypt", zap.Error(err))
 			return err
