@@ -25,6 +25,7 @@ var reportInterval uint
 var pollInterval uint
 var KeyAuth string
 var RateLimit uint
+var CryptoKey string
 
 func (o *NetAddress) String() string {
 	return o.Host + ":" + strconv.Itoa(o.Port)
@@ -64,14 +65,16 @@ func parseFlags() {
 	flag.UintVar(&reportInterval, "r", 10, "частота отправки метрик на сервер (по умолчанию 10 секунд)")
 	flag.UintVar(&pollInterval, "p", 2, "частота опроса метрик из пакета runtime (по умолчанию 2 секунды)")
 	flag.UintVar(&RateLimit, "l", 1, "одновременно исходящих запросов на сервер (по умолчанию 1)")
+	flag.StringVar(&CryptoKey, "crypto-key", "", "crypto-key (по умолчанию, сообщения не шифруются)")
 	flag.Parse()
 
 	flagValid := map[string]struct{}{
-		"a": {},
-		"r": {},
-		"p": {},
-		"k": {},
-		"l": {},
+		"a":          {},
+		"r":          {},
+		"p":          {},
+		"k":          {},
+		"l":          {},
+		"crypto-key": {},
 	}
 	flag.Visit(func(f *flag.Flag) {
 		_, ok := flagValid[f.Name]
@@ -109,5 +112,7 @@ func parseFlags() {
 		}
 		RateLimit = uint(uintValue)
 	}
-
+	if envCryptoKey := os.Getenv("CRYPTO_KEY"); envCryptoKey != "" {
+		CryptoKey = envCryptoKey
+	}
 }

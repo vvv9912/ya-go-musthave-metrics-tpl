@@ -32,7 +32,7 @@ func run() error {
 	log.Println("KeyAuth=", KeyAuth)
 
 	metrics := metrics.NewMetriсs()
-	postreq := server.NewPostRequest(KeyAuth)
+	postreq := server.NewPostRequest(KeyAuth, nil)
 
 	n := notifier.NewNotifier(metrics, postreq, time.Duration(time.Duration(pollInterval)*time.Second), time.Duration(time.Duration(reportInterval)*time.Second), URLserver)
 
