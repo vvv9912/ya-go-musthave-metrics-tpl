@@ -77,6 +77,7 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		client.R().SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst)})
 
 	}
+
 	if p.publicKey != nil {
 		dataBytes, err = rsa.EncryptPKCS1v15(rand.Reader, p.publicKey, buf.Bytes())
 		if err != nil {
@@ -87,7 +88,7 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 
 	_, err = client.R().SetHeaders(map[string]string{
 		"Content-Type": "application/json", "Content-Encoding": "gzip",
-	}).SetBody(buf).Post(url)
+	}).SetBody(dataBytes).Post(url)
 
 	if err != nil {
 		logger.Log.Error("Failed to send metrics", zap.Error(err))
