@@ -122,7 +122,15 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 
 	}
 
-	_, err = client.R().SetBody(data).Post(url)
+	//if p.publicKey != nil {
+	//	data, err = rsa.EncryptPKCS1v15(rand.Reader, p.publicKey, jsonData)
+	//	if err != nil {
+	//		logger.Log.Error("Failed to encrypt", zap.Error(err))
+	//		return err
+	//	}
+	//}
+
+	_, err = client.R().SetBody(jsonData).Post(url)
 	if err != nil {
 		logger.Log.Error("Failed to send metrics batch", zap.Error(err))
 		return err
