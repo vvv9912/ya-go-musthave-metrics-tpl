@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"context"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/json"
@@ -74,13 +75,13 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		client.R().SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst)})
 
 	}
-	//if p.publicKey != nil {
-	//	data, err = rsa.EncryptPKCS1v15(rand.Reader, p.publicKey, data)
-	//	if err != nil {
-	//		logger.Log.Error("Failed to encrypt", zap.Error(err))
-	//		return err
-	//	}
-	//}
+	if p.publicKey != nil {
+		data, err = rsa.EncryptPKCS1v15(rand.Reader, p.publicKey, data)
+		if err != nil {
+			logger.Log.Error("Failed to encrypt", zap.Error(err))
+			return err
+		}
+	}
 
 	_, err = client.R().SetHeaders(map[string]string{
 		"Content-Type": "application/json", "Content-Encoding": "gzip",
@@ -122,13 +123,13 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 
 	}
 
-	//if p.publicKey != nil {
-	//	data, err = rsa.EncryptPKCS1v15(rand.Reader, p.publicKey, jsonData)
-	//	if err != nil {
-	//		logger.Log.Error("Failed to encrypt", zap.Error(err))
-	//		return err
-	//	}
-	//}
+	if p.publicKey != nil {
+		jsonData, err = rsa.EncryptPKCS1v15(rand.Reader, p.publicKey, jsonData)
+		if err != nil {
+			logger.Log.Error("Failed to encrypt", zap.Error(err))
+			return err
+		}
+	}
 
 	_, err = client.R().SetBody(jsonData).Post(url)
 	if err != nil {

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/rsa"
 	"errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -33,6 +34,7 @@ func (s *Server) StartServer(
 	timeSend time.Duration,
 	writer notifier.Writer,
 	keyAuth string,
+	privateKey *rsa.PrivateKey,
 ) error {
 
 	var (
@@ -46,6 +48,11 @@ func (s *Server) StartServer(
 
 	})
 	n.Use(m.MwLogger)
+
+	if privateKey != nil {
+		n.Use(m.MiddlewareCrypt)
+	}
+
 	if keyAuth != "" {
 		n.Use(m.MiddlewareHashAuth)
 	}

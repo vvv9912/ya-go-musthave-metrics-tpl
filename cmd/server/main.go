@@ -3,7 +3,10 @@ package main
 
 import (
 	"context"
+	"crypto/rsa"
+	"crypto/x509"
 	"database/sql"
+	"encoding/pem"
 	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
@@ -37,12 +40,13 @@ func run() error {
 	fmt.Println("Build date:", buildDate)
 	fmt.Println("Build commit:", buildCommit)
 
-	log.Println("Start server")
-	log.Println("KeyAuth=", KeyAuth)
 	if err := logger.Initialize(flagLogLevel); err != nil {
 		return err
 	}
 
+	log.Println("Start server")
+	log.Println("KeyAuth=", KeyAuth)
+	fmt.Println("CryptoKey=", CryptoKey)
 	logger.Log.Info("URLserver=" + URLserver)
 	logger.Log.Info("timerSend=", zap.Int("timerSend", timerSend))
 	logger.Log.Info("FileStoragePath=" + FileStoragePath)
@@ -108,6 +112,23 @@ func run() error {
 			logger.Log.Info("error close", zap.Error(err))
 		}
 	}
+
+	var privateKey *rsa.PrivateKey
+	if CryptoKey != "" {
+		block, _ := pem.Decode([]byte(CryptoKey))
+		if block == nil {
+			err := fmt.Errorf("failed to parse PEM block containing the key: %s", CryptoKey)
+			logger.Log.Error("failed decode crypto key", zap.Error(err))
+			return err
+		}
+		privKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			logger.Log.Error("failed parse private key", zap.Error(err))
+			return err
+		}
+		privateKey = privKey
+	}
+
 	s := server.NewServer()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -120,7 +141,7 @@ func run() error {
 	}
 	defer produce.Close()
 
-	err = s.StartServer(ctx, URLserver, Repo, time.Duration(timerSend)*time.Second, produce, KeyAuth)
+	err = s.StartServer(ctx, URLserver, Repo, time.Duration(timerSend)*time.Second, produce, KeyAuth, privateKey)
 	if err != nil {
 		log.Println(err)
 		return err

@@ -29,6 +29,7 @@ var (
 	KeyAuth         string // Authentication key
 	flagLogLevel    string
 	DatabaseDsn     string
+	CryptoKey       string
 )
 
 func (o *NetAddress) String() string {
@@ -67,6 +68,7 @@ func parseFlags() {
 	flag.IntVar(&timerSend, "i", 300, "send timer")
 	flag.BoolVar(&RESTORE, "r", true, "restore")
 	flag.StringVar(&DatabaseDsn, "d", "", "DATABASE_DSN")
+	flag.StringVar(&CryptoKey, "crypto-key", "", "crypto-key (по умолчанию, сообщения не шифруются)")
 	flag.Parse()
 
 	URLserver = addr.String()
@@ -98,6 +100,9 @@ func parseFlags() {
 	}
 	if envDATABASE := os.Getenv("DATABASE_DSN"); envDATABASE != "" {
 		DatabaseDsn = envDATABASE
+	}
+	if envCryptoKey := os.Getenv("CRYPTO_KEY"); envCryptoKey != "" {
+		CryptoKey = envCryptoKey
 	}
 
 }
