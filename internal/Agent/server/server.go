@@ -109,7 +109,7 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 		return err
 	}
 
-	// Если ключ не задан
+	// Если ключ не задан (подпись)
 	if p.keyAuth != "" {
 
 		h := hmac.New(sha256.New, []byte(p.keyAuth))

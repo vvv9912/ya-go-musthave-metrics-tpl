@@ -19,7 +19,7 @@ import (
 type Mw struct {
 	Service    *service.Service
 	privateKey *rsa.PrivateKey
-	publicKey  *rsa.PublicKey
+	//publicKey  *rsa.PublicKey
 }
 
 func NewMw(s *service.Service) *Mw {
