@@ -78,6 +78,9 @@ func Test_parseFlagsConfig(t *testing.T) {
 	encoder.SetIndent("", "  ") // Устанавливаем отступы для форматирования JSON
 
 	err = encoder.Encode(jsonData)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	defer func() {
 		f.Close()
