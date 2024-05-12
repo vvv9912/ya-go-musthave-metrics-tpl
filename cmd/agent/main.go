@@ -54,7 +54,8 @@ func run() error {
 		}
 		publicKey = pubKey
 	}
-	host := "192.168.1.100"
+
+	host := "192.168.1.100" // todo: А можно ли как то получить методами go
 	postreq := server.NewPostRequest(KeyAuth, publicKey, host)
 
 	n := notifier.NewNotifier(metrics, postreq, time.Duration(time.Duration(pollInterval)*time.Second), time.Duration(time.Duration(reportInterval)*time.Second), URLserver)
