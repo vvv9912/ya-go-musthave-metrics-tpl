@@ -49,7 +49,6 @@ func TestMw_MiddlewareCrypt(t *testing.T) {
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			t.Fatalf("Failed to read the request body: %v", err)
-
 			return
 		}
 		w.Write(data)
