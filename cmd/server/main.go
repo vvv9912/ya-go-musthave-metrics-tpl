@@ -17,7 +17,6 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
 	"log"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -131,7 +130,7 @@ func run() error {
 
 	s := server.NewServer()
 
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer cancel()
 
 	produce, err := fileutils.NewProducer(FileStoragePath)
