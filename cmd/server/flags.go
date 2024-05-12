@@ -56,7 +56,7 @@ func (o *NetAddress) Set(flagValue string) error {
 	return nil
 }
 
-func parseJson(filePath string, flags map[string]bool) {
+func parseJSON(filePath string, flags map[string]bool) {
 	type Conf struct {
 		Address       string `json:"address"`
 		Restore       bool   `json:"restore"`
@@ -76,7 +76,7 @@ func parseJson(filePath string, flags map[string]bool) {
 	}
 
 	for k, v := range flags {
-		if v == true {
+		if v {
 			continue
 		}
 		switch k {
@@ -186,6 +186,6 @@ func parseFlags() {
 	}
 
 	if Config != "" {
-		parseJson(Config, flagValid)
+		parseJSON(Config, flagValid)
 	}
 }
