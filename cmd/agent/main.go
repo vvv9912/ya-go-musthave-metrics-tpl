@@ -25,6 +25,7 @@ func main() {
 	}
 }
 func run() error {
+
 	fmt.Println("Build version:", buildVersion)
 	fmt.Println("Build date:", buildDate)
 	fmt.Println("Build commit:", buildCommit)
@@ -53,8 +54,8 @@ func run() error {
 		}
 		publicKey = pubKey
 	}
-
-	postreq := server.NewPostRequest(KeyAuth, publicKey)
+	host := "192.168.1.100"
+	postreq := server.NewPostRequest(KeyAuth, publicKey, host)
 
 	n := notifier.NewNotifier(metrics, postreq, time.Duration(time.Duration(pollInterval)*time.Second), time.Duration(time.Duration(reportInterval)*time.Second), URLserver)
 

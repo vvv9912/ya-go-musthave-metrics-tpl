@@ -34,6 +34,7 @@ var (
 	DatabaseDsn     string
 	CryptoKey       string
 	Config          string
+	trustedSubnet   string
 )
 
 func (o *NetAddress) String() string {
@@ -64,6 +65,7 @@ func parseJSON(filePath string, flags map[string]bool) {
 		StoreFile     string `json:"store_file"`
 		DatabaseDSN   string `json:"database_dsn"`
 		CryptoKey     string `json:"crypto_key"`
+		TrustedSubnet string `json:"trusted_subnet"`
 	}
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -98,6 +100,8 @@ func parseJSON(filePath string, flags map[string]bool) {
 			DatabaseDsn = config.DatabaseDSN
 		case "crypto-key":
 			CryptoKey = config.CryptoKey
+		case "t":
+			trustedSubnet = config.TrustedSubnet
 		}
 	}
 
@@ -115,6 +119,7 @@ func parseFlags() {
 		"d":          false,
 		"crypto-key": false,
 		"c":          false,
+		"t":          false,
 	}
 	// регистрируем переменную flagRunAddr
 	addr := new(NetAddress)
@@ -133,6 +138,7 @@ func parseFlags() {
 	flag.StringVar(&DatabaseDsn, "d", "", "DATABASE_DSN")
 	flag.StringVar(&CryptoKey, "crypto-key", "", "crypto-key (по умолчанию, сообщения не шифруются)")
 	flag.StringVar(&Config, "c", "", "config")
+	flag.StringVar(&trustedSubnet, "t", "", "TRUSTED_SUBNET")
 	flag.Parse()
 
 	flag.Visit(func(f *flag.Flag) {
@@ -183,6 +189,9 @@ func parseFlags() {
 	}
 	if envConfig := os.Getenv("CONFIG"); envConfig != "" {
 		Config = envConfig
+	}
+	if envTrustSubnet := os.Getenv("TRUSTED_SUBNET"); envTrustSubnet != "" {
+		trustedSubnet = envTrustSubnet
 	}
 
 	if Config != "" {

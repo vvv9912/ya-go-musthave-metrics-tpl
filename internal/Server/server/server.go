@@ -47,7 +47,10 @@ func (s *Server) StartServer(
 	n := s.s.Route("/", func(r chi.Router) {
 
 	})
+
 	n.Use(m.MwLogger)
+
+	n.Use(m.MwTrustedSubnet)
 
 	if privateKey != nil {
 		n.Use(m.MiddlewareCrypt)
