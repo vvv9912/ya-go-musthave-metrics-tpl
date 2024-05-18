@@ -82,7 +82,6 @@ func parseJSON(filePath string, flags map[string]bool) {
 			duration, err := time.ParseDuration(config.ReportInterval)
 			if err != nil {
 				log.Fatal("Error parse duration", zap.Error(err))
-				return
 			}
 			reportInterval = uint(duration.Seconds())
 

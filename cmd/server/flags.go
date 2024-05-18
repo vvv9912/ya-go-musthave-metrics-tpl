@@ -90,7 +90,6 @@ func parseJSON(filePath string, flags map[string]bool) {
 			duration, err := time.ParseDuration(config.StoreInterval)
 			if err != nil {
 				log.Fatal("Error parse duration", zap.Error(err))
-				return
 			}
 			timerSend = int(duration.Seconds())
 
@@ -129,6 +128,7 @@ func parseFlags() {
 	// здесь будет ошибка компиляции
 	var _ = flag.Value(addr)
 	//var restore string
+
 	flag.StringVar(&KeyAuth, "k", "", "key for auth (по умолчанию пустая)")
 	flag.Var(addr, "a", "Net address host:port")
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")

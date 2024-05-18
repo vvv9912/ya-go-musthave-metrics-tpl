@@ -35,21 +35,21 @@ func main() {
 }
 
 func run() error {
-	fmt.Println("Build version:", buildVersion)
-	fmt.Println("Build date:", buildDate)
-	fmt.Println("Build commit:", buildCommit)
+	log.Println("Build version:", buildVersion)
+	log.Println("Build date:", buildDate)
+	log.Println("Build commit:", buildCommit)
 
 	if err := logger.Initialize(flagLogLevel); err != nil {
 		return err
 	}
 
-	log.Println("Start server")
-	log.Println("KeyAuth=", KeyAuth)
-	fmt.Println("CryptoKey=", CryptoKey)
-	logger.Log.Info("URLserver=" + URLserver)
-	logger.Log.Info("timerSend=", zap.Int("timerSend", timerSend))
-	logger.Log.Info("FileStoragePath=" + FileStoragePath)
-	logger.Log.Info("Restore=", zap.Bool("RESTORE", RESTORE))
+	logger.Log.Info("Start server")
+	logger.Log.Info("KeyAuth= " + KeyAuth)
+	logger.Log.Info("CryptoKey= " + CryptoKey)
+	logger.Log.Info("URLserver= " + URLserver)
+	logger.Log.Info("timerSend= ", zap.Int("timerSend", timerSend))
+	logger.Log.Info("FileStoragePath= " + FileStoragePath)
+	logger.Log.Info("Restore= ", zap.Bool("RESTORE", RESTORE))
 
 	var Repo *store.Repository
 
