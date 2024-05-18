@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
+	"go.uber.org/zap"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -25,6 +28,8 @@ var reportInterval uint
 var pollInterval uint
 var KeyAuth string
 var RateLimit uint
+var CryptoKey string
+var Config string
 
 func (o *NetAddress) String() string {
 	return o.Host + ":" + strconv.Itoa(o.Port)
@@ -49,6 +54,51 @@ func (o *NetAddress) Set(flagValue string) error {
 	return nil
 }
 
+func parseJSON(filePath string, flags map[string]bool) {
+	type Conf struct {
+		Address        string `json:"address"`
+		ReportInterval string `json:"report_interval"`
+		PollInterval   string `json:"poll_interval"`
+		CryptoKey      string `json:"crypto_key"`
+	}
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var config Conf
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for k, v := range flags {
+		if v {
+			continue
+		}
+		switch k {
+		case "a":
+			URLserver = config.Address
+		case "r":
+			duration, err := time.ParseDuration(config.ReportInterval)
+			if err != nil {
+				log.Fatal("Error parse duration", zap.Error(err))
+			}
+			reportInterval = uint(duration.Seconds())
+
+		case "p":
+			duration, err := time.ParseDuration(config.PollInterval)
+			if err != nil {
+				log.Fatal("Error parse duration", zap.Error(err))
+				return
+			}
+			pollInterval = uint(duration.Seconds())
+		case "crypto-key":
+			CryptoKey = config.CryptoKey
+		}
+	}
+
+}
+
 func parseFlags() {
 	// регистрируем переменную flagRunAddr
 	// как аргумент -a со значением :8080 по умолчанию
@@ -64,14 +114,18 @@ func parseFlags() {
 	flag.UintVar(&reportInterval, "r", 10, "частота отправки метрик на сервер (по умолчанию 10 секунд)")
 	flag.UintVar(&pollInterval, "p", 2, "частота опроса метрик из пакета runtime (по умолчанию 2 секунды)")
 	flag.UintVar(&RateLimit, "l", 1, "одновременно исходящих запросов на сервер (по умолчанию 1)")
+	flag.StringVar(&CryptoKey, "crypto-key", "", "crypto-key (по умолчанию, сообщения не шифруются)")
+	flag.StringVar(&Config, "c", "", "config")
 	flag.Parse()
 
-	flagValid := map[string]struct{}{
-		"a": {},
-		"r": {},
-		"p": {},
-		"k": {},
-		"l": {},
+	flagValid := map[string]bool{
+		"a":          false,
+		"r":          false,
+		"p":          false,
+		"k":          false,
+		"l":          false,
+		"crypto-key": false,
+		"c":          false,
 	}
 	flag.Visit(func(f *flag.Flag) {
 		_, ok := flagValid[f.Name]
@@ -79,6 +133,7 @@ func parseFlags() {
 			flag.PrintDefaults()
 			log.Panic("лишний флаг:" + f.Name)
 		}
+		flagValid[f.Name] = true
 	})
 
 	URLserver = addr.String()
@@ -109,5 +164,15 @@ func parseFlags() {
 		}
 		RateLimit = uint(uintValue)
 	}
+	if envCryptoKey := os.Getenv("CRYPTO_KEY"); envCryptoKey != "" {
+		CryptoKey = envCryptoKey
+	}
 
+	if envConfig := os.Getenv("CONFIG"); envConfig != "" {
+		Config = envConfig
+	}
+
+	if Config != "" {
+		parseJSON(Config, flagValid)
+	}
 }

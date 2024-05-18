@@ -1,11 +1,8 @@
 package mw
 
 import (
-	"bytes"
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
+	"crypto/rsa"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/gzipwrapper"
@@ -13,109 +10,22 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/typeconst"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
-	"io"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type Mw struct {
-	Service *service.Service
+	Service    *service.Service
+	privateKey *rsa.PrivateKey
+	//publicKey  *rsa.PublicKey
 }
 
 func NewMw(s *service.Service) *Mw {
 	return &Mw{Service: s}
 }
 
-// для хэша
-type responseWriter struct {
-	http.ResponseWriter
-	body *bytes.Buffer
-}
-
-func (rw *responseWriter) Write(b []byte) (int, error) {
-	n, err := rw.body.Write(b)
-	if err != nil {
-		logger.Log.Error("error write body", zap.Error(err))
-		return n, err
-	}
-	return rw.ResponseWriter.Write(b)
-}
-
-type responseData struct {
-	status int
-	size   int
-}
-type loggingResponseWriter struct {
-	http.ResponseWriter
-	responseData *responseData
-}
-
-func (r *loggingResponseWriter) Write(b []byte) (int, error) {
-	// записываем ответ, используя оригинальный http.ResponseWriter
-	size, err := r.ResponseWriter.Write(b)
-	r.responseData.size += size
-	return size, err
-}
-func (r *loggingResponseWriter) WriteHeader(statusCode int) {
-	// записываем код статуса, используя оригинальный http.ResponseWriter
-	r.ResponseWriter.WriteHeader(statusCode)
-	r.responseData.status = statusCode
-}
-
-// mw логера
-func (m *Mw) MwLogger(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		data := &responseData{
-			status: 0,
-			size:   0,
-		}
-		lw := loggingResponseWriter{
-			ResponseWriter: w,
-			responseData:   data,
-		}
-		next.ServeHTTP(&lw, r)
-		duration := time.Since(start)
-		//Сведения о запросах должны содержать URI, метод запроса и время, затраченное на его выполнение.
-		//Сведения об ответах должны содержать код статуса и размер содержимого ответа.
-		logger.Log.Info("Сведения о запросах", zap.String("URI", r.RequestURI), zap.String("method", r.Method), zap.Duration("duration", duration))
-		logger.Log.Info("Сведения об ответах", zap.Int("status", data.status), zap.Int("size", data.size))
-
-	})
-}
-
-// проверяем, что клиент умеет получать от сервера сжатые данные в определенном формате
-func supportAcceptType(acceptType map[string]struct{}, acceptTypeReq string) bool {
-	if acceptTypeReq == "*/*" {
-		return true
-	} else {
-		for key := range acceptType {
-			if strings.Contains(acceptTypeReq, key) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// проверяем, что клиент поддерживает соответствующий content-type
-func supportEncodingTypeOld(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
-	for key := range accpetEncoding {
-		if strings.Contains(acceptEncodingReq, key) {
-			return true
-		}
-	}
-	return false
-}
-
-func supportEncodingType(accpetEncoding map[string]struct{}, acceptEncodingReq string) bool {
-	_, ok := accpetEncoding[acceptEncodingReq]
-	return ok
-}
 func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// по умолчанию устанавливаем оригинальный http.ResponseWriter как тот,
@@ -126,7 +36,6 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 			"application/json": struct{}{},
 			"text/html":        struct{}{},
 			"html/text":        struct{}{}, //
-			"*/*":              struct{}{},
 		}
 
 		supportGzip := map[string]struct{}{
@@ -163,66 +72,6 @@ func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {
 
 		// передаём управление хендлеру
 		next.ServeHTTP(ow, r)
-	})
-
-}
-
-func (m *Mw) MiddlewareHashAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		hashSha := r.Header.Get("HashSHA256")
-
-		if hashSha != "" {
-			hash, err := hex.DecodeString(hashSha)
-			if err != nil {
-				logger.Log.Error("Error decoding hash", zap.Error(err))
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-			// копируем тело запроса
-			reader := io.TeeReader(r.Body, os.Stdout) //
-
-			body, err := io.ReadAll(reader)
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-			//считаем хеш
-			h := hmac.New(sha256.New, []byte(m.Service.KeyAuth))
-
-			_, err = h.Write(body)
-			if err != nil {
-				logger.Log.Error("Failed to write", zap.Error(err))
-				return
-			}
-
-			dst := h.Sum(nil)
-
-			ok := hmac.Equal(dst, hash)
-			if !ok {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-
-		}
-		// подменяем метод 			//а будет ли работать gzip> todo
-		rw := &responseWriter{ResponseWriter: w, body: bytes.NewBuffer(nil)}
-		next.ServeHTTP(rw, r)
-
-		hWriter := hmac.New(sha256.New, []byte(m.Service.KeyAuth))
-
-		_, err := hWriter.Write(rw.body.Bytes())
-		if err != nil {
-			logger.Log.Error("Failed to write", zap.Error(err))
-			return
-		}
-
-		hashWriter := hWriter.Sum(nil)
-
-		w.Header().Set("HashSHA256", string(hashWriter))
-
 	})
 
 }

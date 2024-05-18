@@ -5,6 +5,8 @@ import (
 	"compress/gzip"
 	"context"
 	"crypto/hmac"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -21,11 +23,12 @@ type PostRequester interface {
 }
 type PostRequest struct {
 	PostRequester
-	keyAuth string
+	keyAuth   string
+	publicKey *rsa.PublicKey
 }
 
-func NewPostRequest(keyAuth string) *PostRequest {
-	return &PostRequest{keyAuth: keyAuth}
+func NewPostRequest(keyAuth string, publicKey *rsa.PublicKey) *PostRequest {
+	return &PostRequest{keyAuth: keyAuth, publicKey: publicKey}
 }
 
 func (p *PostRequest) PostReq(ctx context.Context, url string) error {
@@ -57,6 +60,8 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		logger.Log.Error("Failed gzip", zap.Error(err))
 		return err
 	}
+	//
+	dataBytes := buf.Bytes()
 	// В случае, если ключ не задан
 	if p.keyAuth != "" {
 
@@ -69,24 +74,25 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		}
 		dst := h.Sum(nil)
 
-		_, err = client.R().SetHeaders(map[string]string{
-			"HashSHA256": fmt.Sprintf("%x", dst), "Content-Type": "application/json", "Content-Encoding": "gzip",
-		}).SetBody(buf).Post(url)
+		client.R().SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst)})
 
+	}
+
+	if p.publicKey != nil {
+		dataBytes, err = rsa.EncryptPKCS1v15(rand.Reader, p.publicKey, buf.Bytes())
 		if err != nil {
-			logger.Log.Error("Failed to send metrics", zap.Error(err))
+			logger.Log.Error("Failed to encrypt", zap.Error(err))
 			return err
 		}
-	} else {
+	}
 
-		_, err = client.R().SetHeaders(map[string]string{
-			"Content-Type": "application/json", "Content-Encoding": "gzip",
-		}).SetBody(buf).Post(url)
+	_, err = client.R().SetHeaders(map[string]string{
+		"Content-Type": "application/json", "Content-Encoding": "gzip",
+	}).SetBody(dataBytes).Post(url)
 
-		if err != nil {
-			logger.Log.Error("Failed to send metrics", zap.Error(err))
-			return err
-		}
+	if err != nil {
+		logger.Log.Error("Failed to send metrics", zap.Error(err))
+		return err
 	}
 
 	return nil
@@ -96,16 +102,17 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 
 	client := resty.New()
 
-	// Если ключ не задан
+	// При передаче слайса в интерфейс client.R, внутри все равно преобраз. в json
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		logger.Log.Error("Error marshaling metrics", zap.Error(err))
+		return err
+	}
+
+	// Если ключ не задан (подпись)
 	if p.keyAuth != "" {
 
 		h := hmac.New(sha256.New, []byte(p.keyAuth))
-
-		jsonData, err := json.Marshal(data)
-		if err != nil {
-			logger.Log.Error("Error marshaling metrics", zap.Error(err))
-			return err
-		}
 
 		_, err = h.Write(jsonData)
 		if err != nil {
@@ -115,20 +122,23 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 
 		dst := h.Sum(nil)
 
-		_, err = client.R().SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst), "Content-Type": "application/json"}).SetBody(data).Post(url)
-		if err != nil {
-			logger.Log.Error("Failed to send metrics batch", zap.Error(err))
-			return err
-		}
-
-	} else {
-
-		_, err := client.R().SetBody(data).Post(url)
-		if err != nil {
-			logger.Log.Error("Failed to send metrics batch", zap.Error(err))
-			return err
-		}
+		client.R().SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst), "Content-Type": "application/json"})
 
 	}
+
+	if p.publicKey != nil {
+		jsonData, err = rsa.EncryptPKCS1v15(rand.Reader, p.publicKey, jsonData)
+		if err != nil {
+			logger.Log.Error("Failed to encrypt", zap.Error(err))
+			return err
+		}
+	}
+
+	_, err = client.R().SetBody(jsonData).Post(url)
+	if err != nil {
+		logger.Log.Error("Failed to send metrics batch", zap.Error(err))
+		return err
+	}
+
 	return nil
 }
