@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v3.12.4
-// source: proto/metrics.proto
+// source: metrics.proto
 
 package proto
 
@@ -21,7 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Metrics_UpdateGauge_FullMethodName    = "/grpc.Metrics/UpdateGauge"
 	Metrics_UpdateCounter_FullMethodName  = "/grpc.Metrics/UpdateCounter"
-	Metrics_UpdateJson_FullMethodName     = "/grpc.Metrics/UpdateJson"
+	Metrics_UpdateJSON_FullMethodName     = "/grpc.Metrics/UpdateJSON"
 	Metrics_UpdatesBatched_FullMethodName = "/grpc.Metrics/UpdatesBatched"
 )
 
@@ -31,7 +31,7 @@ const (
 type MetricsClient interface {
 	UpdateGauge(ctx context.Context, in *Update, opts ...grpc.CallOption) (*Response, error)
 	UpdateCounter(ctx context.Context, in *Update, opts ...grpc.CallOption) (*Response, error)
-	UpdateJson(ctx context.Context, in *UpdateSlice, opts ...grpc.CallOption) (*Response, error)
+	UpdateJSON(ctx context.Context, in *UpdateSlice, opts ...grpc.CallOption) (*Response, error)
 	UpdatesBatched(ctx context.Context, in *UpdateSlice, opts ...grpc.CallOption) (*Response, error)
 }
 
@@ -61,9 +61,9 @@ func (c *metricsClient) UpdateCounter(ctx context.Context, in *Update, opts ...g
 	return out, nil
 }
 
-func (c *metricsClient) UpdateJson(ctx context.Context, in *UpdateSlice, opts ...grpc.CallOption) (*Response, error) {
+func (c *metricsClient) UpdateJSON(ctx context.Context, in *UpdateSlice, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, Metrics_UpdateJson_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Metrics_UpdateJSON_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (c *metricsClient) UpdatesBatched(ctx context.Context, in *UpdateSlice, opt
 type MetricsServer interface {
 	UpdateGauge(context.Context, *Update) (*Response, error)
 	UpdateCounter(context.Context, *Update) (*Response, error)
-	UpdateJson(context.Context, *UpdateSlice) (*Response, error)
+	UpdateJSON(context.Context, *UpdateSlice) (*Response, error)
 	UpdatesBatched(context.Context, *UpdateSlice) (*Response, error)
 	mustEmbedUnimplementedMetricsServer()
 }
@@ -100,8 +100,8 @@ func (UnimplementedMetricsServer) UpdateGauge(context.Context, *Update) (*Respon
 func (UnimplementedMetricsServer) UpdateCounter(context.Context, *Update) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCounter not implemented")
 }
-func (UnimplementedMetricsServer) UpdateJson(context.Context, *UpdateSlice) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateJson not implemented")
+func (UnimplementedMetricsServer) UpdateJSON(context.Context, *UpdateSlice) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateJSON not implemented")
 }
 func (UnimplementedMetricsServer) UpdatesBatched(context.Context, *UpdateSlice) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdatesBatched not implemented")
@@ -155,20 +155,20 @@ func _Metrics_UpdateCounter_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Metrics_UpdateJson_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Metrics_UpdateJSON_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateSlice)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MetricsServer).UpdateJson(ctx, in)
+		return srv.(MetricsServer).UpdateJSON(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Metrics_UpdateJson_FullMethodName,
+		FullMethod: Metrics_UpdateJSON_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MetricsServer).UpdateJson(ctx, req.(*UpdateSlice))
+		return srv.(MetricsServer).UpdateJSON(ctx, req.(*UpdateSlice))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -207,8 +207,8 @@ var Metrics_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Metrics_UpdateCounter_Handler,
 		},
 		{
-			MethodName: "UpdateJson",
-			Handler:    _Metrics_UpdateJson_Handler,
+			MethodName: "UpdateJSON",
+			Handler:    _Metrics_UpdateJSON_Handler,
 		},
 		{
 			MethodName: "UpdatesBatched",
@@ -216,5 +216,5 @@ var Metrics_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/metrics.proto",
+	Metadata: "metrics.proto",
 }

@@ -3,7 +3,7 @@ package notifier
 import (
 	"context"
 	"encoding/json"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer/proto"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcserver/proto"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/delaysend"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
@@ -27,7 +27,7 @@ type PostRequester interface {
 type GprcRequester interface {
 	UpdateGauge(ctx context.Context, update *proto.Update) error
 	UpdateCounter(ctx context.Context, update *proto.Update) error
-	UpdateJson(ctx context.Context, data []byte) error
+	UpdateJSON(ctx context.Context, data []byte) error
 	UpdatesBatched(ctx context.Context, data []model.Metrics) error
 }
 type Notifier struct {
@@ -119,7 +119,7 @@ func (n *Notifier) SendGaugeReq(ctx context.Context, gauge map[string]string, Pu
 				logger.Log.Error("Failed to send gauge JSON by rest ", zap.Error(err))
 			}
 
-			err = n.UpdateJson(ctx, data)
+			err = n.UpdateJSON(ctx, data)
 			if err != nil {
 				logger.Log.Error("Failed to send gauge JSON by grpc", zap.Error(err))
 			}
@@ -186,7 +186,7 @@ func (n *Notifier) SendCountReq(ctx context.Context, counter uint64, PullGoCh ch
 		return
 	}
 
-	err = n.UpdateJson(ctx, data)
+	err = n.UpdateJSON(ctx, data)
 	if err != nil {
 		logger.Log.Error("Failed to send counter JSON by grpc", zap.Error(err))
 	}

@@ -1,8 +1,8 @@
-package grpcServer
+package grpcserver
 
 import (
 	"context"
-	pb "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer/proto"
+	pb "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcserver/proto"
 	"google.golang.org/grpc"
 )
 

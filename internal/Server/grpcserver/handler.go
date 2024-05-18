@@ -1,4 +1,4 @@
-package grpcServer
+package grpcserver
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	pb "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer/proto"
+	pb "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcserver/proto"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/delaysend"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
@@ -66,7 +66,7 @@ func (m *Metrics) UpdateCounter(ctx context.Context, in *pb.Update) (*pb.Respons
 }
 
 // UpdateJson - обработчик для обновления значения метрик в формате Json.
-func (m *Metrics) UpdateJson(ctx context.Context, in *pb.UpdateSlice) (*pb.Response, error) {
+func (m *Metrics) UpdateJSON(ctx context.Context, in *pb.UpdateSlice) (*pb.Response, error) {
 	var metrics model.Metrics
 
 	err := json.Unmarshal(in.Data, &metrics)

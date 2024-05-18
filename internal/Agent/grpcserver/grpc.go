@@ -1,4 +1,4 @@
-package grpcServer
+package grpcserver
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	pb "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer/proto"
+	pb "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcserver/proto"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"go.uber.org/zap"
@@ -35,7 +35,7 @@ func (m *GrpcRequest) UpdateGauge(ctx context.Context, update *pb.Update) error 
 	ctxMd := metadata.NewOutgoingContext(ctx, md)
 	_, err := m.Client.UpdateGauge(ctxMd, update)
 	if err != nil {
-		logger.Log.Error("grpcServer.UpdateGauge failed", zap.Error(err))
+		logger.Log.Error("grpcserver.UpdateGauge failed", zap.Error(err))
 		return err
 	}
 
@@ -53,15 +53,15 @@ func (m *GrpcRequest) UpdateCounter(ctx context.Context, update *pb.Update) erro
 	_, err := m.Client.UpdateCounter(ctxMd, update)
 	if err != nil {
 
-		logger.Log.Error("grpcServer.UpdateCounter failed", zap.Error(err))
+		logger.Log.Error("grpcserver.UpdateCounter failed", zap.Error(err))
 		return err
 	}
 
 	return nil
 }
 
-func (m *GrpcRequest) UpdateJson(ctx context.Context, data []byte) error {
-	return m.updateJson(ctx, &pb.UpdateSlice{
+func (m *GrpcRequest) UpdateJSON(ctx context.Context, data []byte) error {
+	return m.updateJSON(ctx, &pb.UpdateSlice{
 		Data: data,
 	})
 }
@@ -77,7 +77,7 @@ func (m *GrpcRequest) UpdatesBatched(ctx context.Context, data []model.Metrics) 
 		Data: jsonData,
 	})
 }
-func (m *GrpcRequest) updateJson(ctx context.Context, update *pb.UpdateSlice) error {
+func (m *GrpcRequest) updateJSON(ctx context.Context, update *pb.UpdateSlice) error {
 	headers, err := m.preparingReq(ctx, update)
 	if err != nil {
 		logger.Log.Error("failed create req", zap.Error(err))

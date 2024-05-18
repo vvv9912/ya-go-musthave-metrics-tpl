@@ -6,7 +6,7 @@ import (
 	"errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcserver"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
@@ -84,7 +84,6 @@ func (s *Server) StartServer(
 	ctxServer, cancel := context.WithCancel(ctx)
 
 	e.StartNotifier(ctxServer)
-	// Создаем маршрутизатор REST API
 
 	go func() {
 
@@ -97,10 +96,11 @@ func (s *Server) StartServer(
 		}
 	}()
 
-	err := grpcServer.NewGrpcServer(Service, ":3200")
+	err := grpcserver.NewGrpcServer(Service, ":3200")
 	if err != nil {
 		return err
 	}
+
 	select {
 	case <-ctx.Done():
 		logger.Log.Info("ctx:", zap.Error(ctx.Err()))
