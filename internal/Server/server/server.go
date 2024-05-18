@@ -7,7 +7,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer"
-	pb "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer/proto"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
@@ -15,9 +14,7 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 	"log"
-	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"time"
@@ -100,28 +97,10 @@ func (s *Server) StartServer(
 		}
 	}()
 
-	//grpc
-	listen, err := net.Listen("tcp", ":3200")
+	err := grpcServer.NewGrpcServer(Service, ":3200")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-
-	HandlersGrpc := grpcServer.Metrics{
-		Service: Service,
-	}
-
-	grpcNewServer1 := grpc.NewServer(grpc.UnaryInterceptor(grpcServer.UnaryInterceptor))
-
-	pb.RegisterMetricsServer(grpcNewServer1, &HandlersGrpc)
-
-	go func() {
-
-		if err := grpcNewServer1.Serve(listen); err != nil {
-			log.Fatal(err)
-		}
-
-	}()
-
 	select {
 	case <-ctx.Done():
 		logger.Log.Info("ctx:", zap.Error(ctx.Err()))

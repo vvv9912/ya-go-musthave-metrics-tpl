@@ -10,7 +10,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer/proto"
+	pb "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer/proto"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"go.uber.org/zap"
@@ -21,10 +21,11 @@ type GrpcRequest struct {
 	keyAuth   string
 	publicKey *rsa.PublicKey
 	host      string
-	Client    proto.MetricsClient
+	Client    pb.MetricsClient
 }
 
-func (m *GrpcRequest) UpdateGauge(ctx context.Context, update *proto.Update) error {
+func (m *GrpcRequest) UpdateGauge(ctx context.Context, update *pb.Update) error {
+
 	headres := make(map[string]string)
 	if m.host != "" {
 		headres["X-Real-IP"] = m.host
@@ -41,7 +42,7 @@ func (m *GrpcRequest) UpdateGauge(ctx context.Context, update *proto.Update) err
 	return nil
 }
 
-func (m *GrpcRequest) UpdateCounter(ctx context.Context, update *proto.Update) error {
+func (m *GrpcRequest) UpdateCounter(ctx context.Context, update *pb.Update) error {
 	headres := make(map[string]string)
 	if m.host != "" {
 		headres["X-Real-IP"] = m.host
@@ -60,7 +61,7 @@ func (m *GrpcRequest) UpdateCounter(ctx context.Context, update *proto.Update) e
 }
 
 func (m *GrpcRequest) UpdateJson(ctx context.Context, data []byte) error {
-	return m.updateJson(ctx, &proto.UpdateSlice{
+	return m.updateJson(ctx, &pb.UpdateSlice{
 		Data: data,
 	})
 }
@@ -72,11 +73,11 @@ func (m *GrpcRequest) UpdatesBatched(ctx context.Context, data []model.Metrics) 
 		return err
 	}
 
-	return m.updatesBatched(ctx, &proto.UpdateSlice{
+	return m.updatesBatched(ctx, &pb.UpdateSlice{
 		Data: jsonData,
 	})
 }
-func (m *GrpcRequest) updateJson(ctx context.Context, update *proto.UpdateSlice) error {
+func (m *GrpcRequest) updateJson(ctx context.Context, update *pb.UpdateSlice) error {
 	headers, err := m.preparingReq(ctx, update)
 	if err != nil {
 		logger.Log.Error("failed create req", zap.Error(err))
@@ -94,7 +95,7 @@ func (m *GrpcRequest) updateJson(ctx context.Context, update *proto.UpdateSlice)
 	return nil
 }
 
-func (m *GrpcRequest) updatesBatched(ctx context.Context, update *proto.UpdateSlice) error {
+func (m *GrpcRequest) updatesBatched(ctx context.Context, update *pb.UpdateSlice) error {
 	headers, err := m.preparingReq(ctx, update)
 	if err != nil {
 		logger.Log.Error("failed create req", zap.Error(err))
@@ -113,7 +114,7 @@ func (m *GrpcRequest) updatesBatched(ctx context.Context, update *proto.UpdateSl
 }
 
 // Preparing json req
-func (m *GrpcRequest) preparingReq(ctx context.Context, update *proto.UpdateSlice) (map[string]string, error) {
+func (m *GrpcRequest) preparingReq(ctx context.Context, update *pb.UpdateSlice) (map[string]string, error) {
 	headers := make(map[string]string)
 	if m.host != "" {
 		headers["X-Real-IP"] = m.host
