@@ -27,8 +27,7 @@ type PostRequester interface {
 type GprcRequester interface {
 	UpdateGauge(ctx context.Context, update *proto.Update) error
 	UpdateCounter(ctx context.Context, update *proto.Update) error
-	UpdateGaugeJson(ctx context.Context, data []byte) error
-	UpdateCounterJson(ctx context.Context, data []byte) error
+	UpdateJson(ctx context.Context, data []byte) error
 	UpdatesBatched(ctx context.Context, data []model.Metrics) error
 }
 type Notifier struct {
@@ -72,10 +71,8 @@ func (n *Notifier) SendGaugeReq(ctx context.Context, gauge map[string]string, Pu
 			url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
 
 			err := n.GprcRequester.UpdateGauge(context.Background(), &proto.Update{
-				Key:        key,
-				Values:     values,
-				HashSHA256: "",
-				XRealIP:    "",
+				Key:    key,
+				Values: values,
 			})
 			if err != nil {
 				logger.Log.Error("Error sending gauge by grpc", zap.String("key", key), zap.String("value", values), zap.Error(err))
@@ -122,7 +119,7 @@ func (n *Notifier) SendGaugeReq(ctx context.Context, gauge map[string]string, Pu
 				logger.Log.Error("Failed to send gauge JSON by rest ", zap.Error(err))
 			}
 
-			err = n.UpdateGaugeJson(ctx, data)
+			err = n.UpdateJson(ctx, data)
 			if err != nil {
 				logger.Log.Error("Failed to send gauge JSON by grpc", zap.Error(err))
 			}
@@ -189,7 +186,7 @@ func (n *Notifier) SendCountReq(ctx context.Context, counter uint64, PullGoCh ch
 		return
 	}
 
-	err = n.UpdateCounterJson(ctx, data)
+	err = n.UpdateJson(ctx, data)
 	if err != nil {
 		logger.Log.Error("Failed to send counter JSON by grpc", zap.Error(err))
 	}

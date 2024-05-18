@@ -13,7 +13,6 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 	"io"
 	"strconv"
 	"syscall"
@@ -44,7 +43,6 @@ func (m *Metrics) UpdateGauge(ctx context.Context, in *proto.Update) (*proto.Res
 	return nil, nil
 }
 func (m *Metrics) UpdateCounter(ctx context.Context, in *proto.Update) (*proto.Response, error) {
-	var resp proto.Response
 
 	value, err := strconv.ParseInt(in.Values, 10, 64)
 	if err != nil {
@@ -64,7 +62,7 @@ func (m *Metrics) UpdateCounter(ctx context.Context, in *proto.Update) (*proto.R
 
 	return nil, nil
 }
-func (m *Metrics) UpdateGaugeJson(ctx context.Context, in *proto.UpdateSlice) (*proto.Response, error) {
+func (m *Metrics) UpdateJson(ctx context.Context, in *proto.UpdateSlice) (*proto.Response, error) {
 	var metrics model.Metrics
 
 	err := json.Unmarshal(in.Data, &metrics)
@@ -90,14 +88,6 @@ func (m *Metrics) UpdateGaugeJson(ctx context.Context, in *proto.UpdateSlice) (*
 	return nil, nil
 }
 
-//	func (m *Metrics) UpdateCounterJson(ctx context.Context, in *proto.UpdateSlice) (*proto.Response, error) {
-//		var resp proto.Response
-//
-//		log.Println(in.Data)
-//		//log.Println(in.Values)
-//		_ = resp
-//		return nil, nil
-//	}
 func (m *Metrics) UpdatesBatched(ctx context.Context, in *proto.UpdateSlice) (*proto.Response, error) {
 	var metrics []model.Metrics
 
@@ -121,7 +111,7 @@ func (m *Metrics) UpdatesBatched(ctx context.Context, in *proto.UpdateSlice) (*p
 	return nil, nil
 }
 
-func (m *Metrics) unGzip(in []byte) (out []byte, err error) {
+func unGzip(in []byte) (out []byte, err error) {
 	bb := bytes.NewReader(in)
 
 	r, err := gzip.NewReader(bb)
@@ -137,25 +127,18 @@ func (m *Metrics) unGzip(in []byte) (out []byte, err error) {
 
 	return data, nil
 }
+
+// unzip
 func UnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	var token string
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		values := md.Get("token")
-		if len(values) > 0 {
-			token = values[0]
+
+	if info.FullMethod == "/grpc.Metrics/UpdatesBatched" || info.FullMethod == "/grpc.Metrics/UpdateJson" {
+		a := req.(*proto.UpdateSlice)
+		data, err := unGzip(a.Data)
+		if err != nil {
+			return nil, err
 		}
+		a.Data = data
 	}
-	_ = token
+
 	return handler(ctx, req)
 }
-
-//// Регистрация RPC методов с разными UnaryInterceptor
-//// Метод 1 с UnaryInterceptor myUnaryInterceptor1
-//RegisterService1Server(server, &service1{ /* ... */ }, grpc.WithUnaryInterceptor(myUnaryInterceptor1))
-//// Метод 2 с UnaryInterceptor myUnaryInterceptor2
-//RegisterService2Server(server, &service2{ /* ... */ }, grpc.WithUnaryInterceptor(myUnaryInterceptor2))
-//
-//// Запуск сервера и обработка RPC методов
-//// ...
-//
-//fmt.Println("Сервер gRPC запущен")

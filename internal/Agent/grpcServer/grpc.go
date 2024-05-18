@@ -59,16 +59,12 @@ func (m *GrpcRequest) UpdateCounter(ctx context.Context, update *proto.Update) e
 	return nil
 }
 
-func (m *GrpcRequest) UpdateGaugeJson(ctx context.Context, data []byte) error {
-	return m.updateGaugeJson(ctx, &proto.UpdateSlice{
+func (m *GrpcRequest) UpdateJson(ctx context.Context, data []byte) error {
+	return m.updateJson(ctx, &proto.UpdateSlice{
 		Data: data,
 	})
 }
-func (m *GrpcRequest) UpdateCounterJson(ctx context.Context, data []byte) error {
-	return m.updateCounterJson(ctx, &proto.UpdateSlice{
-		Data: data,
-	})
-}
+
 func (m *GrpcRequest) UpdatesBatched(ctx context.Context, data []model.Metrics) error {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -80,8 +76,8 @@ func (m *GrpcRequest) UpdatesBatched(ctx context.Context, data []model.Metrics) 
 		Data: jsonData,
 	})
 }
-func (m *GrpcRequest) updateGaugeJson(ctx context.Context, update *proto.UpdateSlice) error {
-	headers, err := m.updatesJson(ctx, update)
+func (m *GrpcRequest) updateJson(ctx context.Context, update *proto.UpdateSlice) error {
+	headers, err := m.preparingReq(ctx, update)
 	if err != nil {
 		logger.Log.Error("failed create req", zap.Error(err))
 		return err
@@ -89,7 +85,7 @@ func (m *GrpcRequest) updateGaugeJson(ctx context.Context, update *proto.UpdateS
 
 	md := metadata.New(headers)
 	ctxMd := metadata.NewOutgoingContext(ctx, md)
-	_, err = m.Client.UpdateGaugeJson(ctxMd, update)
+	_, err = m.Client.UpdateJson(ctxMd, update)
 	if err != nil {
 		logger.Log.Error("Error update gauge json", zap.Error(err))
 		return err
@@ -98,26 +94,8 @@ func (m *GrpcRequest) updateGaugeJson(ctx context.Context, update *proto.UpdateS
 	return nil
 }
 
-func (m *GrpcRequest) updateCounterJson(ctx context.Context, update *proto.UpdateSlice) error {
-	headers, err := m.updatesJson(ctx, update)
-	if err != nil {
-		logger.Log.Error("failed create req", zap.Error(err))
-		return err
-	}
-
-	md := metadata.New(headers)
-	ctxMd := metadata.NewOutgoingContext(ctx, md)
-	_, err = m.Client.UpdateCounterJson(ctxMd, update)
-	if err != nil {
-		logger.Log.Error("Error update counter json", zap.Error(err))
-		return err
-	}
-
-	return nil
-}
-
 func (m *GrpcRequest) updatesBatched(ctx context.Context, update *proto.UpdateSlice) error {
-	headers, err := m.updatesJson(ctx, update)
+	headers, err := m.preparingReq(ctx, update)
 	if err != nil {
 		logger.Log.Error("failed create req", zap.Error(err))
 		return err
@@ -135,7 +113,7 @@ func (m *GrpcRequest) updatesBatched(ctx context.Context, update *proto.UpdateSl
 }
 
 // Preparing json req
-func (m *GrpcRequest) updatesJson(ctx context.Context, update *proto.UpdateSlice) (map[string]string, error) {
+func (m *GrpcRequest) preparingReq(ctx context.Context, update *proto.UpdateSlice) (map[string]string, error) {
 	headers := make(map[string]string)
 	if m.host != "" {
 		headers["X-Real-IP"] = m.host

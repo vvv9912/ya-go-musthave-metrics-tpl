@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
@@ -14,6 +15,7 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
 	"log"
+	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"time"
@@ -48,7 +50,9 @@ func (s *Server) StartServer(
 	n := s.s.Route("/", func(r chi.Router) {
 
 	})
+	for i := range runtime {
 
+	}
 	n.Use(m.MwLogger)
 
 	if trustedSubnet != "" {
@@ -75,6 +79,27 @@ func (s *Server) StartServer(
 	n.Get("/ping", h.HandlerPingDatabase)
 	n.Post("/updates/", h.HandlerPostBatched)
 
+	listen, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Handlerss := grpcServer.Metrics{
+		Service: Service,
+	}
+
+	//grpcNewServer1 := grpc.NewServer(grpc.UnaryInterceptor(grpcServer.UnaryInterceptor))
+	//
+	//proto.RegisterMetricsServer(grpcNewServer1, &Handlerss)
+	//
+	////todo временно
+	//go func() {
+	//	if err := grpcNewServer1.Serve(listen); err != nil {
+	//		log.Fatal(err)
+	//	}
+	//
+	//}()
+
 	server := http.Server{
 		Addr:    addr,
 		Handler: s.s,
@@ -83,8 +108,10 @@ func (s *Server) StartServer(
 	ctxServer, cancel := context.WithCancel(ctx)
 
 	e.StartNotifier(ctxServer)
+	// Создаем маршрутизатор REST API
 
 	go func() {
+
 		logger.Log.Info("server start", zap.String("addr", addr))
 		err := server.ListenAndServe()
 
