@@ -23,6 +23,7 @@ type Metrics struct {
 	proto.UnimplementedMetricsServer
 }
 
+// UpdateGauge - обработчик для обновления значения метрики Gauge.
 func (m *Metrics) UpdateGauge(ctx context.Context, in *proto.Update) (*proto.Response, error) {
 	//var resp proto.Response
 	value, err := strconv.ParseFloat(in.Values, 64)
@@ -42,6 +43,8 @@ func (m *Metrics) UpdateGauge(ctx context.Context, in *proto.Update) (*proto.Res
 	}
 	return nil, nil
 }
+
+// UpdateCounter - обработчик для обновления значения метрики Counter.
 func (m *Metrics) UpdateCounter(ctx context.Context, in *proto.Update) (*proto.Response, error) {
 
 	value, err := strconv.ParseInt(in.Values, 10, 64)
@@ -62,6 +65,8 @@ func (m *Metrics) UpdateCounter(ctx context.Context, in *proto.Update) (*proto.R
 
 	return nil, nil
 }
+
+// UpdateJson - обработчик для обновления значения метрик в формате Json.
 func (m *Metrics) UpdateJson(ctx context.Context, in *proto.UpdateSlice) (*proto.Response, error) {
 	var metrics model.Metrics
 
@@ -88,6 +93,7 @@ func (m *Metrics) UpdateJson(ctx context.Context, in *proto.UpdateSlice) (*proto
 	return nil, nil
 }
 
+// UpdatesBatched - обработчик для обновления значения метрик в формате Batch.
 func (m *Metrics) UpdatesBatched(ctx context.Context, in *proto.UpdateSlice) (*proto.Response, error) {
 	var metrics []model.Metrics
 
@@ -111,6 +117,7 @@ func (m *Metrics) UpdatesBatched(ctx context.Context, in *proto.UpdateSlice) (*p
 	return nil, nil
 }
 
+// unGzip - распаковка значений.
 func unGzip(in []byte) (out []byte, err error) {
 	bb := bytes.NewReader(in)
 
@@ -128,7 +135,7 @@ func unGzip(in []byte) (out []byte, err error) {
 	return data, nil
 }
 
-// unzip
+// UnaryInterceptor - mw для распаковки значений для нужных обработчиков.
 func UnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 
 	if info.FullMethod == "/grpc.Metrics/UpdatesBatched" || info.FullMethod == "/grpc.Metrics/UpdateJson" {
