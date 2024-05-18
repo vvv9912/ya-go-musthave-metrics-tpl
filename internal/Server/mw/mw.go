@@ -23,13 +23,14 @@ type Mw struct {
 	trustedSubnet string
 }
 
-func NewMw(s *service.Service) *Mw {
-	return &Mw{Service: s}
+func NewMw(s *service.Service, trustedSubnet string, provateKey *rsa.PrivateKey) *Mw {
+	return &Mw{Service: s, privateKey: provateKey, trustedSubnet: trustedSubnet}
 }
 
 // mw доверенной подсети
 func (m *Mw) MwTrustedSubnet(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		agentIP := r.Header.Get("X-Real-IP")
 		if agentIP == "" {
 			next.ServeHTTP(w, r)

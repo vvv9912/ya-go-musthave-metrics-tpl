@@ -26,6 +26,10 @@ type PostRequester interface {
 }
 type GprcRequester interface {
 	UpdateGauge(ctx context.Context, update *proto.Update) error
+	UpdateCounter(ctx context.Context, update *proto.Update) error
+	UpdateGaugeJson(ctx context.Context, data []byte) error
+	UpdateCounterJson(ctx context.Context, data []byte) error
+	UpdatesBatched(ctx context.Context, data []model.Metrics) error
 }
 type Notifier struct {
 	EventsMetric
@@ -67,20 +71,24 @@ func (n *Notifier) SendGaugeReq(ctx context.Context, gauge map[string]string, Pu
 			}()
 			url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
 
-			n.GprcRequester.UpdateGauge(context.Background(), &proto.Update{
-				Key:        "gauge",
+			err := n.GprcRequester.UpdateGauge(context.Background(), &proto.Update{
+				Key:        key,
 				Values:     values,
 				HashSHA256: "",
 				XRealIP:    "",
 			})
+			if err != nil {
+				logger.Log.Error("Error sending gauge by grpc", zap.String("key", key), zap.String("value", values), zap.Error(err))
+				return
+			}
 
-			err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+			err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
 				AddExpectedError(syscall.ECONNREFUSED).
 				SendDelayed(func() error {
 					return n.PostReq(ctx, url)
 				})
 			if err != nil {
-				log.Println(err)
+				logger.Log.Error("Error sending gauge by rest", zap.String("key", key), zap.String("value", values), zap.Error(err))
 				return
 			}
 
@@ -111,8 +119,14 @@ func (n *Notifier) SendGaugeReq(ctx context.Context, gauge map[string]string, Pu
 					return n.PostReqJSON(ctx, url2, data)
 				})
 			if err != nil {
-				logger.Log.Error("Failed to send JSON", zap.Error(err))
+				logger.Log.Error("Failed to send gauge JSON by rest ", zap.Error(err))
 			}
+
+			err = n.UpdateGaugeJson(ctx, data)
+			if err != nil {
+				logger.Log.Error("Failed to send gauge JSON by grpc", zap.Error(err))
+			}
+
 		}(key, values)
 	}
 
@@ -131,8 +145,16 @@ func (n *Notifier) SendCountReq(ctx context.Context, counter uint64, PullGoCh ch
 	coun := strconv.FormatUint(counter, 10)
 
 	url := "http://" + n.URL + "/update/" + "counter" + "/" + "PollCount" + "/" + coun
+	err := n.UpdateCounter(ctx, &proto.Update{
+		Key:    "counter",
+		Values: coun,
+	})
+	if err != nil {
+		logger.Log.Error("Error sending gauge by grpc", zap.Error(err))
+		return
+	}
 
-	err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
+	err = delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
 		AddExpectedError(syscall.ECONNREFUSED).
 		SendDelayed(func() error {
 			return n.PostReq(ctx, url)
@@ -163,8 +185,13 @@ func (n *Notifier) SendCountReq(ctx context.Context, counter uint64, PullGoCh ch
 			return n.PostReqJSON(ctx, url2, data)
 		})
 	if err != nil {
-		logger.Log.Error("Failed to send JSON", zap.Error(err))
+		logger.Log.Error("Failed to send counter JSON by rest", zap.Error(err))
 		return
+	}
+
+	err = n.UpdateCounterJson(ctx, data)
+	if err != nil {
+		logger.Log.Error("Failed to send counter JSON by grpc", zap.Error(err))
 	}
 
 }
@@ -212,8 +239,12 @@ func (n *Notifier) SendReqBatched(ctx context.Context, gauge map[string]string, 
 			return n.PostReqBatched(ctx, url, m)
 		})
 	if err != nil {
-		logger.Log.Error("Failed to send Batched", zap.Error(err))
+		logger.Log.Error("Failed to send Batched by rest", zap.Error(err))
 		return
+	}
+	err = n.UpdatesBatched(ctx, m)
+	if err != nil {
+		logger.Log.Error("Failed to send Batched by grpc", zap.Error(err))
 	}
 
 }

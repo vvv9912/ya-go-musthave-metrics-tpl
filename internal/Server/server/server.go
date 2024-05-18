@@ -35,13 +35,14 @@ func (s *Server) StartServer(
 	writer notifier.Writer,
 	keyAuth string,
 	privateKey *rsa.PrivateKey,
+	trustedSubnet string,
 ) error {
 
 	var (
 		e       = notifier.NewNotifier(Storage, timeSend, writer)
 		Service = service.NewService(Storage, e, keyAuth)
 		h       = handler.NewHandler(Service)
-		m       = mw.NewMw(Service)
+		m       = mw.NewMw(Service, trustedSubnet, privateKey)
 	)
 	s.s.Mount("/debug", middleware.Profiler())
 	n := s.s.Route("/", func(r chi.Router) {
@@ -50,8 +51,9 @@ func (s *Server) StartServer(
 
 	n.Use(m.MwLogger)
 
-	n.Use(m.MwTrustedSubnet)
-
+	if trustedSubnet != "" {
+		n.Use(m.MwTrustedSubnet)
+	}
 	if privateKey != nil {
 		n.Use(m.MiddlewareCrypt)
 	}

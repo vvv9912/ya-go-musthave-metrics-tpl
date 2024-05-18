@@ -59,14 +59,20 @@ func run() error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	grpcNewServer := grpc.NewServer()
 
 	Handlerss := grpcServer.Metrics{}
 
-	proto.RegisterMetricsServer(grpcNewServer, &Handlerss)
-	if err := grpcNewServer.Serve(listen); err != nil {
-		log.Fatal(err)
-	}
+	grpcNewServer1 := grpc.NewServer(grpc.UnaryInterceptor(grpcServer.UnaryInterceptor))
+
+	proto.RegisterMetricsServer(grpcNewServer1, &Handlerss)
+
+	//todo временно
+	go func() {
+		if err := grpcNewServer1.Serve(listen); err != nil {
+			log.Fatal(err)
+		}
+
+	}()
 	var Repo *store.Repository
 
 	if DatabaseDsn != "" {
@@ -156,7 +162,7 @@ func run() error {
 	}
 	defer produce.Close()
 
-	err = s.StartServer(ctx, URLserver, Repo, time.Duration(timerSend)*time.Second, produce, KeyAuth, privateKey)
+	err = s.StartServer(ctx, URLserver, Repo, time.Duration(timerSend)*time.Second, produce, KeyAuth, privateKey, trustedSubnet)
 	if err != nil {
 		log.Println(err)
 		return err
