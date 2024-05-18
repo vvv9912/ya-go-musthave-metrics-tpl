@@ -86,7 +86,7 @@ func (m *GrpcRequest) updateJSON(ctx context.Context, update *pb.UpdateSlice) er
 
 	md := metadata.New(headers)
 	ctxMd := metadata.NewOutgoingContext(ctx, md)
-	_, err = m.Client.UpdateJson(ctxMd, update)
+	_, err = m.Client.UpdateJSON(ctxMd, update)
 	if err != nil {
 		logger.Log.Error("Error update gauge json", zap.Error(err))
 		return err
