@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package grpc;
+
+option go_package = "grpcServer/proto";
+
+// Для ручек update gauge/counter
+message Update {
+  string key = 1;
+  string values = 2;
+  string HashSHA256 = 3;
+  string xRealIP = 4;
+}
+// json и Batched
+message UpdateSlice {
+  bytes data = 1;
+  string HashSHA256 = 2;
+  string xRealIP = 3;
+}
+message Response {
+  string error = 1; // ошибка
+}
+
+service Metrics {
+  rpc UpdateGauge(Update) returns (Response); //http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
+  rpc UpdateCounter(Update) returns (Response);  //url := "http://" + n.URL + "/update/" + "counter" + "/" + "PollCount" + "/" + coun
+  rpc UpdateGaugeJson(UpdateSlice) returns (Response); //"http://" + n.URL + "/update/"  n.PostReqJSON(ctx, url2, data)
+  rpc UpdateCounterJson(UpdateSlice) returns (Response); //"http://" + n.URL + "/update/"
+
+  rpc UpdatesBatched(UpdateSlice) returns (Response); //"http://" + n.URL + "/updates/"
+
+}
+

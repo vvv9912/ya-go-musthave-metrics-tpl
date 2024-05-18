@@ -10,13 +10,17 @@ import (
 	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/fileutils"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer/proto"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/server"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/postgresql"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store/storage"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"log"
+	"net"
 	"os/signal"
 	"syscall"
 	"time"
@@ -51,6 +55,18 @@ func run() error {
 	logger.Log.Info("FileStoragePath=" + FileStoragePath)
 	logger.Log.Info("Restore=", zap.Bool("RESTORE", RESTORE))
 
+	listen, err := net.Listen("tcp", ":3200")
+	if err != nil {
+		log.Fatal(err)
+	}
+	grpcNewServer := grpc.NewServer()
+
+	Handlerss := grpcServer.Metrics{}
+
+	proto.RegisterMetricsServer(grpcNewServer, &Handlerss)
+	if err := grpcNewServer.Serve(listen); err != nil {
+		log.Fatal(err)
+	}
 	var Repo *store.Repository
 
 	if DatabaseDsn != "" {

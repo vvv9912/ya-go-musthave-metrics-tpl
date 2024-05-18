@@ -6,11 +6,15 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/grpcServer"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/metrics"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/notifier"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Agent/server"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer/proto"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"os/signal"
 	"syscall"
@@ -57,13 +61,22 @@ func run() error {
 
 	host := "192.168.1.100" // todo: А можно ли как то получить методами go
 	postreq := server.NewPostRequest(KeyAuth, publicKey, host)
+	// устанавливаем соединение с сервером
 
-	n := notifier.NewNotifier(metrics, postreq, time.Duration(time.Duration(pollInterval)*time.Second), time.Duration(time.Duration(reportInterval)*time.Second), URLserver)
+	conn, err := grpc.Dial(":3200", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	metricsClient := proto.NewMetricsClient(conn)
+	g := grpcServer.GrpcRequest{Client: metricsClient}
+
+	n := notifier.NewNotifier(metrics, postreq, &g, time.Duration(time.Duration(pollInterval)*time.Second), time.Duration(time.Duration(reportInterval)*time.Second), URLserver)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer cancel()
 
-	err := n.StartNotifyCron(ctx, RateLimit)
+	err = n.StartNotifyCron(ctx, RateLimit)
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,7 @@ package notifier
 import (
 	"context"
 	"encoding/json"
+	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcServer/proto"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/delaysend"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/model"
@@ -23,17 +24,20 @@ type PostRequester interface {
 	PostReqJSON(ctx context.Context, url string, data []byte) error
 	PostReqBatched(ctx context.Context, url string, data []model.Metrics) error
 }
+type GprcRequester interface {
+	UpdateGauge(ctx context.Context, update *proto.Update) error
+}
 type Notifier struct {
 	EventsMetric
 	PostRequester
-
+	GprcRequester
 	TimerUpdate time.Duration
 	TimerSend   time.Duration
 	URL         string
 }
 
-func NewNotifier(eventsMetric EventsMetric, postReq PostRequester, timeupdate time.Duration, timesend time.Duration, url string) *Notifier {
-	return &Notifier{EventsMetric: eventsMetric, PostRequester: postReq, TimerUpdate: timeupdate, TimerSend: timesend, URL: url}
+func NewNotifier(eventsMetric EventsMetric, postReq PostRequester, grpcReq GprcRequester, timeupdate time.Duration, timesend time.Duration, url string) *Notifier {
+	return &Notifier{EventsMetric: eventsMetric, PostRequester: postReq, GprcRequester: grpcReq, TimerUpdate: timeupdate, TimerSend: timesend, URL: url}
 }
 
 func (n *Notifier) NotifyPending() (map[string]string, uint64, error) {
@@ -62,6 +66,13 @@ func (n *Notifier) SendGaugeReq(ctx context.Context, gauge map[string]string, Pu
 				wg.Done()
 			}()
 			url := "http://" + n.URL + "/update/" + "gauge" + "/" + key + "/" + values
+
+			n.GprcRequester.UpdateGauge(context.Background(), &proto.Update{
+				Key:        "gauge",
+				Values:     values,
+				HashSHA256: "",
+				XRealIP:    "",
+			})
 
 			err := delaysend.NewDelaySend().SetDelay([]int{1, 3, 5}).
 				AddExpectedError(syscall.ECONNREFUSED).
