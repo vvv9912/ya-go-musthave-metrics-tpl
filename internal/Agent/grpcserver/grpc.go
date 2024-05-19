@@ -119,7 +119,7 @@ func (m *GrpcRequest) preparingReq(ctx context.Context, update *pb.UpdateSlice) 
 	if m.host != "" {
 		headers["X-Real-IP"] = m.host
 	}
-
+	headers["Encoding"] = "gzip"
 	buf := bytes.NewBuffer(nil)
 	zb := gzip.NewWriter(buf)
 	_, err := zb.Write(update.Data)
