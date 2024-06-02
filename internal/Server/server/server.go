@@ -83,7 +83,7 @@ func (s *Server) StartServer(
 	}
 
 	ctxServer, cancel := context.WithCancel(ctx)
-	defer cancel()
+
 	e.StartNotifier(ctxServer)
 
 	go func() {
