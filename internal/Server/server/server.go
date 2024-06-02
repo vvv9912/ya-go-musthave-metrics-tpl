@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	grpcserver2 "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcserver"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
@@ -13,7 +14,6 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
-	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"time"
@@ -35,20 +35,26 @@ func (s *Server) StartServer(
 	writer notifier.Writer,
 	keyAuth string,
 	privateKey *rsa.PrivateKey,
+	trustedSubnet string,
 ) error {
 
 	var (
 		e       = notifier.NewNotifier(Storage, timeSend, writer)
 		Service = service.NewService(Storage, e, keyAuth)
 		h       = handler.NewHandler(Service)
-		m       = mw.NewMw(Service)
+		m       = mw.NewMw(Service, trustedSubnet, privateKey)
 	)
+
 	s.s.Mount("/debug", middleware.Profiler())
 	n := s.s.Route("/", func(r chi.Router) {
 
 	})
+
 	n.Use(m.MwLogger)
 
+	if trustedSubnet != "" {
+		n.Use(m.MwTrustedSubnet)
+	}
 	if privateKey != nil {
 		n.Use(m.MiddlewareCrypt)
 	}
@@ -80,15 +86,19 @@ func (s *Server) StartServer(
 	e.StartNotifier(ctxServer)
 
 	go func() {
+
 		logger.Log.Info("server start", zap.String("addr", addr))
 		err := server.ListenAndServe()
-
 		if err != nil {
-			log.Println(err)
+			logger.Log.Error("Error starting server", zap.Error(err))
 			cancel()
 		}
 	}()
 
+	_, err := grpcserver2.NewGrpcServer(Service, privateKey, trustedSubnet, keyAuth, ":3200")
+	if err != nil {
+		return err
+	}
 	select {
 	case <-ctx.Done():
 		logger.Log.Info("ctx:", zap.Error(ctx.Err()))

@@ -9,8 +9,6 @@ import (
 	"testing"
 )
 
-// // todo: Тест с флагами и конфигом. Как переедать флаги?
-
 // Тест конфига
 func Test_parseFlags1(t *testing.T) {
 

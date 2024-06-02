@@ -36,7 +36,7 @@ func TestStartServer(t *testing.T) {
 	}
 	defer produce.Close()
 
-	err = s.StartServer(ctx, "localhost:8080", store, time.Duration(1*time.Second), produce, "", nil)
+	err = s.StartServer(ctx, "localhost:8080", store, time.Duration(1*time.Second), produce, "", nil, "")
 	if err != nil {
 		t.Errorf("Expected no error, but got: %v", err)
 	}

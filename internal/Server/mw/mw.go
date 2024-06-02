@@ -11,19 +11,45 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
 	"log"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
 type Mw struct {
-	Service    *service.Service
-	privateKey *rsa.PrivateKey
-	//publicKey  *rsa.PublicKey
+	Service       *service.Service
+	privateKey    *rsa.PrivateKey
+	trustedSubnet string
 }
 
-func NewMw(s *service.Service) *Mw {
-	return &Mw{Service: s}
+func NewMw(s *service.Service, trustedSubnet string, provateKey *rsa.PrivateKey) *Mw {
+	return &Mw{Service: s, privateKey: provateKey, trustedSubnet: trustedSubnet}
+}
+
+// mw доверенной подсети
+func (m *Mw) MwTrustedSubnet(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		agentIP := r.Header.Get("X-Real-IP")
+		if agentIP == "" {
+			next.ServeHTTP(w, r)
+		}
+
+		_, ipv4Net, err := net.ParseCIDR(m.trustedSubnet)
+		if err != nil {
+			logger.Log.Error("Error parsing trusted subnet", zap.String("error", err.Error()))
+		}
+
+		agent := net.ParseIP(agentIP)
+
+		if !ipv4Net.Contains(agent) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+
+	})
 }
 
 func (m *Mw) MiddlewareGzip(next http.Handler) http.Handler {

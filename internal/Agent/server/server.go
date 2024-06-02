@@ -25,17 +25,23 @@ type PostRequest struct {
 	PostRequester
 	keyAuth   string
 	publicKey *rsa.PublicKey
+	host      string
 }
 
-func NewPostRequest(keyAuth string, publicKey *rsa.PublicKey) *PostRequest {
-	return &PostRequest{keyAuth: keyAuth, publicKey: publicKey}
+func NewPostRequest(keyAuth string, publicKey *rsa.PublicKey, host string) *PostRequest {
+	return &PostRequest{keyAuth: keyAuth, publicKey: publicKey, host: host}
 }
 
 func (p *PostRequest) PostReq(ctx context.Context, url string) error {
 
 	client := resty.New()
-
-	_, err := client.R().SetHeaders(map[string]string{
+	req := client.R()
+	if p.host != "" {
+		req.SetHeaders(map[string]string{
+			"X-Real-IP": p.host,
+		})
+	}
+	_, err := req.SetHeaders(map[string]string{
 		"Content-Type": "text/plain",
 	}).Post(url)
 	if err != nil {
@@ -46,7 +52,15 @@ func (p *PostRequest) PostReq(ctx context.Context, url string) error {
 	return nil
 }
 func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) error {
+
 	client := resty.New()
+	req := client.R()
+
+	if p.host != "" {
+		req.SetHeaders(map[string]string{
+			"X-Real-IP": p.host,
+		})
+	}
 
 	buf := bytes.NewBuffer(nil)
 	zb := gzip.NewWriter(buf)
@@ -74,7 +88,7 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		}
 		dst := h.Sum(nil)
 
-		client.R().SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst)})
+		req.SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst)})
 
 	}
 
@@ -86,7 +100,7 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 		}
 	}
 
-	_, err = client.R().SetHeaders(map[string]string{
+	_, err = req.SetHeaders(map[string]string{
 		"Content-Type": "application/json", "Content-Encoding": "gzip",
 	}).SetBody(dataBytes).Post(url)
 
@@ -101,6 +115,13 @@ func (p *PostRequest) PostReqJSON(ctx context.Context, url string, data []byte) 
 func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []model.Metrics) error {
 
 	client := resty.New()
+
+	req := client.R()
+	if p.host != "" {
+		req.SetHeaders(map[string]string{
+			"X-Real-IP": p.host,
+		})
+	}
 
 	// При передаче слайса в интерфейс client.R, внутри все равно преобраз. в json
 	jsonData, err := json.Marshal(data)
@@ -122,7 +143,7 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 
 		dst := h.Sum(nil)
 
-		client.R().SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst), "Content-Type": "application/json"})
+		req.SetHeaders(map[string]string{"HashSHA256": fmt.Sprintf("%x", dst), "Content-Type": "application/json"})
 
 	}
 
@@ -134,7 +155,7 @@ func (p *PostRequest) PostReqBatched(ctx context.Context, url string, data []mod
 		}
 	}
 
-	_, err = client.R().SetBody(jsonData).Post(url)
+	_, err = req.SetBody(jsonData).Post(url)
 	if err != nil {
 		logger.Log.Error("Failed to send metrics batch", zap.Error(err))
 		return err
