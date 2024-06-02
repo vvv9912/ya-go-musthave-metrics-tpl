@@ -14,7 +14,6 @@ import (
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/store"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
 	"go.uber.org/zap"
-	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"time"
@@ -90,9 +89,8 @@ func (s *Server) StartServer(
 
 		logger.Log.Info("server start", zap.String("addr", addr))
 		err := server.ListenAndServe()
-
 		if err != nil {
-			log.Println(err)
+			logger.Log.Error("Error starting server", zap.Error(err))
 			cancel()
 		}
 	}()
