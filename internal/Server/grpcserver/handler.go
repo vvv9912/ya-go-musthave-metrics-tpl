@@ -40,7 +40,7 @@ func (m *Metrics) UpdateGauge(ctx context.Context, in *pb.Update) (*pb.Response,
 	if err != nil {
 		return &pb.Response{Error: "send metrics to file"}, err
 	}
-	return nil, nil
+	return &pb.Response{}, nil
 }
 
 // UpdateCounter - обработчик для обновления значения метрики Counter.

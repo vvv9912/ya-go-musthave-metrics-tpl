@@ -6,7 +6,7 @@ import (
 	"errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcserver"
+	grpcserver2 "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcserver"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/handler"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/mw"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/notifier"
@@ -45,6 +45,7 @@ func (s *Server) StartServer(
 		h       = handler.NewHandler(Service)
 		m       = mw.NewMw(Service, trustedSubnet, privateKey)
 	)
+
 	s.s.Mount("/debug", middleware.Profiler())
 	n := s.s.Route("/", func(r chi.Router) {
 
@@ -82,7 +83,7 @@ func (s *Server) StartServer(
 	}
 
 	ctxServer, cancel := context.WithCancel(ctx)
-
+	defer cancel()
 	e.StartNotifier(ctxServer)
 
 	go func() {
@@ -96,11 +97,10 @@ func (s *Server) StartServer(
 		}
 	}()
 
-	err := grpcserver.NewGrpcServer(Service, ":3200")
+	_, err := grpcserver2.NewGrpcServer(Service, privateKey, trustedSubnet, keyAuth, ":3200")
 	if err != nil {
 		return err
 	}
-
 	select {
 	case <-ctx.Done():
 		logger.Log.Info("ctx:", zap.Error(ctx.Err()))

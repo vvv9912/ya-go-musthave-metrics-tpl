@@ -1,6 +1,7 @@
 package grpcserver
 
 import (
+	"crypto/rsa"
 	pb "github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/grpcserver/proto"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/Server/service"
 	"github.com/vvv9912/ya-go-musthave-metrics-tpl.git/internal/logger"
@@ -9,19 +10,26 @@ import (
 	"net"
 )
 
-func NewGrpcServer(service *service.Service, addr string) error {
+func NewGrpcServer(service *service.Service, privateKey *rsa.PrivateKey, trustedSubnet string, KeyAuth string, addr string) (*grpc.Server, error) {
 	//grpc
 	listen, err := net.Listen("tcp", addr)
 	if err != nil {
 		logger.Log.Error("listen failed", zap.Error(err))
-		return err
+		return nil, err
 	}
 
 	HandlersGrpc := Metrics{
 		Service: service,
 	}
+	i := NewInterceptor(privateKey, trustedSubnet, KeyAuth)
 
-	grpcNewServer1 := grpc.NewServer(grpc.UnaryInterceptor(UnaryInterceptor))
+	unaryInterceptors := []grpc.UnaryServerInterceptor{}
+
+	unaryInterceptors = append(unaryInterceptors, i.GzipInterceptor)
+	unaryInterceptors = append(unaryInterceptors, i.HashInterceptor)
+	unaryInterceptors = append(unaryInterceptors, i.TrustedSubnetInterceptor)
+
+	grpcNewServer1 := grpc.NewServer(grpc.ChainUnaryInterceptor(unaryInterceptors...))
 
 	pb.RegisterMetricsServer(grpcNewServer1, &HandlersGrpc)
 
@@ -32,6 +40,5 @@ func NewGrpcServer(service *service.Service, addr string) error {
 		}
 
 	}()
-
-	return err
+	return grpcNewServer1, err
 }
