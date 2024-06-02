@@ -56,7 +56,7 @@ func run() error {
 		publicKey = pubKey
 	}
 
-	host := "192.168.1.100" // todo: А можно ли как то получить методами go
+	host := "192.168.1.100"
 	postreq := server.NewPostRequest(KeyAuth, publicKey, host)
 
 	grpc, conn := grpcserver.NewGrpcServer(":3200")
